@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef } from "react";
 import { GameCard, CardData, createGameCards } from "@/lib/gameData";
+import { playFlipSound, playMatchSound, playMismatchSound, playWinSound } from "@/lib/sounds";
 
-export function useMemoryGame(pairCount: number = 4) {
+export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = true) {
   const [cards, setCards] = useState<GameCard[]>([]);
   const [flippedIds, setFlippedIds] = useState<string[]>([]);
   const [moves, setMoves] = useState(0);
@@ -22,10 +23,12 @@ export function useMemoryGame(pairCount: number = 4) {
 
   const flipCard = useCallback((uniqueId: string) => {
     if (isChecking) return;
-    
+
     const card = cards.find((c) => c.uniqueId === uniqueId);
     if (!card || card.isFlipped || card.isMatched) return;
     if (flippedIds.length >= 2) return;
+
+    if (soundEnabled) playFlipSound();
 
     const newFlipped = [...flippedIds, uniqueId];
     setFlippedIds(newFlipped);
@@ -42,8 +45,8 @@ export function useMemoryGame(pairCount: number = 4) {
       const second = cards.find((c) => c.uniqueId === secondId)!;
 
       if (first.id === second.id) {
-        // Match!
         timeoutRef.current = setTimeout(() => {
+          if (soundEnabled) playMatchSound();
           setCards((prev) =>
             prev.map((c) =>
               c.id === first.id ? { ...c, isMatched: true, isFlipped: true } : c
@@ -55,11 +58,12 @@ export function useMemoryGame(pairCount: number = 4) {
           setIsChecking(false);
           if (newMatched === pairCount) {
             setIsGameOver(true);
+            if (soundEnabled) playWinSound();
           }
         }, 600);
       } else {
-        // No match
         timeoutRef.current = setTimeout(() => {
+          if (soundEnabled) playMismatchSound();
           setCards((prev) =>
             prev.map((c) =>
               newFlipped.includes(c.uniqueId) ? { ...c, isFlipped: false } : c
@@ -70,7 +74,7 @@ export function useMemoryGame(pairCount: number = 4) {
         }, 1000);
       }
     }
-  }, [cards, flippedIds, isChecking, matchedCount, pairCount]);
+  }, [cards, flippedIds, isChecking, matchedCount, pairCount, soundEnabled]);
 
   return { cards, moves, matchedCount, isGameOver, flipCard, startGame };
 }

@@ -1,20 +1,22 @@
 import { useMemoryGame } from "@/hooks/useMemoryGame";
-import { ThemeType, CardData, GIRL_ANIMALS, BOY_ANIMALS } from "@/lib/gameData";
+import { ThemeType, CardData, GameSettings, GIRL_ANIMALS, BOY_ANIMALS, CARD_SIZE_CONFIG } from "@/lib/gameData";
 import MemoryCard from "@/components/MemoryCard";
+import Confetti from "@/components/Confetti";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
-import { RotateCcw, Home } from "lucide-react";
+import { RotateCcw, Home, Volume2, VolumeX } from "lucide-react";
 
 interface GameBoardProps {
   theme: ThemeType;
+  settings: GameSettings;
   customCards?: CardData[];
   onHome: () => void;
 }
 
-export default function GameBoard({ theme, customCards, onHome }: GameBoardProps) {
+export default function GameBoard({ theme, settings, customCards, onHome }: GameBoardProps) {
   const cardData = customCards || (theme === "girl" ? GIRL_ANIMALS : BOY_ANIMALS);
-  const pairCount = Math.min(cardData.length, 6);
-  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount);
+  const pairCount = Math.min(settings.pairCount, cardData.length);
+  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, settings.soundEnabled);
 
   useEffect(() => {
     startGame(cardData);
@@ -22,40 +24,63 @@ export default function GameBoard({ theme, customCards, onHome }: GameBoardProps
 
   const restart = () => startGame(cardData);
 
-  // Grid columns based on pair count
-  const gridCols = pairCount <= 4 ? "grid-cols-3 sm:grid-cols-4" : "grid-cols-3 sm:grid-cols-4";
+  const sizeConfig = CARD_SIZE_CONFIG[settings.cardSize];
+
+  // Grid columns based on total cards
+  const totalCards = pairCount * 2;
+  let gridCols = "grid-cols-3";
+  if (totalCards <= 4) gridCols = "grid-cols-2";
+  else if (totalCards <= 6) gridCols = "grid-cols-3";
+  else if (totalCards <= 8) gridCols = "grid-cols-4";
+  else if (totalCards <= 12) gridCols = "grid-cols-3 sm:grid-cols-4";
+  else gridCols = "grid-cols-4";
 
   const bgClass = theme === "girl"
     ? "from-game-pink/10 to-background"
     : "from-game-blue/10 to-background";
 
+  // Stars for matched pairs
+  const stars = Array.from({ length: matchedCount }, (_, i) => (
+    <span key={i} className="text-xl bounce-in" style={{ animationDelay: `${i * 0.1}s` }}>⭐</span>
+  ));
+
   return (
     <div className={`min-h-screen bg-gradient-to-b ${bgClass} flex flex-col`} dir="rtl">
+      <Confetti active={isGameOver} />
+
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm">
         <Button variant="ghost" size="sm" onClick={onHome}>
           <Home className="w-5 h-5" />
         </Button>
-        <div className="flex items-center gap-4 text-sm font-bold">
-          <span>🎯 זוגות: {matchedCount}/{pairCount}</span>
-          <span>🔄 ניסיונות: {moves}</span>
+        <div className="flex items-center gap-3 text-sm font-bold">
+          <span>🎯 {matchedCount}/{pairCount}</span>
+          <span>🔄 {moves}</span>
         </div>
         <Button variant="ghost" size="sm" onClick={restart}>
           <RotateCcw className="w-5 h-5" />
         </Button>
       </div>
 
+      {/* Stars row */}
+      {matchedCount > 0 && (
+        <div className="flex justify-center gap-1 py-2">
+          {stars}
+        </div>
+      )}
+
       {/* Game Grid */}
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className={`grid ${gridCols} gap-3 sm:gap-4 w-full max-w-lg`}>
+        <div className={`grid ${gridCols} gap-3 sm:gap-4 w-full ${sizeConfig.maxW}`}>
           {cards.map((card, i) => (
-            <div key={card.uniqueId} className="bounce-in" style={{ animationDelay: `${i * 0.05}s` }}>
+            <div key={card.uniqueId} className="bounce-in" style={{ animationDelay: `${i * 0.04}s` }}>
               <MemoryCard
                 emoji={card.emoji}
                 image={card.image}
                 isFlipped={card.isFlipped}
                 isMatched={card.isMatched}
                 theme={theme}
+                cardSize={settings.cardSize}
                 onClick={() => flipCard(card.uniqueId)}
               />
             </div>
@@ -67,12 +92,17 @@ export default function GameBoard({ theme, customCards, onHome }: GameBoardProps
       {isGameOver && (
         <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-card rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl bounce-in space-y-4">
-            <div className="text-6xl">🎉</div>
-            <h2 className="text-3xl font-black text-foreground">כל הכבוד!</h2>
+            <div className="text-7xl bounce-in">🏆</div>
+            <div className="flex justify-center gap-1 text-3xl">
+              {"⭐".repeat(Math.min(pairCount, 6)).split("").map((s, i) => (
+                <span key={i} className="bounce-in" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>{s}</span>
+              ))}
+            </div>
+            <h2 className="text-3xl font-black text-foreground">🎉 כל הכבוד! 🎉</h2>
             <p className="text-muted-foreground text-lg">
               סיימתם ב-{moves} ניסיונות!
             </p>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 pt-2">
               <Button
                 variant={theme === "girl" ? "game-pink" : "game-blue"}
                 size="lg"
