@@ -334,6 +334,32 @@ export default function CloudGallery({ onSelect, onClose, theme, mode = "images"
           </button>
         </div>
       </div>
+
+      {/* Crop Modal */}
+      {cropImage && !isAudio && (
+        <ImageCropModal
+          imageUrl={cropImage.url}
+          theme={theme}
+          onClose={() => setCropImage(null)}
+          onSave={async (croppedDataUrl) => {
+            // Upload cropped image as new file
+            const res = await fetch(croppedDataUrl);
+            const blob = await res.blob();
+            const fileName = `cropped-${Date.now()}.jpg`;
+            const { error } = await supabase.storage.from(bucket).upload(fileName, blob, {
+              contentType: "image/jpeg",
+              cacheControl: "3600",
+            });
+            if (error) {
+              toast.error("שגיאה בשמירת התמונה החתוכה");
+            } else {
+              toast.success("התמונה החתוכה נשמרה!");
+              loadItems();
+            }
+            setCropImage(null);
+          }}
+        />
+      )}
     </div>
   );
 }
