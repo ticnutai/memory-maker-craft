@@ -32,6 +32,7 @@ export interface StoredSettings {
   customMusic?: string;
   customMusicName?: string;
   theme?: string;
+  bgTheme?: string;
   cardStyle: CardStyle;
 }
 
