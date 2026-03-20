@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      birthdays: {
+        Row: {
+          birth_date: string
+          color: string | null
+          created_at: string
+          device_id: string
+          emoji: string | null
+          id: string
+          name: string
+          notes: string | null
+          relation: string | null
+          updated_at: string
+        }
+        Insert: {
+          birth_date: string
+          color?: string | null
+          created_at?: string
+          device_id: string
+          emoji?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          relation?: string | null
+          updated_at?: string
+        }
+        Update: {
+          birth_date?: string
+          color?: string | null
+          created_at?: string
+          device_id?: string
+          emoji?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          relation?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       game_settings: {
         Row: {
           bg_theme: string | null
