@@ -45,6 +45,7 @@ export function useCloudSettings(initialTheme: string) {
     emojiScale: 1,
     soundEnabled: true,
     speechEnabled: true,
+    speechRate: 0.9,
     flipDuration: 1,
     musicType: "none",
     builtinMelodyId: "twinkle",
