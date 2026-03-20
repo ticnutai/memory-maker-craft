@@ -18,13 +18,15 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
   const [emojiScale, setEmojiScale] = useState(1);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [flipDuration, setFlipDuration] = useState(1);
+  const [musicType, setMusicType] = useState<"none" | "builtin" | "custom">("none");
+  const [builtinMelodyId, setBuiltinMelodyId] = useState<string>("twinkle");
   const [customMusic, setCustomMusic] = useState<string | undefined>();
   const [customMusicName, setCustomMusicName] = useState<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLInputElement>(null);
 
   const accentBtn = theme === "girl" ? "game-pink" as const : "game-blue" as const;
-  const settings: GameSettings = { pairCount, cardMaxW, emojiScale, soundEnabled, flipDuration, customMusic };
+  const settings: GameSettings = { pairCount, cardMaxW, emojiScale, soundEnabled, flipDuration, musicType, builtinMelodyId, customMusic };
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
