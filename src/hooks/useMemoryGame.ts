@@ -71,7 +71,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
           );
           setFlippedIds([]);
           setIsChecking(false);
-        }, 1000);
+        }, flipDuration * 1000);
       }
     }
   }, [cards, flippedIds, isChecking, matchedCount, pairCount, soundEnabled]);
