@@ -5,7 +5,7 @@ import MemoryCard from "@/components/MemoryCard";
 import Confetti from "@/components/Confetti";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
-import { RotateCcw, Home, Music, MusicOff } from "lucide-react";
+import { RotateCcw, Home, Music, VolumeX } from "lucide-react";
 
 interface GameBoardProps {
   theme: ThemeType;
