@@ -51,6 +51,10 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
   const [formEmoji, setFormEmoji] = useState("📷");
   const [formColor, setFormColor] = useState("#60a5fa");
   const [uploading, setUploading] = useState(false);
+  const [showCloudPicker, setShowCloudPicker] = useState(false);
+  const [cloudImages, setCloudImages] = useState<{ name: string; url: string }[]>([]);
+  const [cloudSelected, setCloudSelected] = useState<Set<string>>(new Set());
+  const [loadingCloud, setLoadingCloud] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const deviceId = getDeviceId();
