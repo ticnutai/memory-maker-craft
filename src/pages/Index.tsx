@@ -13,7 +13,8 @@ const Index = () => {
   const [customCards, setCustomCards] = useState<CardData[] | undefined>();
   const [settings, setSettings] = useState<GameSettings>({
     pairCount: 4,
-    cardSize: "medium",
+    cardMaxW: 480,
+    emojiScale: 1,
     soundEnabled: true,
     flipDuration: 1,
   });
