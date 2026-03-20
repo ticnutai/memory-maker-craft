@@ -67,23 +67,28 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
 
       {/* Settings panel */}
       <div className="w-full max-w-sm bg-card rounded-2xl p-5 shadow-lg border-2 border-muted space-y-4 bounce-in">
-        {/* Pair count */}
+        {/* Difficulty */}
         <div>
-          <p className="font-bold text-sm mb-2">🎯 כמה זוגות?</p>
+          <p className="font-bold text-sm mb-2">🎯 רמת קושי</p>
           <div className="flex gap-2">
-            {[2, 3, 4, 5, 6].map((n) => (
+            {[
+              { pairs: 3, label: "קל", emoji: "😊" },
+              { pairs: 4, label: "בינוני", emoji: "🤔" },
+              { pairs: 6, label: "קשה", emoji: "🔥" },
+            ].map((lvl) => (
               <button
-                key={n}
-                onClick={() => setPairCount(n)}
-                className={`flex-1 h-11 rounded-xl font-black text-lg transition-all active:scale-95 ${
-                  pairCount === n
+                key={lvl.pairs}
+                onClick={() => setPairCount(lvl.pairs)}
+                className={`flex-1 h-14 rounded-xl font-bold text-sm transition-all active:scale-95 flex flex-col items-center justify-center gap-0.5 ${
+                  pairCount === lvl.pairs
                     ? theme === "girl"
                       ? "bg-game-pink text-primary-foreground shadow-md"
                       : "bg-game-blue text-secondary-foreground shadow-md"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
-                {n}
+                <span className="text-lg">{lvl.emoji}</span>
+                <span>{lvl.label}</span>
               </button>
             ))}
           </div>
