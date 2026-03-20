@@ -395,6 +395,21 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
           }}
         />
       )}
+
+      {showCloudAudio && (
+        <CloudGallery
+          theme={theme}
+          mode="audio"
+          onClose={() => setShowCloudAudio(false)}
+          onSelect={() => {}}
+          onSelectAudio={(url, name) => {
+            setShowCloudAudio(false);
+            setMusicType("cloud");
+            setCustomMusic(url);
+            setCustomMusicName(`cloud:${name}`);
+          }}
+        />
+      )}
     </div>
   );
 }
