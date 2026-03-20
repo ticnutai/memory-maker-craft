@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { GameCard, CardData, createGameCards } from "@/lib/gameData";
 import { playFlipSound, playMatchSound, playMismatchSound, playWinSound } from "@/lib/sounds";
+import { playCardSound } from "@/lib/cardSounds";
 
 export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = true, flipDuration: number = 1) {
   const [cards, setCards] = useState<GameCard[]>([]);
@@ -28,7 +29,10 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
     if (!card || card.isFlipped || card.isMatched) return;
     if (flippedIds.length >= 2) return;
 
-    if (soundEnabled) playFlipSound();
+    if (soundEnabled) {
+      playFlipSound();
+      playCardSound(card.id);
+    }
 
     const newFlipped = [...flippedIds, uniqueId];
     setFlippedIds(newFlipped);
