@@ -106,6 +106,7 @@ export function useCloudSettings(initialTheme: string) {
         card_border_width: newSettings.cardStyle.borderWidth,
         card_border_color: newSettings.cardStyle.borderColor,
         card_back_color: newSettings.cardStyle.backColor,
+        card_back_color_2: newSettings.cardStyle.backColor2 || "",
         card_back_icon: newSettings.cardStyle.backIcon,
         card_shape: newSettings.cardStyle.shape,
         updated_at: new Date().toISOString(),
