@@ -18,6 +18,14 @@ const Index = () => {
     soundEnabled: true,
     flipDuration: 1,
     musicType: "none",
+    cardStyle: {
+      borderRadius: 16,
+      borderWidth: 4,
+      borderColor: "default",
+      backColor: "default",
+      backIcon: "⭐",
+      shape: "square",
+    },
   });
 
   const handleTheme = (t: ThemeType) => {

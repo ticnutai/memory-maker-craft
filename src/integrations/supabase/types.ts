@@ -17,7 +17,13 @@ export type Database = {
       game_settings: {
         Row: {
           builtin_melody_id: string | null
+          card_back_color: string
+          card_back_icon: string
+          card_border_color: string
+          card_border_radius: number
+          card_border_width: number
           card_max_w: number
+          card_shape: string
           created_at: string
           custom_music: string | null
           custom_music_name: string | null
@@ -33,7 +39,13 @@ export type Database = {
         }
         Insert: {
           builtin_melody_id?: string | null
+          card_back_color?: string
+          card_back_icon?: string
+          card_border_color?: string
+          card_border_radius?: number
+          card_border_width?: number
           card_max_w?: number
+          card_shape?: string
           created_at?: string
           custom_music?: string | null
           custom_music_name?: string | null
@@ -49,7 +61,13 @@ export type Database = {
         }
         Update: {
           builtin_melody_id?: string | null
+          card_back_color?: string
+          card_back_icon?: string
+          card_border_color?: string
+          card_border_radius?: number
+          card_border_width?: number
           card_max_w?: number
+          card_shape?: string
           created_at?: string
           custom_music?: string | null
           custom_music_name?: string | null

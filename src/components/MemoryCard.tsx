@@ -1,4 +1,22 @@
-import { ThemeType } from "@/lib/gameData";
+import { ThemeType, CardStyle } from "@/lib/gameData";
+
+const BACK_COLOR_MAP: Record<string, string> = {
+  red: "from-red-400 to-rose-500",
+  green: "from-emerald-400 to-green-500",
+  purple: "from-purple-400 to-violet-500",
+  orange: "from-orange-400 to-amber-500",
+  cyan: "from-cyan-400 to-sky-500",
+  gold: "from-yellow-400 to-amber-500",
+};
+
+const BORDER_COLOR_MAP: Record<string, string> = {
+  white: "#ffffff",
+  black: "#1a1a2e",
+  gold: "#d4a574",
+  pink: "hsl(var(--game-pink))",
+  blue: "hsl(var(--game-blue))",
+  green: "#22c55e",
+};
 
 interface MemoryCardProps {
   emoji: string;
@@ -8,17 +26,33 @@ interface MemoryCardProps {
   isMatched: boolean;
   theme: ThemeType;
   emojiScale: number;
+  cardStyle: CardStyle;
   onClick: () => void;
 }
 
-export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, theme, emojiScale, onClick }: MemoryCardProps) {
-  const backColor = theme === "girl"
+export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, theme, emojiScale, cardStyle, onClick }: MemoryCardProps) {
+  const defaultBack = theme === "girl"
     ? "bg-gradient-to-br from-game-pink to-primary"
     : "bg-gradient-to-br from-game-blue to-secondary";
 
+  const backColorClass = cardStyle.backColor === "default"
+    ? defaultBack
+    : `bg-gradient-to-br ${BACK_COLOR_MAP[cardStyle.backColor] || ""}`;
+
+  const borderColor = cardStyle.borderColor === "default"
+    ? undefined
+    : BORDER_COLOR_MAP[cardStyle.borderColor];
+
   const isLetter = emoji.length === 1 && /[\u0590-\u05FF]/.test(emoji);
-  const baseFontSize = 3; // rem
+  const baseFontSize = 3;
   const fontSize = baseFontSize * emojiScale;
+
+  const borderStyle: React.CSSProperties = {
+    borderRadius: `${cardStyle.borderRadius}px`,
+    borderWidth: `${cardStyle.borderWidth}px`,
+    borderStyle: "solid",
+    borderColor: borderColor || "hsl(var(--background))",
+  };
 
   return (
     <button
@@ -28,12 +62,21 @@ export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, 
       aria-label={isFlipped ? (label || emoji) : "קלף הפוך"}
     >
       <div className={`card-flip-inner w-full h-full relative ${isFlipped ? "flipped" : ""}`}>
-        <div className={`card-face rounded-2xl ${backColor} flex items-center justify-center shadow-lg border-4 border-background cursor-pointer hover:brightness-110 hover:scale-[1.03] transition-all duration-200`}>
-          <span className="text-3xl sm:text-4xl opacity-80 drop-shadow-sm">⭐</span>
+        <div
+          className={`card-face ${backColorClass} flex items-center justify-center shadow-lg cursor-pointer hover:brightness-110 hover:scale-[1.03] transition-all duration-200`}
+          style={borderStyle}
+        >
+          <span className="text-3xl sm:text-4xl opacity-80 drop-shadow-sm">{cardStyle.backIcon}</span>
         </div>
-        <div className={`card-face card-face-back rounded-2xl bg-card flex flex-col items-center justify-center shadow-lg border-4 transition-colors duration-300 ${isMatched ? "border-accent bg-accent/5" : "border-muted"}`}>
+        <div
+          className={`card-face card-face-back bg-card flex flex-col items-center justify-center shadow-lg transition-colors duration-300 ${isMatched ? "bg-accent/5" : ""}`}
+          style={{
+            ...borderStyle,
+            borderColor: isMatched ? "hsl(var(--accent))" : (borderColor || "hsl(var(--muted))"),
+          }}
+        >
           {image ? (
-            <img src={image} alt="" className="w-full h-full object-cover rounded-xl" />
+            <img src={image} alt="" className="w-full h-full object-cover" style={{ borderRadius: `${Math.max(0, cardStyle.borderRadius - cardStyle.borderWidth)}px` }} />
           ) : isLetter ? (
             <div className="flex flex-col items-center gap-0.5">
               <span className="select-none font-black" style={{ fontSize: `${fontSize}rem`, lineHeight: 1.1 }}>

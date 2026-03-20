@@ -1,6 +1,15 @@
 export type ThemeType = "girl" | "boy";
 export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "custom";
 
+export interface CardStyle {
+  borderRadius: number;
+  borderWidth: number;
+  borderColor: string;
+  backColor: string;
+  backIcon: string;
+  shape: string;
+}
+
 export interface GameSettings {
   pairCount: number;
   cardMaxW: number;
@@ -10,6 +19,7 @@ export interface GameSettings {
   musicType: "none" | "builtin" | "custom" | "cloud";
   builtinMelodyId?: string;
   customMusic?: string;
+  cardStyle: CardStyle;
 }
 
 export interface CardData {

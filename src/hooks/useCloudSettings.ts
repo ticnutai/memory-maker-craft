@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { GameSettings } from "@/lib/gameData";
+import { GameSettings, CardStyle } from "@/lib/gameData";
 
 function getDeviceId(): string {
   const key = "memory-game-device-id";
@@ -12,7 +12,16 @@ function getDeviceId(): string {
   return id;
 }
 
-interface StoredSettings {
+const DEFAULT_CARD_STYLE: CardStyle = {
+  borderRadius: 16,
+  borderWidth: 4,
+  borderColor: "default",
+  backColor: "default",
+  backIcon: "⭐",
+  shape: "square",
+};
+
+export interface StoredSettings {
   pairCount: number;
   cardMaxW: number;
   emojiScale: number;
@@ -23,6 +32,7 @@ interface StoredSettings {
   customMusic?: string;
   customMusicName?: string;
   theme?: string;
+  cardStyle: CardStyle;
 }
 
 export function useCloudSettings(initialTheme: string) {
@@ -35,12 +45,12 @@ export function useCloudSettings(initialTheme: string) {
     musicType: "none",
     builtinMelodyId: "twinkle",
     theme: initialTheme,
+    cardStyle: { ...DEFAULT_CARD_STYLE },
   });
   const [loaded, setLoaded] = useState(false);
   const deviceId = useRef(getDeviceId());
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>();
 
-  // Load settings on mount
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
@@ -61,6 +71,14 @@ export function useCloudSettings(initialTheme: string) {
           customMusic: data.custom_music || undefined,
           customMusicName: data.custom_music_name || undefined,
           theme: data.theme || initialTheme,
+          cardStyle: {
+            borderRadius: data.card_border_radius ?? 16,
+            borderWidth: data.card_border_width ?? 4,
+            borderColor: data.card_border_color || "default",
+            backColor: data.card_back_color || "default",
+            backIcon: data.card_back_icon || "⭐",
+            shape: data.card_shape || "square",
+          },
         });
       }
       setLoaded(true);
@@ -68,7 +86,6 @@ export function useCloudSettings(initialTheme: string) {
     load();
   }, [initialTheme]);
 
-  // Save to cloud with debounce
   const saveToCloud = useCallback((newSettings: StoredSettings) => {
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(async () => {
@@ -84,6 +101,12 @@ export function useCloudSettings(initialTheme: string) {
         custom_music: newSettings.customMusic || null,
         custom_music_name: newSettings.customMusicName || null,
         theme: newSettings.theme || initialTheme,
+        card_border_radius: newSettings.cardStyle.borderRadius,
+        card_border_width: newSettings.cardStyle.borderWidth,
+        card_border_color: newSettings.cardStyle.borderColor,
+        card_back_color: newSettings.cardStyle.backColor,
+        card_back_icon: newSettings.cardStyle.backIcon,
+        card_shape: newSettings.cardStyle.shape,
         updated_at: new Date().toISOString(),
       }, { onConflict: "device_id" });
     }, 500);
@@ -92,6 +115,14 @@ export function useCloudSettings(initialTheme: string) {
   const updateSetting = useCallback(<K extends keyof StoredSettings>(key: K, value: StoredSettings[K]) => {
     setSettings((prev) => {
       const next = { ...prev, [key]: value };
+      saveToCloud(next);
+      return next;
+    });
+  }, [saveToCloud]);
+
+  const updateCardStyle = useCallback(<K extends keyof CardStyle>(key: K, value: CardStyle[K]) => {
+    setSettings((prev) => {
+      const next = { ...prev, cardStyle: { ...prev.cardStyle, [key]: value } };
       saveToCloud(next);
       return next;
     });
@@ -114,7 +145,8 @@ export function useCloudSettings(initialTheme: string) {
     musicType: settings.musicType,
     builtinMelodyId: settings.builtinMelodyId,
     customMusic: settings.customMusic,
+    cardStyle: settings.cardStyle,
   }), [settings]);
 
-  return { settings, loaded, updateSetting, updateMultiple, toGameSettings };
+  return { settings, loaded, updateSetting, updateCardStyle, updateMultiple, toGameSettings };
 }
