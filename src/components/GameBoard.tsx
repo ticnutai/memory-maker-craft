@@ -90,6 +90,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             <div key={card.uniqueId} className="bounce-in" style={{ animationDelay: `${i * 0.04}s` }}>
               <MemoryCard
                 emoji={card.emoji}
+                label={card.label}
                 image={card.image}
                 isFlipped={card.isFlipped}
                 isMatched={card.isMatched}
