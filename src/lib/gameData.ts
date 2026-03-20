@@ -6,7 +6,8 @@ export interface GameSettings {
   pairCount: number;
   cardSize: CardSize;
   soundEnabled: boolean;
-  flipDuration: number; // seconds cards stay open before closing
+  flipDuration: number;
+  customMusic?: string; // data URL of uploaded audio
 }
 
 export interface CardData {

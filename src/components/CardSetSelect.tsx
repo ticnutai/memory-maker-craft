@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ThemeType, CardData, CardSetType, CardSize, GameSettings } from "@/lib/gameData";
-import { Camera, Image, Upload, Volume2, VolumeX } from "lucide-react";
+import { Camera, Image, Upload, Volume2, VolumeX, Music, Trash2 } from "lucide-react";
 
 interface CardSetSelectProps {
   theme: ThemeType;
@@ -16,10 +16,13 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
   const [cardSize, setCardSize] = useState<CardSize>("medium");
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [flipDuration, setFlipDuration] = useState(1);
+  const [customMusic, setCustomMusic] = useState<string | undefined>();
+  const [customMusicName, setCustomMusicName] = useState<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLInputElement>(null);
 
   const accentBtn = theme === "girl" ? "game-pink" as const : "game-blue" as const;
-  const settings: GameSettings = { pairCount, cardSize, soundEnabled, flipDuration };
+  const settings: GameSettings = { pairCount, cardSize, soundEnabled, flipDuration, customMusic };
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -156,6 +159,48 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
           {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
           {soundEnabled ? "🔊 קולות פועלים" : "🔇 קולות כבויים"}
         </button>
+
+        {/* Custom music upload */}
+        <div>
+          <p className="font-bold text-sm mb-2">🎵 מוזיקת רקע</p>
+          {customMusic ? (
+            <div className="flex items-center gap-2 bg-muted rounded-xl px-3 py-2">
+              <Music className="w-4 h-4 text-accent shrink-0" />
+              <span className="text-xs font-medium truncate flex-1">{customMusicName}</span>
+              <button
+                onClick={() => { setCustomMusic(undefined); setCustomMusicName(""); }}
+                className="text-destructive hover:text-destructive/80 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => audioRef.current?.click()}
+              className="w-full h-11 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 bg-muted text-muted-foreground hover:bg-muted/80 border-2 border-dashed border-muted-foreground/30"
+            >
+              <Upload className="w-4 h-4" />
+              העלו MP3 / רינגטון
+            </button>
+          )}
+          <input
+            ref={audioRef}
+            type="file"
+            accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setCustomMusicName(file.name);
+              const reader = new FileReader();
+              reader.onload = (ev) => setCustomMusic(ev.target?.result as string);
+              reader.readAsDataURL(file);
+            }}
+            className="hidden"
+          />
+          <p className="text-[10px] text-muted-foreground mt-1 text-center">
+            MP3, WAV, M4A, רינגטונים ועוד
+          </p>
+        </div>
       </div>
 
       {/* Card type selection */}
