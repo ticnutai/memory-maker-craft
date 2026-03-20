@@ -266,7 +266,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
             {/* Background theme */}
             <div>
               <p className="font-bold text-sm mb-2">🎨 סגנון רקע</p>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-48 overflow-y-auto pr-1">
                 {getBgThemes().map((bg) => (
                   <button key={bg.id}
                     onClick={() => updateSetting("bgTheme" as any, bg.id)}
