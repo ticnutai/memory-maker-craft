@@ -17,7 +17,7 @@ interface CardSetSelectProps {
   onBack: () => void;
 }
 
-type TabId = "sets" | "gallery" | "music" | "cards";
+type TabId = "sets" | "gallery" | "music" | "cards" | "birthdays";
 
 const BACK_ICONS = ["⭐", "❓", "🎴", "🃏", "💫", "🌟", "🎯", "🔮", "🎪", "🎨"];
 const BACK_COLORS = [
