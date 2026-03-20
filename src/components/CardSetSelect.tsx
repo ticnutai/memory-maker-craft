@@ -15,12 +15,13 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
   const [customImages, setCustomImages] = useState<string[]>([]);
   const [showUpload, setShowUpload] = useState(false);
   const [showCloudGallery, setShowCloudGallery] = useState(false);
+  const [showCloudAudio, setShowCloudAudio] = useState(false);
   const [pairCount, setPairCount] = useState(4);
   const [cardMaxW, setCardMaxW] = useState(480);
   const [emojiScale, setEmojiScale] = useState(1);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [flipDuration, setFlipDuration] = useState(1);
-  const [musicType, setMusicType] = useState<"none" | "builtin" | "custom">("none");
+  const [musicType, setMusicType] = useState<"none" | "builtin" | "custom" | "cloud">("none");
   const [builtinMelodyId, setBuiltinMelodyId] = useState<string>("twinkle");
   const [customMusic, setCustomMusic] = useState<string | undefined>();
   const [customMusicName, setCustomMusicName] = useState<string>("");
@@ -184,6 +185,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
               { type: "none" as const, label: "ללא", emoji: "🔇" },
               { type: "builtin" as const, label: "שירים", emoji: "🎶" },
               { type: "custom" as const, label: "העלאה", emoji: "📁" },
+              { type: "cloud" as const, label: "ענן", emoji: "☁️" },
             ]).map((opt) => (
               <button
                 key={opt.type}
@@ -262,6 +264,35 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
               />
               <p className="text-[10px] text-muted-foreground text-center">
                 MP3, WAV, M4A, רינגטונים, שירים ועוד
+              </p>
+            </div>
+          )}
+
+          {/* Cloud music */}
+          {musicType === "cloud" && (
+            <div className="space-y-2">
+              {customMusic && customMusicName.startsWith("cloud:") ? (
+                <div className="flex items-center gap-2 bg-muted rounded-xl px-3 py-2.5">
+                  <Music className="w-4 h-4 text-accent shrink-0" />
+                  <span className="text-xs font-medium truncate flex-1">{customMusicName.replace("cloud:", "")}</span>
+                  <button
+                    onClick={() => { setCustomMusic(undefined); setCustomMusicName(""); }}
+                    className="text-destructive hover:text-destructive/80 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowCloudAudio(true)}
+                  className="w-full h-11 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 bg-muted text-muted-foreground hover:bg-muted/80 border-2 border-dashed border-muted-foreground/30"
+                >
+                  <Cloud className="w-4 h-4" />
+                  בחרו שיר מהענן
+                </button>
+              )}
+              <p className="text-[10px] text-muted-foreground text-center">
+                העלו ובחרו שירים, רינגטונים ומוזיקה מהענן
               </p>
             </div>
           )}
@@ -361,6 +392,21 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
             }));
             const cloudPairCount = Math.min(pairCount, cards.length);
             onSelectSet("custom", { ...settings, pairCount: cloudPairCount }, cards);
+          }}
+        />
+      )}
+
+      {showCloudAudio && (
+        <CloudGallery
+          theme={theme}
+          mode="audio"
+          onClose={() => setShowCloudAudio(false)}
+          onSelect={() => {}}
+          onSelectAudio={(url, name) => {
+            setShowCloudAudio(false);
+            setMusicType("cloud");
+            setCustomMusic(url);
+            setCustomMusicName(`cloud:${name}`);
           }}
         />
       )}

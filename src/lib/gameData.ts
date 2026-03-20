@@ -7,7 +7,7 @@ export interface GameSettings {
   emojiScale: number;
   soundEnabled: boolean;
   flipDuration: number;
-  musicType: "none" | "builtin" | "custom";
+  musicType: "none" | "builtin" | "custom" | "cloud";
   builtinMelodyId?: string;
   customMusic?: string;
 }

@@ -1,75 +1,124 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Upload, Trash2, Check, FolderUp, Image, Loader2, X } from "lucide-react";
+import { Upload, Trash2, Check, FolderUp, Image, Loader2, X, Music, FileArchive, Play, Pause } from "lucide-react";
 import { toast } from "sonner";
+import JSZip from "jszip";
 
 interface CloudGalleryProps {
   onSelect: (urls: string[]) => void;
   onClose: () => void;
   theme: "girl" | "boy";
+  mode?: "images" | "audio";
+  onSelectAudio?: (url: string, name: string) => void;
 }
 
-const BUCKET = "game-images";
-const ACCEPTED = "image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/bmp,image/tiff";
+const IMG_BUCKET = "game-images";
+const AUDIO_BUCKET = "game-audio";
+const IMG_ACCEPTED = "image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/bmp,image/tiff,.zip";
+const AUDIO_ACCEPTED = "audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/aac,audio/m4a,audio/x-m4a,.mp3,.wav,.ogg,.m4a,.aac,.zip";
 
-export default function CloudGallery({ onSelect, onClose, theme }: CloudGalleryProps) {
-  const [images, setImages] = useState<{ name: string; url: string }[]>([]);
+const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "tiff"]);
+const AUDIO_EXTS = new Set(["mp3", "wav", "ogg", "m4a", "aac", "flac", "wma"]);
+
+export default function CloudGallery({ onSelect, onClose, theme, mode = "images", onSelectAudio }: CloudGalleryProps) {
+  const [items, setItems] = useState<{ name: string; url: string }[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [playingUrl, setPlayingUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const folderRef = useRef<HTMLInputElement>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+
+  const isAudio = mode === "audio";
+  const bucket = isAudio ? AUDIO_BUCKET : IMG_BUCKET;
+  const accepted = isAudio ? AUDIO_ACCEPTED : IMG_ACCEPTED;
+  const validExts = isAudio ? AUDIO_EXTS : IMAGE_EXTS;
 
   const accent = theme === "girl" ? "bg-game-pink" : "bg-game-blue";
   const accentBorder = theme === "girl" ? "border-game-pink" : "border-game-blue";
-  const accentText = theme === "girl" ? "text-game-pink" : "text-game-blue";
 
-  const loadImages = useCallback(async () => {
+  const loadItems = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.storage.from(BUCKET).list("", {
+    const { data, error } = await supabase.storage.from(bucket).list("", {
       limit: 200,
       sortBy: { column: "created_at", order: "desc" },
     });
     if (error) {
-      toast.error("שגיאה בטעינת תמונות");
+      toast.error("שגיאה בטעינה");
       setLoading(false);
       return;
     }
-    const imgs = (data || [])
+    const results = (data || [])
       .filter((f) => f.name && !f.name.startsWith("."))
       .map((f) => ({
         name: f.name,
-        url: supabase.storage.from(BUCKET).getPublicUrl(f.name).data.publicUrl,
+        url: supabase.storage.from(bucket).getPublicUrl(f.name).data.publicUrl,
       }));
-    setImages(imgs);
+    setItems(results);
     setLoading(false);
-  }, []);
+  }, [bucket]);
 
-  useEffect(() => { loadImages(); }, [loadImages]);
+  useEffect(() => { loadItems(); }, [loadItems]);
+
+  const extractZip = async (file: File): Promise<File[]> => {
+    const zip = await JSZip.loadAsync(file);
+    const extracted: File[] = [];
+    const entries = Object.entries(zip.files);
+    for (const [path, entry] of entries) {
+      if (entry.dir) continue;
+      const ext = path.split(".").pop()?.toLowerCase() || "";
+      if (!validExts.has(ext)) continue;
+      const blob = await entry.async("blob");
+      const name = path.split("/").pop() || `file.${ext}`;
+      extracted.push(new File([blob], name, { type: blob.type || (isAudio ? "audio/mpeg" : "image/jpeg") }));
+    }
+    return extracted;
+  };
 
   const uploadFiles = async (files: FileList | File[]) => {
-    const fileArray = Array.from(files).filter((f) =>
-      f.type.startsWith("image/") || f.name.endsWith(".gif") || f.name.endsWith(".svg")
-    );
-    if (fileArray.length === 0) {
-      toast.error("לא נמצאו קבצי תמונה");
+    setUploading(true);
+    let allFiles: File[] = [];
+
+    for (const file of Array.from(files)) {
+      if (file.name.toLowerCase().endsWith(".zip")) {
+        try {
+          const extracted = await extractZip(file);
+          allFiles.push(...extracted);
+          if (extracted.length > 0) {
+            toast.info(`חולצו ${extracted.length} קבצים מ-${file.name}`);
+          }
+        } catch {
+          toast.error(`שגיאה בפתיחת ${file.name}`);
+        }
+      } else {
+        const ext = file.name.split(".").pop()?.toLowerCase() || "";
+        if (validExts.has(ext) || (isAudio && file.type.startsWith("audio/")) || (!isAudio && file.type.startsWith("image/"))) {
+          allFiles.push(file);
+        }
+      }
+    }
+
+    if (allFiles.length === 0) {
+      toast.error(isAudio ? "לא נמצאו קבצי שמע" : "לא נמצאו קבצי תמונה");
+      setUploading(false);
       return;
     }
-    setUploading(true);
+
     let uploaded = 0;
-    for (const file of fileArray) {
-      const ext = file.name.split(".").pop() || "jpg";
+    for (const file of allFiles) {
+      const ext = file.name.split(".").pop() || (isAudio ? "mp3" : "jpg");
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error } = await supabase.storage.from(BUCKET).upload(fileName, file, {
+      const { error } = await supabase.storage.from(bucket).upload(fileName, file, {
         contentType: file.type,
         cacheControl: "3600",
       });
       if (!error) uploaded++;
     }
-    toast.success(`הועלו ${uploaded} תמונות בהצלחה!`);
+    toast.success(`הועלו ${uploaded} קבצים בהצלחה!`);
     setUploading(false);
-    loadImages();
+    loadItems();
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,6 +127,11 @@ export default function CloudGallery({ onSelect, onClose, theme }: CloudGalleryP
   };
 
   const toggleSelect = (url: string) => {
+    if (isAudio) {
+      // For audio, single select
+      setSelected(new Set([url]));
+      return;
+    }
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(url)) next.delete(url);
@@ -87,28 +141,50 @@ export default function CloudGallery({ onSelect, onClose, theme }: CloudGalleryP
     });
   };
 
-  const deleteImage = async (name: string) => {
-    const { error } = await supabase.storage.from(BUCKET).remove([name]);
+  const deleteItem = async (name: string) => {
+    const { error } = await supabase.storage.from(bucket).remove([name]);
     if (error) toast.error("שגיאה במחיקה");
     else {
       toast.success("נמחק!");
       setSelected((prev) => {
         const next = new Set(prev);
-        const url = images.find((i) => i.name === name)?.url;
+        const url = items.find((i) => i.name === name)?.url;
         if (url) next.delete(url);
         return next;
       });
-      loadImages();
+      loadItems();
+    }
+  };
+
+  const togglePlay = (url: string) => {
+    if (playingUrl === url) {
+      audioPlayerRef.current?.pause();
+      setPlayingUrl(null);
+    } else {
+      if (audioPlayerRef.current) audioPlayerRef.current.pause();
+      const audio = new Audio(url);
+      audio.onended = () => setPlayingUrl(null);
+      audio.play();
+      audioPlayerRef.current = audio;
+      setPlayingUrl(url);
     }
   };
 
   const confirmSelection = () => {
-    if (selected.size < 2) {
-      toast.error("בחרו לפחות 2 תמונות");
+    if (isAudio) {
+      const url = Array.from(selected)[0];
+      if (!url) { toast.error("בחרו קובץ שמע"); return; }
+      const item = items.find((i) => i.url === url);
+      onSelectAudio?.(url, item?.name || "שיר מהענן");
       return;
     }
+    if (selected.size < 2) { toast.error("בחרו לפחות 2 תמונות"); return; }
     onSelect(Array.from(selected));
   };
+
+  useEffect(() => {
+    return () => { audioPlayerRef.current?.pause(); };
+  }, []);
 
   return (
     <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" dir="rtl">
@@ -116,8 +192,8 @@ export default function CloudGallery({ onSelect, onClose, theme }: CloudGalleryP
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-muted">
           <h3 className="text-xl font-black flex items-center gap-2">
-            <Image className="w-5 h-5" />
-            גלריית תמונות ענן ☁️
+            {isAudio ? <Music className="w-5 h-5" /> : <Image className="w-5 h-5" />}
+            {isAudio ? "🎵 מוזיקה מהענן" : "☁️ גלריית תמונות ענן"}
           </h3>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
@@ -142,11 +218,11 @@ export default function CloudGallery({ onSelect, onClose, theme }: CloudGalleryP
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FolderUp className="w-4 h-4" />}
             העלאת תיקייה
           </button>
-          <input ref={fileRef} type="file" accept={ACCEPTED} multiple onChange={handleFileChange} className="hidden" />
+          <input ref={fileRef} type="file" accept={accepted} multiple onChange={handleFileChange} className="hidden" />
           <input
             ref={folderRef}
             type="file"
-            accept={ACCEPTED}
+            accept={accepted}
             onChange={handleFileChange}
             className="hidden"
             {...({ webkitdirectory: "", directory: "", multiple: true } as any)}
@@ -154,24 +230,61 @@ export default function CloudGallery({ onSelect, onClose, theme }: CloudGalleryP
         </div>
 
         <p className="text-[10px] text-muted-foreground text-center py-1">
-          JPG, PNG, GIF, WebP, SVG, BMP • מינימום 2, מקסימום 8
+          {isAudio
+            ? "MP3, WAV, M4A, OGG, AAC, ZIP • בחרו שיר אחד"
+            : "JPG, PNG, GIF, WebP, SVG, BMP, ZIP • מינימום 2, מקסימום 8"}
         </p>
 
-        {/* Gallery grid */}
+        {/* Gallery / List */}
         <div className="flex-1 overflow-y-auto px-5 py-3">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
-          ) : images.length === 0 ? (
+          ) : items.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <Image className="w-12 h-12 mx-auto mb-3 opacity-40" />
-              <p className="font-bold">אין עדיין תמונות</p>
-              <p className="text-xs mt-1">העלו תמונות כדי להתחיל!</p>
+              {isAudio ? <Music className="w-12 h-12 mx-auto mb-3 opacity-40" /> : <Image className="w-12 h-12 mx-auto mb-3 opacity-40" />}
+              <p className="font-bold">{isAudio ? "אין עדיין שירים" : "אין עדיין תמונות"}</p>
+              <p className="text-xs mt-1">העלו קבצים כדי להתחיל!</p>
+            </div>
+          ) : isAudio ? (
+            <div className="space-y-2">
+              {items.map((item) => {
+                const isSelected = selected.has(item.url);
+                const isPlaying = playingUrl === item.url;
+                return (
+                  <div
+                    key={item.name}
+                    onClick={() => toggleSelect(item.url)}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl border-2 cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.98] ${
+                      isSelected ? `${accentBorder} shadow-md` : "border-muted hover:border-muted-foreground/40"
+                    }`}
+                  >
+                    <button
+                      onClick={(e) => { e.stopPropagation(); togglePlay(item.url); }}
+                      className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors ${accent} text-primary-foreground`}
+                    >
+                      {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    </button>
+                    <span className="text-sm font-medium truncate flex-1">{item.name}</span>
+                    {isSelected && (
+                      <div className={`w-6 h-6 ${accent} rounded-full flex items-center justify-center`}>
+                        <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                      </div>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteItem(item.name); }}
+                      className="text-destructive hover:text-destructive/80 transition-colors shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {images.map((img) => {
+              {items.map((img) => {
                 const isSelected = selected.has(img.url);
                 return (
                   <div
@@ -188,7 +301,7 @@ export default function CloudGallery({ onSelect, onClose, theme }: CloudGalleryP
                       </div>
                     )}
                     <button
-                      onClick={(e) => { e.stopPropagation(); deleteImage(img.name); }}
+                      onClick={(e) => { e.stopPropagation(); deleteItem(img.name); }}
                       className="absolute top-1.5 left-1.5 w-6 h-6 bg-destructive rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <Trash2 className="w-3 h-3 text-destructive-foreground" />
@@ -202,15 +315,13 @@ export default function CloudGallery({ onSelect, onClose, theme }: CloudGalleryP
 
         {/* Footer */}
         <div className="px-5 py-4 border-t border-muted flex gap-2">
-          <Button variant="ghost" onClick={onClose} className="flex-1">
-            ביטול
-          </Button>
+          <Button variant="ghost" onClick={onClose} className="flex-1">ביטול</Button>
           <button
             onClick={confirmSelection}
-            disabled={selected.size < 2}
+            disabled={isAudio ? selected.size === 0 : selected.size < 2}
             className={`flex-1 h-11 rounded-xl font-bold text-sm transition-all active:scale-95 ${accent} text-primary-foreground shadow-md hover:opacity-90 disabled:opacity-50`}
           >
-            🎮 התחלה עם {selected.size} תמונות
+            {isAudio ? `🎵 בחירת שיר` : `🎮 התחלה עם ${selected.size} תמונות`}
           </button>
         </div>
       </div>
