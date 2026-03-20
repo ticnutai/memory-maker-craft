@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           builtin_melody_id: string | null
           card_back_color: string
+          card_back_color_2: string | null
           card_back_icon: string
           card_border_color: string
           card_border_radius: number
@@ -40,6 +41,7 @@ export type Database = {
         Insert: {
           builtin_melody_id?: string | null
           card_back_color?: string
+          card_back_color_2?: string | null
           card_back_icon?: string
           card_border_color?: string
           card_border_radius?: number
@@ -62,6 +64,7 @@ export type Database = {
         Update: {
           builtin_melody_id?: string | null
           card_back_color?: string
+          card_back_color_2?: string | null
           card_back_icon?: string
           card_border_color?: string
           card_border_radius?: number
