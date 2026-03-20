@@ -10,12 +10,14 @@ import { RotateCcw, Home, Music, VolumeX } from "lucide-react";
 interface GameBoardProps {
   theme: ThemeType;
   settings: GameSettings;
+  cardSetType: CardSetType;
   customCards?: CardData[];
   onHome: () => void;
 }
 
-export default function GameBoard({ theme, settings, customCards, onHome }: GameBoardProps) {
-  const cardData = customCards || (theme === "girl" ? GIRL_ANIMALS : BOY_ANIMALS);
+export default function GameBoard({ theme, settings, cardSetType, customCards, onHome }: GameBoardProps) {
+  const setInfo = getCardSets(theme).find((s) => s.type === cardSetType);
+  const cardData = customCards || setInfo?.cards || getCardSets(theme)[0].cards;
   const pairCount = Math.min(settings.pairCount, cardData.length);
   const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, settings.soundEnabled, settings.flipDuration);
   const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(settings.customMusic);
