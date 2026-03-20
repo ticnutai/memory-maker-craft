@@ -14,7 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      game_settings: {
+        Row: {
+          builtin_melody_id: string | null
+          card_max_w: number
+          created_at: string
+          custom_music: string | null
+          custom_music_name: string | null
+          device_id: string
+          emoji_scale: number
+          flip_duration: number
+          id: string
+          music_type: string
+          pair_count: number
+          sound_enabled: boolean
+          theme: string | null
+          updated_at: string
+        }
+        Insert: {
+          builtin_melody_id?: string | null
+          card_max_w?: number
+          created_at?: string
+          custom_music?: string | null
+          custom_music_name?: string | null
+          device_id: string
+          emoji_scale?: number
+          flip_duration?: number
+          id?: string
+          music_type?: string
+          pair_count?: number
+          sound_enabled?: boolean
+          theme?: string | null
+          updated_at?: string
+        }
+        Update: {
+          builtin_melody_id?: string | null
+          card_max_w?: number
+          created_at?: string
+          custom_music?: string | null
+          custom_music_name?: string | null
+          device_id?: string
+          emoji_scale?: number
+          flip_duration?: number
+          id?: string
+          music_type?: string
+          pair_count?: number
+          sound_enabled?: boolean
+          theme?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
