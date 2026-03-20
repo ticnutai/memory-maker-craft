@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import CloudGallery from "@/components/CloudGallery";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
+import { getBgThemes, BgThemeId } from "@/components/ThemeBackground";
 
 interface CardSetSelectProps {
   theme: ThemeType;
