@@ -203,29 +203,27 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
         </div>
       </div>
 
-      {/* Card type selection */}
-      <div className="flex flex-col gap-3 w-full max-w-sm">
-        <Button
-          variant={accentBtn}
-          size="lg"
-          className="text-xl gap-3 bounce-in"
-          style={{ animationDelay: "0.1s" }}
-          onClick={() => onSelectSet("animals", settings)}
-        >
-          <Image className="w-6 h-6" />
-          🐾 חיות
-        </Button>
-
-        <Button
-          variant="game-orange"
-          size="lg"
-          className="text-xl gap-3 bounce-in"
-          style={{ animationDelay: "0.2s" }}
+      {/* Card set selection grid */}
+      <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+        {getCardSets(theme).map((set, i) => (
+          <button
+            key={set.type}
+            onClick={() => onSelectSet(set.type, settings)}
+            className={`bg-gradient-to-br ${set.color} rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground`}
+            style={{ animationDelay: `${0.1 + i * 0.08}s` }}
+          >
+            <span className="text-4xl drop-shadow-sm">{set.emoji}</span>
+            <span className="font-bold text-sm">{set.label}</span>
+          </button>
+        ))}
+        <button
           onClick={() => setShowUpload(true)}
+          className="bg-gradient-to-br from-game-orange to-amber-500 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground col-span-2"
+          style={{ animationDelay: "0.5s" }}
         >
-          <Camera className="w-6 h-6" />
-          📸 תמונות אישיות
-        </Button>
+          <span className="text-4xl drop-shadow-sm">📸</span>
+          <span className="font-bold text-sm">תמונות אישיות / GIF</span>
+        </button>
       </div>
 
       {showUpload && (
