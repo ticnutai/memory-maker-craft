@@ -93,25 +93,37 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
           </div>
         </div>
 
-        {/* Card size */}
+        {/* Card size slider */}
         <div>
-          <p className="font-bold text-sm mb-2">📐 גודל קלפים</p>
-          <div className="flex gap-2">
-            {sizeOptions.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setCardSize(opt.value)}
-                className={`flex-1 h-11 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-1 ${
-                  cardSize === opt.value
-                    ? theme === "girl"
-                      ? "bg-game-pink text-primary-foreground shadow-md"
-                      : "bg-game-blue text-secondary-foreground shadow-md"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                {opt.emoji} {opt.label}
-              </button>
-            ))}
+          <div className="flex justify-between items-center mb-2">
+            <p className="font-bold text-sm">📐 גודל קלפים</p>
+            <span className="text-xs text-muted-foreground">{cardMaxW}px</span>
+          </div>
+          <input
+            type="range" min={280} max={700} step={20}
+            value={cardMaxW}
+            onChange={(e) => setCardMaxW(Number(e.target.value))}
+            className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`}
+          />
+          <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+            <span>קטן</span><span>גדול</span>
+          </div>
+        </div>
+
+        {/* Emoji scale slider */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <p className="font-bold text-sm">🔤 גודל אלמנט</p>
+            <span className="text-xs text-muted-foreground">×{emojiScale.toFixed(1)}</span>
+          </div>
+          <input
+            type="range" min={0.5} max={2} step={0.1}
+            value={emojiScale}
+            onChange={(e) => setEmojiScale(Number(e.target.value))}
+            className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`}
+          />
+          <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+            <span>קטן</span><span>גדול</span>
           </div>
         </div>
 
