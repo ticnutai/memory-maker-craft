@@ -21,6 +21,7 @@ export interface GameSettings {
   builtinMelodyId?: string;
   customMusic?: string;
   cardStyle: CardStyle;
+  bgTheme?: string;
 }
 
 export interface CardData {

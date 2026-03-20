@@ -32,6 +32,7 @@ export interface StoredSettings {
   customMusic?: string;
   customMusicName?: string;
   theme?: string;
+  bgTheme?: string;
   cardStyle: CardStyle;
 }
 
@@ -71,6 +72,7 @@ export function useCloudSettings(initialTheme: string) {
           customMusic: data.custom_music || undefined,
           customMusicName: data.custom_music_name || undefined,
           theme: data.theme || initialTheme,
+          bgTheme: (data as any).bg_theme || "default",
           cardStyle: {
             borderRadius: data.card_border_radius ?? 16,
             borderWidth: data.card_border_width ?? 4,
@@ -102,6 +104,7 @@ export function useCloudSettings(initialTheme: string) {
         custom_music: newSettings.customMusic || null,
         custom_music_name: newSettings.customMusicName || null,
         theme: newSettings.theme || initialTheme,
+        bg_theme: newSettings.bgTheme || "default",
         card_border_radius: newSettings.cardStyle.borderRadius,
         card_border_width: newSettings.cardStyle.borderWidth,
         card_border_color: newSettings.cardStyle.borderColor,
@@ -148,6 +151,7 @@ export function useCloudSettings(initialTheme: string) {
     builtinMelodyId: settings.builtinMelodyId,
     customMusic: settings.customMusic,
     cardStyle: settings.cardStyle,
+    bgTheme: settings.bgTheme,
   }), [settings]);
 
   return { settings, loaded, updateSetting, updateCardStyle, updateMultiple, toGameSettings };

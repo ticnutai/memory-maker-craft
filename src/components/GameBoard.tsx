@@ -4,6 +4,8 @@ import { ThemeType, CardData, GameSettings, CardSetType, getCardSets } from "@/l
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import MemoryCard from "@/components/MemoryCard";
 import Confetti from "@/components/Confetti";
+import ThemeBackground from "@/components/ThemeBackground";
+import { BgThemeId } from "@/components/ThemeBackground";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { RotateCcw, Home, Music, VolumeX } from "lucide-react";
@@ -44,9 +46,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   else if (totalCards <= 12) gridCols = "grid-cols-3 sm:grid-cols-4";
   else gridCols = "grid-cols-4";
 
-  const bgClass = theme === "girl"
-    ? "from-game-pink/10 to-background"
-    : "from-game-blue/10 to-background";
+  const bgThemeId = (settings.bgTheme || "default") as BgThemeId;
 
   // Stars for matched pairs
   const stars = Array.from({ length: matchedCount }, (_, i) => (
@@ -54,7 +54,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   ));
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b ${bgClass} flex flex-col`} dir="rtl">
+    <div dir="rtl">
+    <ThemeBackground themeId={bgThemeId} girlTheme={theme === "girl"} className="flex flex-col" >
       <Confetti active={isGameOver} />
 
       {/* Header */}
@@ -139,6 +140,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
           </div>
         </div>
       )}
+    </ThemeBackground>
     </div>
   );
 }

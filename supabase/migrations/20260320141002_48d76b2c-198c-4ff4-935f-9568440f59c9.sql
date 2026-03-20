@@ -1,0 +1,1 @@
+ALTER TABLE public.game_settings ADD COLUMN IF NOT EXISTS bg_theme text DEFAULT 'default';

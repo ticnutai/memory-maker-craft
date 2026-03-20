@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       game_settings: {
         Row: {
+          bg_theme: string | null
           builtin_melody_id: string | null
           card_back_color: string
           card_back_color_2: string | null
@@ -39,6 +40,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bg_theme?: string | null
           builtin_melody_id?: string | null
           card_back_color?: string
           card_back_color_2?: string | null
@@ -62,6 +64,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bg_theme?: string | null
           builtin_melody_id?: string | null
           card_back_color?: string
           card_back_color_2?: string | null
