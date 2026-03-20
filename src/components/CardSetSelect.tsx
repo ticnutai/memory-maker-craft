@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import BirthdayManager from "@/components/BirthdayManager";
 import CloudGallery from "@/components/CloudGallery";
+import CustomCardSets from "@/components/CustomCardSets";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { getBgThemes, BgThemeId } from "@/components/ThemeBackground";
 
@@ -316,6 +317,18 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
                   <span className="font-bold text-sm">{set.label}</span>
                 </button>
               ))}
+            </div>
+
+            {/* Custom card sets */}
+            <div className="mt-4">
+              <p className="font-bold text-sm mb-2 text-center">🎴 ערכות מותאמות אישית</p>
+              <CustomCardSets
+                theme={theme}
+                onPlay={(cards, name) => {
+                  const customPairCount = Math.min(settings.pairCount, cards.length);
+                  onSelectSet("custom", { ...settings, pairCount: customPairCount }, cards);
+                }}
+              />
             </div>
           </div>
         )}
