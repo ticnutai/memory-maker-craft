@@ -1,4 +1,5 @@
 import { ThemeType, CardStyle } from "@/lib/gameData";
+import { useState } from "react";
 
 function isHexColor(s: string): boolean {
   return /^#[0-9a-fA-F]{6,8}$/.test(s);
@@ -17,6 +18,15 @@ interface MemoryCardProps {
 }
 
 export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, theme, emojiScale, cardStyle, onClick }: MemoryCardProps) {
+  const [justMatched, setJustMatched] = useState(false);
+
+  // Detect match transition
+  const prevMatchedRef = { current: isMatched };
+  if (isMatched && !justMatched) {
+    setJustMatched(true);
+    setTimeout(() => setJustMatched(false), 800);
+  }
+
   // Resolve border color
   const BORDER_PRESETS: Record<string, string> = {
     white: "#ffffff", black: "#1a1a2e", gold: "#d4a574",
@@ -48,7 +58,6 @@ export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, 
       return { backgroundColor: c1 };
     }
 
-    // Fallback to preset Tailwind classes handled via className
     return {};
   };
 
@@ -75,46 +84,64 @@ export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, 
     borderRadius: `${cardStyle.borderRadius}px`,
     borderWidth: `${cardStyle.borderWidth}px`,
     borderStyle: "solid",
-    borderColor: borderColor,
+    borderColor: isMatched ? "hsl(var(--accent))" : borderColor,
   };
 
   return (
     <button
       onClick={onClick}
       disabled={isFlipped || isMatched}
-      className={`card-flip w-full aspect-square ${isMatched ? "matched-card" : ""}`}
+      className={`card-flip w-full aspect-square group ${isMatched ? "matched-card" : ""} ${justMatched ? "sparkle-burst" : ""}`}
       aria-label={isFlipped ? (label || emoji) : "קלף הפוך"}
     >
       <div className={`card-flip-inner w-full h-full relative ${isFlipped ? "flipped" : ""}`}>
+        {/* Front (back of card) */}
         <div
-          className={`card-face ${backColorClass} flex items-center justify-center shadow-lg cursor-pointer hover:brightness-110 hover:scale-[1.03] transition-all duration-200`}
-          style={{ ...borderStyle, ...backStyle }}
+          className={`card-face ${backColorClass} flex items-center justify-center shadow-lg cursor-pointer card-hover-effect`}
+          style={{ ...borderStyle, borderColor: borderColor, ...backStyle }}
         >
-          <span className="text-3xl sm:text-4xl opacity-80 drop-shadow-sm">{cardStyle.backIcon}</span>
+          <span className="text-3xl sm:text-4xl opacity-80 drop-shadow-sm back-icon-pulse">{cardStyle.backIcon}</span>
         </div>
+        {/* Back (card face with emoji) */}
         <div
-          className={`card-face card-face-back bg-card flex flex-col items-center justify-center shadow-lg transition-colors duration-300 ${isMatched ? "bg-accent/5" : ""}`}
-          style={{
-            ...borderStyle,
-            borderColor: isMatched ? "hsl(var(--accent))" : borderColor,
-          }}
+          className={`card-face card-face-back bg-card flex flex-col items-center justify-center shadow-lg transition-colors duration-300 ${isMatched ? "bg-accent/5 matched-glow" : ""}`}
+          style={borderStyle}
         >
           {image ? (
             <img src={image} alt="" className="w-full h-full object-cover" style={{ borderRadius: `${Math.max(0, cardStyle.borderRadius - cardStyle.borderWidth)}px` }} />
           ) : isLetter ? (
             <div className="flex flex-col items-center gap-0.5">
-              <span className="select-none font-black" style={{ fontSize: `${fontSize}rem`, lineHeight: 1.1 }}>
+              <span className={`select-none font-black ${isFlipped && !isMatched ? "emoji-reveal" : ""}`} style={{ fontSize: `${fontSize}rem`, lineHeight: 1.1 }}>
                 {emoji}
               </span>
               {label && <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">{label}</span>}
             </div>
           ) : (
-            <span className="select-none drop-shadow-sm" style={{ fontSize: `${fontSize}rem`, lineHeight: 1.1 }}>
+            <span className={`select-none drop-shadow-sm ${isFlipped && !isMatched ? "emoji-reveal" : ""}`} style={{ fontSize: `${fontSize}rem`, lineHeight: 1.1 }}>
               {emoji}
             </span>
           )}
           {isMatched && (
-            <span className="absolute bottom-1 left-1 text-lg opacity-60 pointer-events-none">✓</span>
+            <span className="absolute bottom-1 left-1 text-lg opacity-60 pointer-events-none match-checkmark">✓</span>
+          )}
+          {/* Sparkle particles on match */}
+          {justMatched && (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ borderRadius: `${cardStyle.borderRadius}px` }}>
+              {[...Array(8)].map((_, i) => (
+                <span
+                  key={i}
+                  className="absolute sparkle-particle"
+                  style={{
+                    left: `${10 + (i * 11) % 80}%`,
+                    top: `${10 + (i * 13) % 80}%`,
+                    animationDelay: `${i * 0.06}s`,
+                    fontSize: `${10 + (i % 3) * 4}px`,
+                  }}
+                >
+                  {["✨", "⭐", "💫", "🌟"][i % 4]}
+                </span>
+              ))}
+            </div>
           )}
         </div>
       </div>
