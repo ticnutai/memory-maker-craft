@@ -308,6 +308,13 @@ export default function CloudGallery({ onSelect, onClose, theme, mode = "images"
                     >
                       <Trash2 className="w-3 h-3 text-destructive-foreground" />
                     </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCropImage({ url: img.url, name: img.name }); }}
+                      className="absolute bottom-1.5 left-1.5 w-6 h-6 bg-foreground/80 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="חיתוך והתאמה"
+                    >
+                      <Crop className="w-3 h-3 text-background" />
+                    </button>
                   </div>
                 );
               })}
