@@ -23,6 +23,7 @@ const Index = () => {
       borderWidth: 4,
       borderColor: "default",
       backColor: "default",
+      backColor2: undefined,
       backIcon: "⭐",
       shape: "square",
     },

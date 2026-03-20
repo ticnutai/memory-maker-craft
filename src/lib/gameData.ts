@@ -6,6 +6,7 @@ export interface CardStyle {
   borderWidth: number;
   borderColor: string;
   backColor: string;
+  backColor2?: string;
   backIcon: string;
   shape: string;
 }

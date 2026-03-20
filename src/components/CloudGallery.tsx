@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Upload, Trash2, Check, FolderUp, Image, Loader2, X, Music, FileArchive, Play, Pause } from "lucide-react";
+import { Upload, Trash2, Check, FolderUp, Image, Loader2, X, Music, FileArchive, Play, Pause, Crop } from "lucide-react";
 import { toast } from "sonner";
 import JSZip from "jszip";
+import ImageCropModal from "@/components/ImageCropModal";
 
 interface CloudGalleryProps {
   onSelect: (urls: string[]) => void;
@@ -26,6 +27,7 @@ export default function CloudGallery({ onSelect, onClose, theme, mode = "images"
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [cropImage, setCropImage] = useState<{ url: string; name: string } | null>(null);
   const [playingUrl, setPlayingUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const folderRef = useRef<HTMLInputElement>(null);
@@ -306,6 +308,13 @@ export default function CloudGallery({ onSelect, onClose, theme, mode = "images"
                     >
                       <Trash2 className="w-3 h-3 text-destructive-foreground" />
                     </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCropImage({ url: img.url, name: img.name }); }}
+                      className="absolute bottom-1.5 left-1.5 w-6 h-6 bg-foreground/80 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="חיתוך והתאמה"
+                    >
+                      <Crop className="w-3 h-3 text-background" />
+                    </button>
                   </div>
                 );
               })}
@@ -325,6 +334,32 @@ export default function CloudGallery({ onSelect, onClose, theme, mode = "images"
           </button>
         </div>
       </div>
+
+      {/* Crop Modal */}
+      {cropImage && !isAudio && (
+        <ImageCropModal
+          imageUrl={cropImage.url}
+          theme={theme}
+          onClose={() => setCropImage(null)}
+          onSave={async (croppedDataUrl) => {
+            // Upload cropped image as new file
+            const res = await fetch(croppedDataUrl);
+            const blob = await res.blob();
+            const fileName = `cropped-${Date.now()}.jpg`;
+            const { error } = await supabase.storage.from(bucket).upload(fileName, blob, {
+              contentType: "image/jpeg",
+              cacheControl: "3600",
+            });
+            if (error) {
+              toast.error("שגיאה בשמירת התמונה החתוכה");
+            } else {
+              toast.success("התמונה החתוכה נשמרה!");
+              loadItems();
+            }
+            setCropImage(null);
+          }}
+        />
+      )}
     </div>
   );
 }
