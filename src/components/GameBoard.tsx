@@ -22,7 +22,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const setInfo = getCardSets(theme).find((s) => s.type === cardSetType);
   const cardData = customCards || setInfo?.cards || getCardSets(theme)[0].cards;
   const pairCount = Math.min(settings.pairCount, cardData.length);
-  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, settings.soundEnabled, settings.speechEnabled, settings.flipDuration);
+  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, settings.soundEnabled, settings.speechEnabled, settings.flipDuration, settings.speechRate);
   const activeMelody = settings.musicType === "builtin"
     ? BUILT_IN_MELODIES.find((m) => m.id === settings.builtinMelodyId)
     : undefined;
