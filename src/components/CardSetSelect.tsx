@@ -267,6 +267,35 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
               </p>
             </div>
           )}
+
+          {/* Cloud music */}
+          {musicType === "cloud" && (
+            <div className="space-y-2">
+              {customMusic && customMusicName.startsWith("cloud:") ? (
+                <div className="flex items-center gap-2 bg-muted rounded-xl px-3 py-2.5">
+                  <Music className="w-4 h-4 text-accent shrink-0" />
+                  <span className="text-xs font-medium truncate flex-1">{customMusicName.replace("cloud:", "")}</span>
+                  <button
+                    onClick={() => { setCustomMusic(undefined); setCustomMusicName(""); }}
+                    className="text-destructive hover:text-destructive/80 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowCloudAudio(true)}
+                  className="w-full h-11 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 bg-muted text-muted-foreground hover:bg-muted/80 border-2 border-dashed border-muted-foreground/30"
+                >
+                  <Cloud className="w-4 h-4" />
+                  בחרו שיר מהענן
+                </button>
+              )}
+              <p className="text-[10px] text-muted-foreground text-center">
+                העלו ובחרו שירים, רינגטונים ומוזיקה מהענן
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
