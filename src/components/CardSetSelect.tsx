@@ -115,6 +115,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
     { id: "gallery", label: "גלריה", icon: <Image className="w-4 h-4" /> },
     { id: "music", label: "מוזיקה", icon: <Music className="w-4 h-4" /> },
     { id: "cards", label: "קלפים", icon: <Palette className="w-4 h-4" /> },
+    { id: "birthdays", label: "ימי הולדת", icon: <Cake className="w-4 h-4" /> },
   ];
 
   // Card preview for the cards tab
