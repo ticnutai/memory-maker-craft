@@ -52,9 +52,19 @@ export default function GameBoard({ theme, settings, customCards, onHome }: Game
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm">
-        <Button variant="ghost" size="sm" onClick={onHome}>
-          <Home className="w-5 h-5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => { stopMusic(); onHome(); }}>
+            <Home className="w-5 h-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleMusic}
+            className={musicPlaying ? "text-accent" : "text-muted-foreground"}
+          >
+            {musicPlaying ? <Music className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </Button>
+        </div>
         <div className="flex items-center gap-3 text-sm font-bold">
           <span>🎯 {matchedCount}/{pairCount}</span>
           <span>🔄 {moves}</span>
