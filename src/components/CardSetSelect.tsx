@@ -125,7 +125,15 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen gap-4 px-4 py-6 overflow-y-auto" dir="rtl">
+    <div
+      className="flex flex-col items-center min-h-screen gap-4 px-4 py-6 overflow-y-auto relative"
+      dir="rtl"
+      style={{
+        background: theme === "girl"
+          ? "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 30%, #f3e5f5 60%, #fff9c4 100%)"
+          : "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 30%, #e8eaf6 60%, #e0f7fa 100%)",
+      }}
+    >
       <Button variant="ghost" onClick={onBack} className="self-start text-muted-foreground">
         → חזרה
       </Button>
