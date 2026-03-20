@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import BirthdayManager from "@/components/BirthdayManager";
 import CloudGallery from "@/components/CloudGallery";
+import CustomCardSets from "@/components/CustomCardSets";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { getBgThemes, BgThemeId } from "@/components/ThemeBackground";
 
