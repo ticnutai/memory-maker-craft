@@ -76,6 +76,7 @@ export function useCloudSettings(initialTheme: string) {
             borderWidth: data.card_border_width ?? 4,
             borderColor: data.card_border_color || "default",
             backColor: data.card_back_color || "default",
+            backColor2: (data as any).card_back_color_2 || undefined,
             backIcon: data.card_back_icon || "⭐",
             shape: data.card_shape || "square",
           },
