@@ -2,7 +2,8 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ThemeType, CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData";
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
-import { Camera, Image, Upload, Volume2, VolumeX, Music, Trash2, Play } from "lucide-react";
+import { Camera, Image, Upload, Volume2, VolumeX, Music, Trash2, Play, Cloud } from "lucide-react";
+import CloudGallery from "@/components/CloudGallery";
 
 interface CardSetSelectProps {
   theme: ThemeType;
@@ -13,6 +14,7 @@ interface CardSetSelectProps {
 export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSelectProps) {
   const [customImages, setCustomImages] = useState<string[]>([]);
   const [showUpload, setShowUpload] = useState(false);
+  const [showCloudGallery, setShowCloudGallery] = useState(false);
   const [pairCount, setPairCount] = useState(4);
   const [cardMaxW, setCardMaxW] = useState(480);
   const [emojiScale, setEmojiScale] = useState(1);
@@ -281,11 +283,19 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
         ))}
         <button
           onClick={() => setShowUpload(true)}
-          className="bg-gradient-to-br from-game-orange to-amber-500 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground col-span-2"
+          className="bg-gradient-to-br from-game-orange to-amber-500 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground"
           style={{ animationDelay: "0.5s" }}
         >
           <span className="text-4xl drop-shadow-sm">📸</span>
-          <span className="font-bold text-sm">תמונות אישיות / GIF</span>
+          <span className="font-bold text-sm">תמונות מהמכשיר</span>
+        </button>
+        <button
+          onClick={() => setShowCloudGallery(true)}
+          className="bg-gradient-to-br from-sky-400 to-blue-500 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground"
+          style={{ animationDelay: "0.58s" }}
+        >
+          <span className="text-4xl drop-shadow-sm">☁️</span>
+          <span className="font-bold text-sm">גלריית ענן</span>
         </button>
       </div>
 
@@ -336,6 +346,23 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
             🎮 התחלת משחק ({customImages.length} תמונות)
           </Button>
         </div>
+      )}
+
+      {showCloudGallery && (
+        <CloudGallery
+          theme={theme}
+          onClose={() => setShowCloudGallery(false)}
+          onSelect={(urls) => {
+            setShowCloudGallery(false);
+            const cards: CardData[] = urls.map((url, i) => ({
+              id: `cloud-${i}`,
+              emoji: "☁️",
+              image: url,
+            }));
+            const cloudPairCount = Math.min(pairCount, cards.length);
+            onSelectSet("custom", { ...settings, pairCount: cloudPairCount }, cards);
+          }}
+        />
       )}
     </div>
   );
