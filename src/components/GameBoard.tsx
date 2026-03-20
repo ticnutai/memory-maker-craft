@@ -141,5 +141,6 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
         </div>
       )}
     </ThemeBackground>
+    </div>
   );
 }
