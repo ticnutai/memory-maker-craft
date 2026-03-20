@@ -149,6 +149,7 @@ export function useCloudSettings(initialTheme: string) {
     cardMaxW: settings.cardMaxW,
     emojiScale: settings.emojiScale,
     soundEnabled: settings.soundEnabled,
+    speechEnabled: settings.speechEnabled,
     flipDuration: settings.flipDuration,
     musicType: settings.musicType,
     builtinMelodyId: settings.builtinMelodyId,
