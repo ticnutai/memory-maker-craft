@@ -2,8 +2,9 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ThemeType, CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData";
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
-import { Camera, Image, Upload, Volume2, VolumeX, Music, Trash2, Play, Cloud } from "lucide-react";
+import { Camera, Image, Upload, Volume2, VolumeX, Music, Trash2, Play, Cloud, Loader2 } from "lucide-react";
 import CloudGallery from "@/components/CloudGallery";
+import { useCloudSettings } from "@/hooks/useCloudSettings";
 
 interface CardSetSelectProps {
   theme: ThemeType;
@@ -16,20 +17,23 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
   const [showUpload, setShowUpload] = useState(false);
   const [showCloudGallery, setShowCloudGallery] = useState(false);
   const [showCloudAudio, setShowCloudAudio] = useState(false);
-  const [pairCount, setPairCount] = useState(4);
-  const [cardMaxW, setCardMaxW] = useState(480);
-  const [emojiScale, setEmojiScale] = useState(1);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [flipDuration, setFlipDuration] = useState(1);
-  const [musicType, setMusicType] = useState<"none" | "builtin" | "custom" | "cloud">("none");
-  const [builtinMelodyId, setBuiltinMelodyId] = useState<string>("twinkle");
-  const [customMusic, setCustomMusic] = useState<string | undefined>();
-  const [customMusicName, setCustomMusicName] = useState<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLInputElement>(null);
 
+  const { settings: cloud, loaded, updateSetting, toGameSettings } = useCloudSettings(theme);
+
+  const pairCount = cloud.pairCount;
+  const cardMaxW = cloud.cardMaxW;
+  const emojiScale = cloud.emojiScale;
+  const soundEnabled = cloud.soundEnabled;
+  const flipDuration = cloud.flipDuration;
+  const musicType = cloud.musicType;
+  const builtinMelodyId = cloud.builtinMelodyId || "twinkle";
+  const customMusic = cloud.customMusic;
+  const customMusicName = cloud.customMusicName || "";
+
   const accentBtn = theme === "girl" ? "game-pink" as const : "game-blue" as const;
-  const settings: GameSettings = { pairCount, cardMaxW, emojiScale, soundEnabled, flipDuration, musicType, builtinMelodyId, customMusic };
+  const settings = toGameSettings();
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
