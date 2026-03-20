@@ -62,11 +62,14 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
           );
           const newMatched = matchedCount + 1;
           setMatchedCount(newMatched);
+          if (soundEnabled) setTimeout(() => playStarSound(), 300);
           setFlippedIds([]);
           setIsChecking(false);
           if (newMatched === pairCount) {
-            setIsGameOver(true);
-            if (soundEnabled) playWinSound();
+            setTimeout(() => {
+              setIsGameOver(true);
+              if (soundEnabled) playWinSound();
+            }, 500);
           }
         }, 600);
       } else {
