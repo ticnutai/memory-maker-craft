@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ThemeType, CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData";
-import { Camera, Image, Upload, Volume2, VolumeX, Music, Trash2 } from "lucide-react";
+import { BUILT_IN_MELODIES } from "@/lib/melodies";
+import { Camera, Image, Upload, Volume2, VolumeX, Music, Trash2, Play } from "lucide-react";
 
 interface CardSetSelectProps {
   theme: ThemeType;
