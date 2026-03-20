@@ -421,22 +421,31 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
             {/* Live preview */}
             <div className="flex justify-center gap-3 py-2">
               <div
-                className={`w-20 h-24 flex items-center justify-center shadow-lg transition-all duration-300 ${
-                  cardStyle.backColor !== "default" ? `bg-gradient-to-br ${BACK_COLORS.find(c => c.id === cardStyle.backColor)?.css || ""}` : ""
-                }`}
+                className={`w-20 h-24 flex items-center justify-center shadow-lg transition-all duration-300`}
                 style={{
                   ...previewCardStyle,
-                  ...(cardStyle.backColor === "default" ? {
-                    background: theme === "girl"
-                      ? "linear-gradient(135deg, hsl(var(--game-pink)), hsl(var(--primary)))"
-                      : "linear-gradient(135deg, hsl(var(--game-blue)), hsl(var(--secondary)))"
-                  } : {}),
+                  ...(/^#/.test(cardStyle.backColor)
+                    ? {
+                        background: cardStyle.backColor2
+                          ? `linear-gradient(135deg, ${cardStyle.backColor}, ${cardStyle.backColor2})`
+                          : cardStyle.backColor,
+                      }
+                    : cardStyle.backColor === "default"
+                      ? {
+                          background: theme === "girl"
+                            ? "linear-gradient(135deg, hsl(var(--game-pink)), hsl(var(--primary)))"
+                            : "linear-gradient(135deg, hsl(var(--game-blue)), hsl(var(--secondary)))",
+                        }
+                      : {}),
                 }}
               >
                 <span className="text-2xl drop-shadow-sm">{cardStyle.backIcon}</span>
               </div>
               <div className="w-20 h-24 bg-card flex items-center justify-center shadow-lg transition-all duration-300"
-                style={previewCardStyle}
+                style={{
+                  ...previewCardStyle,
+                  borderColor: /^#/.test(cardStyle.borderColor) ? cardStyle.borderColor : previewCardStyle.borderColor,
+                }}
               >
                 <span className="text-2xl">🐰</span>
               </div>
