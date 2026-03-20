@@ -1,10 +1,11 @@
 import { useMemoryGame } from "@/hooks/useMemoryGame";
+import { useBackgroundMusic } from "@/hooks/useBackgroundMusic";
 import { ThemeType, CardData, GameSettings, GIRL_ANIMALS, BOY_ANIMALS, CARD_SIZE_CONFIG } from "@/lib/gameData";
 import MemoryCard from "@/components/MemoryCard";
 import Confetti from "@/components/Confetti";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
-import { RotateCcw, Home, Volume2, VolumeX } from "lucide-react";
+import { RotateCcw, Home, Music, MusicOff } from "lucide-react";
 
 interface GameBoardProps {
   theme: ThemeType;
