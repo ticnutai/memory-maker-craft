@@ -43,6 +43,7 @@ export function useCloudSettings(initialTheme: string) {
     cardMaxW: 480,
     emojiScale: 1,
     soundEnabled: true,
+    speechEnabled: true,
     flipDuration: 1,
     musicType: "none",
     builtinMelodyId: "twinkle",

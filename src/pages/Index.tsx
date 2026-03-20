@@ -18,9 +18,6 @@ const Index = () => {
     soundEnabled: true,
     speechEnabled: true,
     flipDuration: 1,
-    emojiScale: 1,
-    soundEnabled: true,
-    flipDuration: 1,
     musicType: "none",
     cardStyle: {
       borderRadius: 16,
