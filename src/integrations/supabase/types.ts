@@ -53,6 +53,74 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_card_items: {
+        Row: {
+          created_at: string
+          emoji: string | null
+          id: string
+          image_url: string | null
+          label: string | null
+          set_id: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          image_url?: string | null
+          label?: string | null
+          set_id: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          image_url?: string | null
+          label?: string | null
+          set_id?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_card_items_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "custom_card_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_card_sets: {
+        Row: {
+          color: string | null
+          created_at: string
+          device_id: string
+          emoji: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          device_id: string
+          emoji?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          device_id?: string
+          emoji?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       game_settings: {
         Row: {
           bg_theme: string | null
