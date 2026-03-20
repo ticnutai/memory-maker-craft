@@ -71,7 +71,7 @@ function buildFilterString(f: Filters): string {
   return `brightness(${f.brightness}%) contrast(${f.contrast}%) saturate(${f.saturate}%) grayscale(${f.grayscale}%) sepia(${f.sepia}%) hue-rotate(${f.hueRotate}deg) blur(${f.blur}px)`;
 }
 
-export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: ImageCropModalProps) {
+export default function ImageCropModal({ imageUrl, onSave, onClose, theme, onCloudSaved }: ImageCropModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [zoom, setZoom] = useState(1);
