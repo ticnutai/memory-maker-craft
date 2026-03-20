@@ -13,7 +13,8 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
   const [customImages, setCustomImages] = useState<string[]>([]);
   const [showUpload, setShowUpload] = useState(false);
   const [pairCount, setPairCount] = useState(4);
-  const [cardSize, setCardSize] = useState<CardSize>("medium");
+  const [cardMaxW, setCardMaxW] = useState(480);
+  const [emojiScale, setEmojiScale] = useState(1);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [flipDuration, setFlipDuration] = useState(1);
   const [customMusic, setCustomMusic] = useState<string | undefined>();
@@ -22,7 +23,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
   const audioRef = useRef<HTMLInputElement>(null);
 
   const accentBtn = theme === "girl" ? "game-pink" as const : "game-blue" as const;
-  const settings: GameSettings = { pairCount, cardSize, soundEnabled, flipDuration, customMusic };
+  const settings: GameSettings = { pairCount, cardMaxW, emojiScale, soundEnabled, flipDuration, customMusic };
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
