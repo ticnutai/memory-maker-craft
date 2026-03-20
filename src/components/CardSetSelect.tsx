@@ -367,5 +367,3 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
     </div>
   );
 }
-  );
-}
