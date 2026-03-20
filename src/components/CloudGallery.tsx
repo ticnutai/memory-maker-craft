@@ -27,6 +27,7 @@ export default function CloudGallery({ onSelect, onClose, theme, mode = "images"
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [cropImage, setCropImage] = useState<{ url: string; name: string } | null>(null);
   const [playingUrl, setPlayingUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const folderRef = useRef<HTMLInputElement>(null);
