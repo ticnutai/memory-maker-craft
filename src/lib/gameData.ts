@@ -16,6 +16,7 @@ export interface GameSettings {
   cardMaxW: number;
   emojiScale: number;
   soundEnabled: boolean;
+  speechEnabled: boolean;
   flipDuration: number;
   musicType: "none" | "builtin" | "custom" | "cloud";
   builtinMelodyId?: string;

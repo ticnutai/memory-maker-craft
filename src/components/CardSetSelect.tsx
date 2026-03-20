@@ -234,15 +234,25 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
               </div>
 
               {/* Sound toggle */}
-              <button
-                onClick={() => updateSetting("soundEnabled", !soundEnabled)}
-                className={`w-full h-11 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
-                  soundEnabled ? "bg-accent text-accent-foreground shadow-md" : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-                {soundEnabled ? "🔊 קולות פועלים" : "🔇 קולות כבויים"}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => updateSetting("soundEnabled", !soundEnabled)}
+                  className={`flex-1 h-11 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                    soundEnabled ? "bg-accent text-accent-foreground shadow-md" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                  {soundEnabled ? "🔊 צלילים" : "🔇 צלילים"}
+                </button>
+                <button
+                  onClick={() => updateSetting("speechEnabled", !cloud.speechEnabled)}
+                  className={`flex-1 h-11 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                    cloud.speechEnabled ? "bg-accent text-accent-foreground shadow-md" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {cloud.speechEnabled ? "🗣️ הכרזה" : "🔇 הכרזה"}
+                </button>
+              </div>
             </div>
 
             {/* Background theme */}
