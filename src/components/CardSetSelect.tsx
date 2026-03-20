@@ -14,6 +14,7 @@ interface CardSetSelectProps {
 export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSelectProps) {
   const [customImages, setCustomImages] = useState<string[]>([]);
   const [showUpload, setShowUpload] = useState(false);
+  const [showCloudGallery, setShowCloudGallery] = useState(false);
   const [pairCount, setPairCount] = useState(4);
   const [cardMaxW, setCardMaxW] = useState(480);
   const [emojiScale, setEmojiScale] = useState(1);
