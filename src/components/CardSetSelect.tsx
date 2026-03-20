@@ -318,6 +318,18 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
                 </button>
               ))}
             </div>
+
+            {/* Custom card sets */}
+            <div className="mt-4">
+              <p className="font-bold text-sm mb-2 text-center">🎴 ערכות מותאמות אישית</p>
+              <CustomCardSets
+                theme={theme}
+                onPlay={(cards, name) => {
+                  const customPairCount = Math.min(settings.pairCount, cards.length);
+                  onSelectSet("custom", { ...settings, pairCount: customPairCount }, cards);
+                }}
+              />
+            </div>
           </div>
         )}
 
