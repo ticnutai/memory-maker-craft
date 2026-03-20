@@ -1,6 +1,6 @@
 import { useMemoryGame } from "@/hooks/useMemoryGame";
 import { useBackgroundMusic } from "@/hooks/useBackgroundMusic";
-import { ThemeType, CardData, GameSettings, CardSetType, getCardSets, CARD_SIZE_CONFIG } from "@/lib/gameData";
+import { ThemeType, CardData, GameSettings, CardSetType, getCardSets } from "@/lib/gameData";
 import MemoryCard from "@/components/MemoryCard";
 import Confetti from "@/components/Confetti";
 import { Button } from "@/components/ui/button";
