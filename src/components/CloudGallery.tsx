@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Upload, Trash2, Check, FolderUp, Image, Loader2, X, Music, FileArchive, Play, Pause } from "lucide-react";
+import { Upload, Trash2, Check, FolderUp, Image, Loader2, X, Music, FileArchive, Play, Pause, Crop } from "lucide-react";
 import { toast } from "sonner";
 import JSZip from "jszip";
+import ImageCropModal from "@/components/ImageCropModal";
 
 interface CloudGalleryProps {
   onSelect: (urls: string[]) => void;
