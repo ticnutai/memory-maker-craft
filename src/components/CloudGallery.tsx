@@ -340,6 +340,7 @@ export default function CloudGallery({ onSelect, onClose, theme, mode = "images"
         <ImageCropModal
           imageUrl={cropImage.url}
           theme={theme}
+          onCloudSaved={() => loadItems()}
           onClose={() => setCropImage(null)}
           onSave={async (croppedDataUrl) => {
             // Upload cropped image as new file

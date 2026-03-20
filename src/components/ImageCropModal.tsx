@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { X, RotateCw, ZoomIn, ZoomOut, Check, Maximize, Eraser, ImagePlus, Loader2, Sparkles, SlidersHorizontal } from "lucide-react";
+import { X, RotateCw, ZoomIn, ZoomOut, Check, Maximize, Eraser, ImagePlus, Loader2, Sparkles, SlidersHorizontal, CloudUpload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -8,6 +8,7 @@ interface ImageCropModalProps {
   onSave: (croppedDataUrl: string) => void;
   onClose: () => void;
   theme: "girl" | "boy";
+  onCloudSaved?: () => void;
 }
 
 const BG_PRESETS = [
@@ -70,7 +71,7 @@ function buildFilterString(f: Filters): string {
   return `brightness(${f.brightness}%) contrast(${f.contrast}%) saturate(${f.saturate}%) grayscale(${f.grayscale}%) sepia(${f.sepia}%) hue-rotate(${f.hueRotate}deg) blur(${f.blur}px)`;
 }
 
-export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: ImageCropModalProps) {
+export default function ImageCropModal({ imageUrl, onSave, onClose, theme, onCloudSaved }: ImageCropModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -84,6 +85,7 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: Ima
   const [customBgPrompt, setCustomBgPrompt] = useState("");
   const [processedUrl, setProcessedUrl] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ ...DEFAULT_FILTERS });
+  const [savingToCloud, setSavingToCloud] = useState(false);
 
   const accent = theme === "girl" ? "bg-game-pink" : "bg-game-blue";
   const SIZE = 300;
@@ -412,14 +414,46 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: Ima
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-muted flex gap-2">
-          <button onClick={onClose}
-            className="flex-1 h-11 rounded-xl font-bold text-sm bg-muted text-muted-foreground hover:bg-muted/80 transition-all active:scale-95">
-            ביטול
-          </button>
-          <button onClick={handleSave} disabled={processing}
-            className={`flex-1 h-11 rounded-xl font-bold text-sm ${accent} text-primary-foreground shadow-md hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50`}>
-            <Check className="w-4 h-4" /> שמירה
+        <div className="px-5 py-4 border-t border-muted flex flex-col gap-2">
+          <div className="flex gap-2">
+            <button onClick={onClose}
+              className="flex-1 h-11 rounded-xl font-bold text-sm bg-muted text-muted-foreground hover:bg-muted/80 transition-all active:scale-95">
+              ביטול
+            </button>
+            <button onClick={handleSave} disabled={processing}
+              className={`flex-1 h-11 rounded-xl font-bold text-sm ${accent} text-primary-foreground shadow-md hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50`}>
+              <Check className="w-4 h-4" /> שמירה
+            </button>
+          </div>
+          <button
+            onClick={async () => {
+              const canvas = canvasRef.current;
+              if (!canvas) return;
+              setSavingToCloud(true);
+              try {
+                const blob = await new Promise<Blob>((resolve) =>
+                  canvas.toBlob((b) => resolve(b!), "image/png", 0.95)
+                );
+                const fileName = `edited-${Date.now()}.png`;
+                const { error } = await supabase.storage.from("game-images").upload(fileName, blob, {
+                  contentType: "image/png",
+                  cacheControl: "3600",
+                });
+                if (error) throw error;
+                toast.success("התמונה נשמרה לגלריית הענן! ☁️");
+                onCloudSaved?.();
+              } catch (err) {
+                console.error(err);
+                toast.error("שגיאה בשמירה לענן");
+              } finally {
+                setSavingToCloud(false);
+              }
+            }}
+            disabled={processing || savingToCloud}
+            className="w-full h-10 rounded-xl font-bold text-sm border-2 border-muted hover:bg-muted/50 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {savingToCloud ? <Loader2 className="w-4 h-4 animate-spin" /> : <CloudUpload className="w-4 h-4" />}
+            ☁️ שמירה לגלריית הענן
           </button>
         </div>
       </div>
