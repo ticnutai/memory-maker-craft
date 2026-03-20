@@ -149,6 +149,7 @@ export function useCloudSettings(initialTheme: string) {
     builtinMelodyId: settings.builtinMelodyId,
     customMusic: settings.customMusic,
     cardStyle: settings.cardStyle,
+    bgTheme: settings.bgTheme,
   }), [settings]);
 
   return { settings, loaded, updateSetting, updateCardStyle, updateMultiple, toGameSettings };
