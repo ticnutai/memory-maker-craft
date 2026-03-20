@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { GameCard, CardData, createGameCards } from "@/lib/gameData";
 import { playFlipSound, playMatchSound, playMismatchSound, playWinSound } from "@/lib/sounds";
+import { playCardSound } from "@/lib/cardSounds";
 
 export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = true, flipDuration: number = 1) {
   const [cards, setCards] = useState<GameCard[]>([]);
