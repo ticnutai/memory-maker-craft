@@ -18,6 +18,7 @@ export default function GameBoard({ theme, settings, customCards, onHome }: Game
   const cardData = customCards || (theme === "girl" ? GIRL_ANIMALS : BOY_ANIMALS);
   const pairCount = Math.min(settings.pairCount, cardData.length);
   const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, settings.soundEnabled, settings.flipDuration);
+  const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic();
 
   useEffect(() => {
     startGame(cardData);
