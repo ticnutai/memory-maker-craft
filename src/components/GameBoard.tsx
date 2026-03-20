@@ -85,7 +85,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
 
       {/* Game Grid */}
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className={`grid ${gridCols} gap-3 sm:gap-4 w-full ${sizeConfig.maxW}`}>
+        <div className={`grid ${gridCols} gap-3 sm:gap-4 w-full`} style={{ maxWidth: `${cardMaxW}px` }}>
           {cards.map((card, i) => (
             <div key={card.uniqueId} className="bounce-in" style={{ animationDelay: `${i * 0.04}s` }}>
               <MemoryCard
@@ -95,7 +95,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                 isFlipped={card.isFlipped}
                 isMatched={card.isMatched}
                 theme={theme}
-                cardSize={settings.cardSize}
+                emojiScale={settings.emojiScale}
                 onClick={() => flipCard(card.uniqueId)}
               />
             </div>
