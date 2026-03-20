@@ -1,10 +1,17 @@
 export type ThemeType = "girl" | "boy";
 export type CardSetType = "animals" | "custom";
+export type CardSize = "small" | "medium" | "large";
+
+export interface GameSettings {
+  pairCount: number;
+  cardSize: CardSize;
+  soundEnabled: boolean;
+}
 
 export interface CardData {
   id: string;
   emoji: string;
-  image?: string; // for custom photos
+  image?: string;
 }
 
 export interface GameCard extends CardData {
@@ -13,7 +20,6 @@ export interface GameCard extends CardData {
   isMatched: boolean;
 }
 
-// Animal sets — emoji-based for simplicity and delight
 export const GIRL_ANIMALS: CardData[] = [
   { id: "bunny", emoji: "🐰" },
   { id: "butterfly", emoji: "🦋" },
@@ -21,6 +27,8 @@ export const GIRL_ANIMALS: CardData[] = [
   { id: "unicorn", emoji: "🦄" },
   { id: "dolphin", emoji: "🐬" },
   { id: "flamingo", emoji: "🦩" },
+  { id: "panda", emoji: "🐼" },
+  { id: "owl", emoji: "🦉" },
 ];
 
 export const BOY_ANIMALS: CardData[] = [
@@ -30,7 +38,15 @@ export const BOY_ANIMALS: CardData[] = [
   { id: "bear", emoji: "🐻" },
   { id: "dragon", emoji: "🐉" },
   { id: "eagle", emoji: "🦅" },
+  { id: "wolf", emoji: "🐺" },
+  { id: "octopus", emoji: "🐙" },
 ];
+
+export const CARD_SIZE_CONFIG: Record<CardSize, { maxW: string; cardClass: string; emojiClass: string }> = {
+  small: { maxW: "max-w-sm", cardClass: "", emojiClass: "text-3xl sm:text-4xl" },
+  medium: { maxW: "max-w-lg", cardClass: "", emojiClass: "text-4xl sm:text-5xl md:text-6xl" },
+  large: { maxW: "max-w-2xl", cardClass: "", emojiClass: "text-5xl sm:text-6xl md:text-7xl" },
+};
 
 export function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
