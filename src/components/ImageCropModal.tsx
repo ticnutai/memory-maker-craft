@@ -85,6 +85,7 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme, onClo
   const [customBgPrompt, setCustomBgPrompt] = useState("");
   const [processedUrl, setProcessedUrl] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ ...DEFAULT_FILTERS });
+  const [savingToCloud, setSavingToCloud] = useState(false);
 
   const accent = theme === "girl" ? "bg-game-pink" : "bg-game-blue";
   const SIZE = 300;
