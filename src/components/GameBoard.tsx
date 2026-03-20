@@ -21,7 +21,11 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const cardData = customCards || setInfo?.cards || getCardSets(theme)[0].cards;
   const pairCount = Math.min(settings.pairCount, cardData.length);
   const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, settings.soundEnabled, settings.flipDuration);
-  const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(settings.customMusic);
+  const activeMelody = settings.musicType === "builtin"
+    ? BUILT_IN_MELODIES.find((m) => m.id === settings.builtinMelodyId)
+    : undefined;
+  const customUrl = settings.musicType === "custom" ? settings.customMusic : undefined;
+  const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(activeMelody, customUrl);
 
   useEffect(() => {
     startGame(cardData);
