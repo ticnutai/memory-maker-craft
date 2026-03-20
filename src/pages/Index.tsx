@@ -14,6 +14,7 @@ const Index = () => {
     pairCount: 4,
     cardSize: "medium",
     soundEnabled: true,
+    flipDuration: 1,
   });
 
   const handleTheme = (t: ThemeType) => {
