@@ -27,6 +27,7 @@ export interface StoredSettings {
   emojiScale: number;
   soundEnabled: boolean;
   speechEnabled: boolean;
+  speechRate: number;
   flipDuration: number;
   musicType: "none" | "builtin" | "custom" | "cloud";
   builtinMelodyId?: string;
@@ -44,6 +45,7 @@ export function useCloudSettings(initialTheme: string) {
     emojiScale: 1,
     soundEnabled: true,
     speechEnabled: true,
+    speechRate: 0.9,
     flipDuration: 1,
     musicType: "none",
     builtinMelodyId: "twinkle",
@@ -69,6 +71,7 @@ export function useCloudSettings(initialTheme: string) {
           emojiScale: Number(data.emoji_scale),
           soundEnabled: data.sound_enabled,
           speechEnabled: (data as any).speech_enabled ?? true,
+          speechRate: Number((data as any).speech_rate ?? 0.9),
           flipDuration: Number(data.flip_duration),
           musicType: data.music_type as StoredSettings["musicType"],
           builtinMelodyId: data.builtin_melody_id || "twinkle",
@@ -102,6 +105,7 @@ export function useCloudSettings(initialTheme: string) {
         emoji_scale: newSettings.emojiScale,
         sound_enabled: newSettings.soundEnabled,
         speech_enabled: newSettings.speechEnabled,
+        speech_rate: newSettings.speechRate,
         flip_duration: newSettings.flipDuration,
         music_type: newSettings.musicType,
         builtin_melody_id: newSettings.builtinMelodyId || "twinkle",
@@ -151,6 +155,7 @@ export function useCloudSettings(initialTheme: string) {
     emojiScale: settings.emojiScale,
     soundEnabled: settings.soundEnabled,
     speechEnabled: settings.speechEnabled,
+    speechRate: settings.speechRate,
     flipDuration: settings.flipDuration,
     musicType: settings.musicType,
     builtinMelodyId: settings.builtinMelodyId,

@@ -7,8 +7,8 @@ import Confetti from "@/components/Confetti";
 import ThemeBackground from "@/components/ThemeBackground";
 import { BgThemeId } from "@/components/ThemeBackground";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
-import { RotateCcw, Home, Music, VolumeX } from "lucide-react";
+import { useEffect, useState } from "react";
+import { RotateCcw, Home, Music, VolumeX, Mic, MicOff } from "lucide-react";
 
 interface GameBoardProps {
   theme: ThemeType;
@@ -19,10 +19,11 @@ interface GameBoardProps {
 }
 
 export default function GameBoard({ theme, settings, cardSetType, customCards, onHome }: GameBoardProps) {
+  const [speechOn, setSpeechOn] = useState(settings.speechEnabled);
   const setInfo = getCardSets(theme).find((s) => s.type === cardSetType);
   const cardData = customCards || setInfo?.cards || getCardSets(theme)[0].cards;
   const pairCount = Math.min(settings.pairCount, cardData.length);
-  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, settings.soundEnabled, settings.speechEnabled, settings.flipDuration);
+  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, settings.soundEnabled, speechOn, settings.flipDuration, settings.speechRate);
   const activeMelody = settings.musicType === "builtin"
     ? BUILT_IN_MELODIES.find((m) => m.id === settings.builtinMelodyId)
     : undefined;
@@ -69,8 +70,18 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             size="sm"
             onClick={toggleMusic}
             className={musicPlaying ? "text-accent" : "text-muted-foreground"}
+            title="מוזיקת רקע"
           >
             {musicPlaying ? <Music className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSpeechOn(!speechOn)}
+            className={speechOn ? "text-accent" : "text-muted-foreground"}
+            title="הכרזה קולית"
+          >
+            {speechOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
           </Button>
         </div>
         <div className="flex items-center gap-3 text-sm font-bold">

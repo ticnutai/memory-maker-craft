@@ -261,6 +261,23 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
                   {cloud.speechEnabled ? "🗣️ הכרזה" : "🔇 הכרזה"}
                 </button>
               </div>
+
+              {/* Speech rate slider */}
+              {cloud.speechEnabled && (
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="font-bold text-sm">🗣️ מהירות הקריין</p>
+                    <span className="text-xs text-muted-foreground">×{(cloud.speechRate || 0.9).toFixed(1)}</span>
+                  </div>
+                  <input type="range" min={0.3} max={1.5} step={0.1} value={cloud.speechRate || 0.9}
+                    onChange={(e) => updateSetting("speechRate", Number(e.target.value))}
+                    className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`}
+                  />
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                    <span>איטי</span><span>רגיל</span><span>מהיר</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Background theme */}

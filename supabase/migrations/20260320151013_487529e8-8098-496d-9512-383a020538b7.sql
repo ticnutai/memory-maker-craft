@@ -1,0 +1,1 @@
+ALTER TABLE public.game_settings ADD COLUMN IF NOT EXISTS speech_rate numeric DEFAULT 0.9;

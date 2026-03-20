@@ -30,25 +30,22 @@ const CARD_NAMES_HE: Record<string, string> = {
 
 let lastSpoke = 0;
 
-export function speakCardName(cardId: string) {
+export function speakCardName(cardId: string, rate: number = 0.9) {
   const name = CARD_NAMES_HE[cardId];
   if (!name) return;
 
-  // Debounce - don't speak too rapidly
   const now = Date.now();
   if (now - lastSpoke < 400) return;
   lastSpoke = now;
 
-  // Cancel any ongoing speech
   window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(name);
   utterance.lang = "he-IL";
-  utterance.rate = 0.9;
-  utterance.pitch = 1.2; // Slightly higher pitch for kids
+  utterance.rate = rate;
+  utterance.pitch = 1.2;
   utterance.volume = 0.8;
 
-  // Try to find a Hebrew voice
   const voices = window.speechSynthesis.getVoices();
   const heVoice = voices.find(v => v.lang.startsWith("he")) || voices.find(v => v.lang.startsWith("iw"));
   if (heVoice) utterance.voice = heVoice;
