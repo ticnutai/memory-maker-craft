@@ -17,6 +17,7 @@ const Index = () => {
     emojiScale: 1,
     soundEnabled: true,
     speechEnabled: true,
+    speechRate: 0.9,
     flipDuration: 1,
     musicType: "none",
     cardStyle: {
