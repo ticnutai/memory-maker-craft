@@ -485,27 +485,41 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
             {/* Border color */}
             <div>
               <p className="font-bold text-sm mb-2">🎨 צבע מסגרת</p>
-              <div className="flex flex-wrap gap-2">
-                {BORDER_COLORS.map((c) => (
-                  <button key={c.id}
-                    onClick={() => updateCardStyle("borderColor", c.id)}
-                    className={`w-9 h-9 rounded-full transition-all active:scale-90 shadow-sm ${
-                      cardStyle.borderColor === c.id ? "ring-2 ring-offset-2 ring-foreground scale-110" : "hover:scale-105"
-                    }`}
-                    style={{ backgroundColor: c.color }}
-                    title={c.label}
+              <div className="flex items-center gap-3">
+                <div className="flex flex-wrap gap-2 flex-1">
+                  {BORDER_COLORS.map((c) => (
+                    <button key={c.id}
+                      onClick={() => updateCardStyle("borderColor", c.id)}
+                      className={`w-9 h-9 rounded-full transition-all active:scale-90 shadow-sm ${
+                        cardStyle.borderColor === c.id ? "ring-2 ring-offset-2 ring-foreground scale-110" : "hover:scale-105"
+                      }`}
+                      style={{ backgroundColor: c.color }}
+                      title={c.label}
+                    />
+                  ))}
+                </div>
+                <label className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-dashed border-muted-foreground/40 cursor-pointer hover:scale-105 transition-all shrink-0" title="בחרו צבע מותאם">
+                  <input type="color"
+                    value={/^#/.test(cardStyle.borderColor) ? cardStyle.borderColor : "#ffffff"}
+                    onChange={(e) => updateCardStyle("borderColor", e.target.value)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
-                ))}
+                  <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground"
+                    style={{ backgroundColor: /^#/.test(cardStyle.borderColor) ? cardStyle.borderColor : undefined }}
+                  >
+                    {!/^#/.test(cardStyle.borderColor) && "🎨"}
+                  </div>
+                </label>
               </div>
             </div>
 
-            {/* Back color */}
+            {/* Back color with gradient */}
             <div>
               <p className="font-bold text-sm mb-2">🃏 צבע גב הקלף</p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mb-3">
                 {BACK_COLORS.map((c) => (
                   <button key={c.id}
-                    onClick={() => updateCardStyle("backColor", c.id)}
+                    onClick={() => { updateCardStyle("backColor", c.id); updateCardStyle("backColor2" as any, undefined); }}
                     className={`h-9 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 ${
                       cardStyle.backColor === c.id
                         ? theme === "girl"
@@ -518,6 +532,51 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
                   </button>
                 ))}
               </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-1">
+                  <label className="flex flex-col items-center gap-1 cursor-pointer">
+                    <span className="text-[10px] text-muted-foreground font-bold">צבע 1</span>
+                    <div className="relative w-10 h-10 rounded-xl overflow-hidden border-2 border-muted shadow-sm">
+                      <input type="color"
+                        value={/^#/.test(cardStyle.backColor) ? cardStyle.backColor : "#ff6b9d"}
+                        onChange={(e) => updateCardStyle("backColor", e.target.value)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <div className="w-full h-full"
+                        style={{ backgroundColor: /^#/.test(cardStyle.backColor) ? cardStyle.backColor : "#ff6b9d" }}
+                      />
+                    </div>
+                  </label>
+                  <span className="text-lg text-muted-foreground mt-4">→</span>
+                  <label className="flex flex-col items-center gap-1 cursor-pointer">
+                    <span className="text-[10px] text-muted-foreground font-bold">צבע 2</span>
+                    <div className="relative w-10 h-10 rounded-xl overflow-hidden border-2 border-muted shadow-sm">
+                      <input type="color"
+                        value={cardStyle.backColor2 && /^#/.test(cardStyle.backColor2) ? cardStyle.backColor2 : "#6366f1"}
+                        onChange={(e) => {
+                          if (!/^#/.test(cardStyle.backColor)) updateCardStyle("backColor", "#ff6b9d");
+                          updateCardStyle("backColor2" as any, e.target.value);
+                        }}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <div className="w-full h-full"
+                        style={{ backgroundColor: cardStyle.backColor2 && /^#/.test(cardStyle.backColor2) ? cardStyle.backColor2 : "#6366f1" }}
+                      />
+                    </div>
+                  </label>
+                </div>
+                {/* Preview swatch */}
+                {/^#/.test(cardStyle.backColor) && (
+                  <div className="w-14 h-10 rounded-xl border-2 border-muted shadow-sm mt-4"
+                    style={{
+                      background: cardStyle.backColor2
+                        ? `linear-gradient(135deg, ${cardStyle.backColor}, ${cardStyle.backColor2})`
+                        : cardStyle.backColor,
+                    }}
+                  />
+                )}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1.5 text-center">בחרו 2 צבעים ליצירת גרדיאנט</p>
             </div>
 
             {/* Back icon / custom text */}
