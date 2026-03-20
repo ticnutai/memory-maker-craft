@@ -1,6 +1,6 @@
 import { useMemoryGame } from "@/hooks/useMemoryGame";
 import { useBackgroundMusic } from "@/hooks/useBackgroundMusic";
-import { ThemeType, CardData, GameSettings, GIRL_ANIMALS, BOY_ANIMALS, CARD_SIZE_CONFIG } from "@/lib/gameData";
+import { ThemeType, CardData, GameSettings, CardSetType, getCardSets, CARD_SIZE_CONFIG } from "@/lib/gameData";
 import MemoryCard from "@/components/MemoryCard";
 import Confetti from "@/components/Confetti";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,14 @@ import { RotateCcw, Home, Music, VolumeX } from "lucide-react";
 interface GameBoardProps {
   theme: ThemeType;
   settings: GameSettings;
+  cardSetType: CardSetType;
   customCards?: CardData[];
   onHome: () => void;
 }
 
-export default function GameBoard({ theme, settings, customCards, onHome }: GameBoardProps) {
-  const cardData = customCards || (theme === "girl" ? GIRL_ANIMALS : BOY_ANIMALS);
+export default function GameBoard({ theme, settings, cardSetType, customCards, onHome }: GameBoardProps) {
+  const setInfo = getCardSets(theme).find((s) => s.type === cardSetType);
+  const cardData = customCards || setInfo?.cards || getCardSets(theme)[0].cards;
   const pairCount = Math.min(settings.pairCount, cardData.length);
   const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, settings.soundEnabled, settings.flipDuration);
   const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(settings.customMusic);
@@ -88,6 +90,7 @@ export default function GameBoard({ theme, settings, customCards, onHome }: Game
             <div key={card.uniqueId} className="bounce-in" style={{ animationDelay: `${i * 0.04}s` }}>
               <MemoryCard
                 emoji={card.emoji}
+                label={card.label}
                 image={card.image}
                 isFlipped={card.isFlipped}
                 isMatched={card.isMatched}
