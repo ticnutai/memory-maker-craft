@@ -299,7 +299,65 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             העלאת תמונות
           </Button>
+          <Button variant="outline" size="sm" onClick={openCloudPicker} disabled={uploading}
+            className="flex-1 rounded-xl gap-1">
+            <CloudDownload className="w-4 h-4" />
+            ייבוא מהענן
+          </Button>
         </div>
+
+        {/* Cloud picker modal */}
+        {showCloudPicker && (
+          <div className="bg-card rounded-2xl border-2 border-muted shadow-lg p-3 space-y-2 bounce-in">
+            <div className="flex items-center justify-between">
+              <h4 className="font-bold text-sm">☁️ בחירת תמונות מהענן</h4>
+              <button onClick={() => setShowCloudPicker(false)}>
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+            {loadingCloud ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : cloudImages.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">אין תמונות בענן. העלו תמונות דרך הגלריה!</p>
+            ) : (
+              <>
+                <div className="grid grid-cols-4 gap-1.5 max-h-48 overflow-y-auto">
+                  {cloudImages.map(img => {
+                    const isSel = cloudSelected.has(img.url);
+                    return (
+                      <button key={img.name} onClick={() => {
+                        setCloudSelected(prev => {
+                          const next = new Set(prev);
+                          if (next.has(img.url)) next.delete(img.url);
+                          else next.add(img.url);
+                          return next;
+                        });
+                      }}
+                        className={`aspect-square rounded-lg overflow-hidden border-2 transition-all active:scale-95 ${
+                          isSel ? "border-foreground ring-1 ring-foreground/30" : "border-muted hover:border-muted-foreground/40"
+                        }`}
+                      >
+                        <img src={img.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      </button>
+                    );
+                  })}
+                </div>
+                <Button
+                  variant={theme === "girl" ? "game-pink" : "game-blue"}
+                  size="sm"
+                  className="w-full rounded-xl"
+                  disabled={cloudSelected.size === 0 || uploading}
+                  onClick={() => importFromCloud(openSetId)}
+                >
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  ייבוא {cloudSelected.size} תמונות
+                </Button>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Cards grid */}
         {setItems.length === 0 ? (
