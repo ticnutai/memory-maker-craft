@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { X, RotateCw, ZoomIn, ZoomOut, Check, Maximize, Eraser, ImagePlus, Loader2, Sparkles } from "lucide-react";
+import { X, RotateCw, ZoomIn, ZoomOut, Check, Maximize, Eraser, ImagePlus, Loader2, Sparkles, SlidersHorizontal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -23,6 +23,53 @@ const BG_PRESETS = [
   { label: "עננים", value: "fluffy pastel clouds in a dreamy sky", color: "#e0e7ff" },
 ];
 
+interface Filters {
+  brightness: number;
+  contrast: number;
+  saturate: number;
+  grayscale: number;
+  sepia: number;
+  blur: number;
+  hueRotate: number;
+}
+
+const DEFAULT_FILTERS: Filters = {
+  brightness: 100,
+  contrast: 100,
+  saturate: 100,
+  grayscale: 0,
+  sepia: 0,
+  blur: 0,
+  hueRotate: 0,
+};
+
+const FILTER_PRESETS: { label: string; emoji: string; filters: Partial<Filters> }[] = [
+  { label: "מקור", emoji: "🔄", filters: {} },
+  { label: "שחור-לבן", emoji: "⬛", filters: { grayscale: 100 } },
+  { label: "ספיה", emoji: "🟤", filters: { sepia: 80, saturate: 120 } },
+  { label: "חם", emoji: "🔥", filters: { saturate: 130, sepia: 20, brightness: 105 } },
+  { label: "קר", emoji: "❄️", filters: { saturate: 80, hueRotate: 180, brightness: 105 } },
+  { label: "וינטג׳", emoji: "📷", filters: { sepia: 40, contrast: 110, saturate: 80, brightness: 95 } },
+  { label: "דרמטי", emoji: "🎭", filters: { contrast: 150, saturate: 120, brightness: 90 } },
+  { label: "רך", emoji: "☁️", filters: { brightness: 110, contrast: 90, saturate: 90, blur: 0.5 } },
+  { label: "ניאון", emoji: "💜", filters: { saturate: 200, contrast: 120, brightness: 110 } },
+  { label: "סאנסט", emoji: "🌅", filters: { sepia: 30, saturate: 140, hueRotate: -15, brightness: 105 } },
+];
+
+const FILTER_SLIDERS: { key: keyof Filters; label: string; min: number; max: number; unit: string }[] = [
+  { key: "brightness", label: "בהירות", min: 0, max: 200, unit: "%" },
+  { key: "contrast", label: "ניגודיות", min: 0, max: 200, unit: "%" },
+  { key: "saturate", label: "רוויה", min: 0, max: 200, unit: "%" },
+  { key: "grayscale", label: "שחור-לבן", min: 0, max: 100, unit: "%" },
+  { key: "sepia", label: "ספיה", min: 0, max: 100, unit: "%" },
+  { key: "hueRotate", label: "גוון", min: -180, max: 180, unit: "°" },
+  { key: "blur", label: "טשטוש", min: 0, max: 10, unit: "px" },
+];
+
+function buildFilterString(f: Filters): string {
+  return `brightness(${f.brightness}%) contrast(${f.contrast}%) saturate(${f.saturate}%) grayscale(${f.grayscale}%) sepia(${f.sepia}%) hue-rotate(${f.hueRotate}deg) blur(${f.blur}px)`;
+}
+
 export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: ImageCropModalProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -33,9 +80,10 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: Ima
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [loaded, setLoaded] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"crop" | "background">("crop");
+  const [activeTab, setActiveTab] = useState<"crop" | "filters" | "background">("crop");
   const [customBgPrompt, setCustomBgPrompt] = useState("");
   const [processedUrl, setProcessedUrl] = useState<string | null>(null);
+  const [filters, setFilters] = useState<Filters>({ ...DEFAULT_FILTERS });
 
   const accent = theme === "girl" ? "bg-game-pink" : "bg-game-blue";
   const SIZE = 300;
@@ -48,12 +96,11 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: Ima
     img.onload = () => {
       imgRef.current = img;
       setLoaded(true);
-      drawCanvas(img, 1, 0, { x: 0, y: 0 });
     };
     img.src = currentImageUrl;
   }, [currentImageUrl]);
 
-  const drawCanvas = useCallback((img: HTMLImageElement, z: number, rot: number, off: { x: number; y: number }) => {
+  const drawCanvas = useCallback((img: HTMLImageElement, z: number, rot: number, off: { x: number; y: number }, f: Filters) => {
     const canvas = canvasRef.current;
     if (!canvas || !img) return;
     const ctx = canvas.getContext("2d");
@@ -62,6 +109,7 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: Ima
     canvas.width = SIZE;
     canvas.height = SIZE;
     ctx.clearRect(0, 0, SIZE, SIZE);
+    ctx.filter = buildFilterString(f);
     ctx.save();
     ctx.translate(SIZE / 2 + off.x, SIZE / 2 + off.y);
     ctx.rotate((rot * Math.PI) / 180);
@@ -72,13 +120,14 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: Ima
     const h = img.height * scale;
     ctx.drawImage(img, -w / 2, -h / 2, w, h);
     ctx.restore();
+    ctx.filter = "none";
   }, []);
 
   useEffect(() => {
     if (imgRef.current && loaded) {
-      drawCanvas(imgRef.current, zoom, rotation, offset);
+      drawCanvas(imgRef.current, zoom, rotation, offset, filters);
     }
-  }, [zoom, rotation, offset, loaded, drawCanvas]);
+  }, [zoom, rotation, offset, loaded, drawCanvas, filters]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     setDragging(true);
@@ -100,6 +149,14 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: Ima
     onSave(dataUrl);
   };
 
+  const applyPreset = (preset: Partial<Filters>) => {
+    setFilters({ ...DEFAULT_FILTERS, ...preset });
+  };
+
+  const updateFilter = (key: keyof Filters, value: number) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
   const callBackgroundAPI = async (mode: "remove" | "replace", replacementPrompt?: string) => {
     setProcessing(true);
     try {
@@ -112,7 +169,6 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: Ima
       if (!data?.imageUrl) throw new Error("לא התקבלה תמונה");
 
       setProcessedUrl(data.imageUrl);
-      // Reset crop state
       setZoom(1);
       setRotation(0);
       setOffset({ x: 0, y: 0 });
@@ -128,6 +184,12 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: Ima
   const handleRemoveBg = () => callBackgroundAPI("remove");
   const handleReplaceBg = (prompt: string) => callBackgroundAPI("replace", prompt);
 
+  const tabs = [
+    { id: "crop" as const, label: "✂️ חיתוך" },
+    { id: "filters" as const, label: "🎨 פילטרים" },
+    { id: "background" as const, label: "✨ רקע AI" },
+  ];
+
   return (
     <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" dir="rtl">
       <div className="bg-card w-full max-w-md rounded-2xl shadow-2xl border-2 border-muted flex flex-col overflow-hidden bounce-in max-h-[90vh]">
@@ -141,32 +203,23 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: Ima
 
         {/* Tab switcher */}
         <div className="flex border-b border-muted">
-          <button
-            onClick={() => setActiveTab("crop")}
-            className={`flex-1 py-2.5 text-sm font-bold transition-all ${
-              activeTab === "crop"
-                ? `${accent} text-primary-foreground`
-                : "text-muted-foreground hover:bg-muted/50"
-            }`}
-          >
-            ✂️ חיתוך וסיבוב
-          </button>
-          <button
-            onClick={() => setActiveTab("background")}
-            className={`flex-1 py-2.5 text-sm font-bold transition-all ${
-              activeTab === "background"
-                ? `${accent} text-primary-foreground`
-                : "text-muted-foreground hover:bg-muted/50"
-            }`}
-          >
-            <span className="inline-flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" /> רקע AI
-            </span>
-          </button>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-2.5 text-xs font-bold transition-all ${
+                activeTab === tab.id
+                  ? `${accent} text-primary-foreground`
+                  : "text-muted-foreground hover:bg-muted/50"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         <div className="overflow-y-auto flex-1">
-          {/* Canvas preview - shared */}
+          {/* Canvas preview */}
           <div className="p-4 flex flex-col items-center gap-3">
             <div
               className="relative border-2 border-dashed border-muted-foreground/30 rounded-xl overflow-hidden cursor-grab active:cursor-grabbing"
@@ -225,29 +278,85 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: Ima
                     <Maximize className="w-3.5 h-3.5" /> איפוס
                   </button>
                   {processedUrl && (
-                    <button onClick={() => { setProcessedUrl(null); }}
+                    <button onClick={() => setProcessedUrl(null)}
                       className="h-9 px-4 rounded-xl bg-muted text-sm font-bold flex items-center gap-1.5 hover:bg-muted/80 transition-all active:scale-95">
-                        ↩️ מקור
+                      ↩️ מקור
                     </button>
                   )}
                 </div>
               </>
             )}
 
+            {/* Filters controls */}
+            {activeTab === "filters" && (
+              <div className="w-full space-y-3">
+                {/* Presets */}
+                <div>
+                  <p className="text-xs font-bold text-muted-foreground mb-2">🎭 פילטרים מוכנים:</p>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {FILTER_PRESETS.map((preset) => {
+                      const isActive = Object.entries(preset.filters).every(
+                        ([k, v]) => filters[k as keyof Filters] === v
+                      ) && (Object.keys(preset.filters).length > 0 || 
+                        JSON.stringify(filters) === JSON.stringify(DEFAULT_FILTERS));
+                      return (
+                        <button
+                          key={preset.label}
+                          onClick={() => applyPreset(preset.filters)}
+                          className={`flex flex-col items-center gap-0.5 p-1.5 rounded-xl transition-all active:scale-95 ${
+                            isActive ? "bg-muted ring-2 ring-foreground/20" : "hover:bg-muted/50"
+                          }`}
+                        >
+                          <span className="text-lg">{preset.emoji}</span>
+                          <span className="text-[9px] font-bold text-muted-foreground leading-tight">{preset.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Sliders */}
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-muted-foreground">🎛️ כוונון ידני:</p>
+                  {FILTER_SLIDERS.map(({ key, label, min, max, unit }) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <span className="text-[11px] font-bold text-muted-foreground w-16 text-left shrink-0">{label}</span>
+                      <input
+                        type="range"
+                        min={min}
+                        max={max}
+                        step={key === "blur" ? 0.5 : 1}
+                        value={filters[key]}
+                        onChange={(e) => updateFilter(key, Number(e.target.value))}
+                        className="flex-1 h-1.5 rounded-full cursor-pointer accent-[hsl(var(--foreground))]"
+                      />
+                      <span className="text-[10px] font-mono text-muted-foreground w-10 text-right shrink-0">
+                        {filters[key]}{unit}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setFilters({ ...DEFAULT_FILTERS })}
+                  className="w-full h-9 rounded-xl bg-muted text-sm font-bold hover:bg-muted/80 transition-all active:scale-95">
+                  🔄 איפוס פילטרים
+                </button>
+              </div>
+            )}
+
             {/* Background controls */}
             {activeTab === "background" && (
               <div className="w-full space-y-3">
-                {/* Remove background button */}
                 <button
                   onClick={handleRemoveBg}
                   disabled={processing}
-                  className={`w-full h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] border-2 border-dashed border-muted-foreground/30 hover:border-foreground/40 bg-muted/50 hover:bg-muted`}
+                  className="w-full h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] border-2 border-dashed border-muted-foreground/30 hover:border-foreground/40 bg-muted/50 hover:bg-muted"
                 >
                   <Eraser className="w-4 h-4" />
                   🪄 הסרת רקע (AI)
                 </button>
 
-                {/* Preset backgrounds */}
                 <div>
                   <p className="text-xs font-bold text-muted-foreground mb-2">🎨 החלפת רקע מוכן:</p>
                   <div className="grid grid-cols-5 gap-2">
@@ -268,7 +377,6 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme }: Ima
                   </div>
                 </div>
 
-                {/* Custom prompt */}
                 <div>
                   <p className="text-xs font-bold text-muted-foreground mb-2">✍️ רקע מותאם אישית:</p>
                   <div className="flex gap-2">
