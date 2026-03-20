@@ -8,7 +8,7 @@ import ThemeBackground from "@/components/ThemeBackground";
 import { BgThemeId } from "@/components/ThemeBackground";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
-import { RotateCcw, Home, Music, VolumeX } from "lucide-react";
+import { RotateCcw, Home, Music, VolumeX, Mic, MicOff } from "lucide-react";
 
 interface GameBoardProps {
   theme: ThemeType;
