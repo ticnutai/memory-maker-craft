@@ -1,16 +1,35 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import ThemeSelect from "@/components/ThemeSelect";
+import CardSetSelect from "@/components/CardSetSelect";
+import GameBoard from "@/components/GameBoard";
+import { ThemeType, CardSetType, CardData } from "@/lib/gameData";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
-  return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
-  );
+type Screen = "theme" | "cardSet" | "game";
+
+const Index = () => {
+  const [screen, setScreen] = useState<Screen>("theme");
+  const [theme, setTheme] = useState<ThemeType>("girl");
+  const [customCards, setCustomCards] = useState<CardData[] | undefined>();
+
+  const handleTheme = (t: ThemeType) => {
+    setTheme(t);
+    setScreen("cardSet");
+  };
+
+  const handleCardSet = (set: CardSetType, cards?: CardData[]) => {
+    setCustomCards(set === "custom" ? cards : undefined);
+    setScreen("game");
+  };
+
+  const goHome = () => {
+    setScreen("theme");
+    setCustomCards(undefined);
+  };
+
+  if (screen === "theme") return <ThemeSelect onSelect={handleTheme} />;
+  if (screen === "cardSet")
+    return <CardSetSelect theme={theme} onSelectSet={handleCardSet} onBack={() => setScreen("theme")} />;
+  return <GameBoard theme={theme} customCards={customCards} onHome={goHome} />;
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
