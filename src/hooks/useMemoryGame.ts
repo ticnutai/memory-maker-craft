@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { GameCard, CardData, createGameCards } from "@/lib/gameData";
-import { playFlipSound, playMatchSound, playMismatchSound, playWinSound } from "@/lib/sounds";
+import { playFlipSound, playMatchSound, playMismatchSound, playWinSound, playStarSound } from "@/lib/sounds";
 import { playCardSound } from "@/lib/cardSounds";
 import { speakCardName } from "@/lib/cardSpeech";
 
