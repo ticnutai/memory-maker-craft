@@ -159,30 +159,20 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
           <div className="space-y-4">
             {/* Settings panel */}
             <div className="bg-card rounded-2xl p-5 shadow-lg border-2 border-muted space-y-4">
-              {/* Difficulty */}
+              {/* Pair count */}
               <div>
-                <p className="font-bold text-sm mb-2">🎯 רמת קושי</p>
-                <div className="flex gap-2">
-                  {[
-                    { pairs: 3, label: "קל", emoji: "😊" },
-                    { pairs: 4, label: "בינוני", emoji: "🤔" },
-                    { pairs: 6, label: "קשה", emoji: "🔥" },
-                  ].map((lvl) => (
-                    <button
-                      key={lvl.pairs}
-                      onClick={() => updateSetting("pairCount", lvl.pairs)}
-                      className={`flex-1 h-14 rounded-xl font-bold text-sm transition-all active:scale-95 flex flex-col items-center justify-center gap-0.5 ${
-                        pairCount === lvl.pairs
-                          ? theme === "girl"
-                            ? "bg-game-pink text-primary-foreground shadow-md"
-                            : "bg-game-blue text-secondary-foreground shadow-md"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                      }`}
-                    >
-                      <span className="text-lg">{lvl.emoji}</span>
-                      <span>{lvl.label}</span>
-                    </button>
-                  ))}
+                <div className="flex justify-between items-center mb-2">
+                  <p className="font-bold text-sm">🎯 מספר זוגות</p>
+                  <span className={`text-sm font-black px-3 py-0.5 rounded-full ${accent} text-primary-foreground`}>
+                    {pairCount} זוגות
+                  </span>
+                </div>
+                <input type="range" min={2} max={16} step={1} value={pairCount}
+                  onChange={(e) => updateSetting("pairCount", Number(e.target.value))}
+                  className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`}
+                />
+                <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                  <span>2 קל 😊</span><span>8 בינוני 🤔</span><span>16 קשה 🔥</span>
                 </div>
               </div>
 
