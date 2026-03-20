@@ -3,10 +3,12 @@ export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "custom
 
 export interface GameSettings {
   pairCount: number;
-  cardMaxW: number;    // px, controls grid max-width (280–700)
-  emojiScale: number;  // 0.6–1.6 multiplier
+  cardMaxW: number;
+  emojiScale: number;
   soundEnabled: boolean;
   flipDuration: number;
+  musicType: "none" | "builtin" | "custom";
+  builtinMelodyId?: string;
   customMusic?: string;
 }
 
