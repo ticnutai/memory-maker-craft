@@ -185,6 +185,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
               { type: "none" as const, label: "ללא", emoji: "🔇" },
               { type: "builtin" as const, label: "שירים", emoji: "🎶" },
               { type: "custom" as const, label: "העלאה", emoji: "📁" },
+              { type: "cloud" as const, label: "ענן", emoji: "☁️" },
             ]).map((opt) => (
               <button
                 key={opt.type}
