@@ -177,6 +177,50 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
     }));
   };
 
+  const openCloudPicker = async () => {
+    setShowCloudPicker(true);
+    setCloudSelected(new Set());
+    setLoadingCloud(true);
+    const { data } = await supabase.storage.from("game-images").list("", {
+      limit: 200,
+      sortBy: { column: "created_at", order: "desc" },
+    });
+    const results = (data || [])
+      .filter(f => f.name && !f.name.startsWith(".") && !f.name.startsWith("custom-sets"))
+      .map(f => ({
+        name: f.name,
+        url: supabase.storage.from("game-images").getPublicUrl(f.name).data.publicUrl,
+      }));
+    setCloudImages(results);
+    setLoadingCloud(false);
+  };
+
+  const importFromCloud = async (setId: string) => {
+    if (cloudSelected.size === 0) return;
+    setUploading(true);
+    const existingCount = (cards[setId] || []).length;
+    const newCards: CustomCard[] = [];
+    let i = 0;
+    for (const url of cloudSelected) {
+      const img = cloudImages.find(c => c.url === url);
+      const { data: insertData } = await supabase.from("custom_card_items").insert({
+        set_id: setId,
+        label: img?.name.replace(/\.[^.]+$/, "") || `קלף ${existingCount + i + 1}`,
+        emoji: "📷",
+        image_url: url,
+        sort_order: existingCount + i,
+      }).select().single();
+      if (insertData) newCards.push(insertData as CustomCard);
+      i++;
+    }
+    setCards(prev => ({
+      ...prev,
+      [setId]: [...(prev[setId] || []), ...newCards],
+    }));
+    setUploading(false);
+    setShowCloudPicker(false);
+    toast.success(`${newCards.length} קלפים יובאו מהענן! ☁️`);
+
   const updateCardLabel = async (setId: string, cardId: string, label: string) => {
     await supabase.from("custom_card_items").update({ label }).eq("id", cardId);
     setCards(prev => ({
