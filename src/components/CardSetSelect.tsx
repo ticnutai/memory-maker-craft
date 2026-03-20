@@ -15,10 +15,11 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
   const [pairCount, setPairCount] = useState(4);
   const [cardSize, setCardSize] = useState<CardSize>("medium");
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [flipDuration, setFlipDuration] = useState(1);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const accentBtn = theme === "girl" ? "game-pink" as const : "game-blue" as const;
-  const settings: GameSettings = { pairCount, cardSize, soundEnabled };
+  const settings: GameSettings = { pairCount, cardSize, soundEnabled, flipDuration };
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
