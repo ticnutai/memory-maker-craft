@@ -155,6 +155,7 @@ export function useCloudSettings(initialTheme: string) {
     emojiScale: settings.emojiScale,
     soundEnabled: settings.soundEnabled,
     speechEnabled: settings.speechEnabled,
+    speechRate: settings.speechRate,
     flipDuration: settings.flipDuration,
     musicType: settings.musicType,
     builtinMelodyId: settings.builtinMelodyId,
