@@ -245,6 +245,28 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
               </button>
             </div>
 
+            {/* Background theme */}
+            <div>
+              <p className="font-bold text-sm mb-2">🎨 סגנון רקע</p>
+              <div className="grid grid-cols-4 gap-2">
+                {getBgThemes().map((bg) => (
+                  <button key={bg.id}
+                    onClick={() => updateSetting("bgTheme" as any, bg.id)}
+                    className={`h-14 rounded-xl text-xs font-bold transition-all active:scale-95 flex flex-col items-center justify-center gap-0.5 ${
+                      (cloud.bgTheme || "default") === bg.id
+                        ? theme === "girl"
+                          ? "bg-game-pink text-primary-foreground shadow-md"
+                          : "bg-game-blue text-secondary-foreground shadow-md"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    <span className="text-lg">{bg.emoji}</span>
+                    <span className="text-[10px]">{bg.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Card set grid */}
             <div className="grid grid-cols-2 gap-3">
               {getCardSets(theme).map((set, i) => (
