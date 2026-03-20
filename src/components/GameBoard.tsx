@@ -1,10 +1,11 @@
 import { useMemoryGame } from "@/hooks/useMemoryGame";
+import { useBackgroundMusic } from "@/hooks/useBackgroundMusic";
 import { ThemeType, CardData, GameSettings, GIRL_ANIMALS, BOY_ANIMALS, CARD_SIZE_CONFIG } from "@/lib/gameData";
 import MemoryCard from "@/components/MemoryCard";
 import Confetti from "@/components/Confetti";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
-import { RotateCcw, Home, Volume2, VolumeX } from "lucide-react";
+import { RotateCcw, Home, Music, VolumeX } from "lucide-react";
 
 interface GameBoardProps {
   theme: ThemeType;
@@ -17,6 +18,7 @@ export default function GameBoard({ theme, settings, customCards, onHome }: Game
   const cardData = customCards || (theme === "girl" ? GIRL_ANIMALS : BOY_ANIMALS);
   const pairCount = Math.min(settings.pairCount, cardData.length);
   const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, settings.soundEnabled, settings.flipDuration);
+  const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic();
 
   useEffect(() => {
     startGame(cardData);
@@ -50,9 +52,19 @@ export default function GameBoard({ theme, settings, customCards, onHome }: Game
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm">
-        <Button variant="ghost" size="sm" onClick={onHome}>
-          <Home className="w-5 h-5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => { stopMusic(); onHome(); }}>
+            <Home className="w-5 h-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleMusic}
+            className={musicPlaying ? "text-accent" : "text-muted-foreground"}
+          >
+            {musicPlaying ? <Music className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </Button>
+        </div>
         <div className="flex items-center gap-3 text-sm font-bold">
           <span>🎯 {matchedCount}/{pairCount}</span>
           <span>🔄 {moves}</span>
