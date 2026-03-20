@@ -29,7 +29,10 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
     if (!card || card.isFlipped || card.isMatched) return;
     if (flippedIds.length >= 2) return;
 
-    if (soundEnabled) playFlipSound();
+    if (soundEnabled) {
+      playFlipSound();
+      playCardSound(card.id);
+    }
 
     const newFlipped = [...flippedIds, uniqueId];
     setFlippedIds(newFlipped);
