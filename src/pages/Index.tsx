@@ -17,6 +17,7 @@ const Index = () => {
     emojiScale: 1,
     soundEnabled: true,
     flipDuration: 1,
+    musicType: "none",
   });
 
   const handleTheme = (t: ThemeType) => {

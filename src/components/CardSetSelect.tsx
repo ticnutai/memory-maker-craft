@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ThemeType, CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData";
-import { Camera, Image, Upload, Volume2, VolumeX, Music, Trash2 } from "lucide-react";
+import { BUILT_IN_MELODIES } from "@/lib/melodies";
+import { Camera, Image, Upload, Volume2, VolumeX, Music, Trash2, Play } from "lucide-react";
 
 interface CardSetSelectProps {
   theme: ThemeType;
@@ -17,13 +18,15 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
   const [emojiScale, setEmojiScale] = useState(1);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [flipDuration, setFlipDuration] = useState(1);
+  const [musicType, setMusicType] = useState<"none" | "builtin" | "custom">("none");
+  const [builtinMelodyId, setBuiltinMelodyId] = useState<string>("twinkle");
   const [customMusic, setCustomMusic] = useState<string | undefined>();
   const [customMusicName, setCustomMusicName] = useState<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLInputElement>(null);
 
   const accentBtn = theme === "girl" ? "game-pink" as const : "game-blue" as const;
-  const settings: GameSettings = { pairCount, cardMaxW, emojiScale, soundEnabled, flipDuration, customMusic };
+  const settings: GameSettings = { pairCount, cardMaxW, emojiScale, soundEnabled, flipDuration, musicType, builtinMelodyId, customMusic };
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -169,46 +172,97 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
           {soundEnabled ? "🔊 קולות פועלים" : "🔇 קולות כבויים"}
         </button>
 
-        {/* Custom music upload */}
+        {/* Music selection */}
         <div>
           <p className="font-bold text-sm mb-2">🎵 מוזיקת רקע</p>
-          {customMusic ? (
-            <div className="flex items-center gap-2 bg-muted rounded-xl px-3 py-2">
-              <Music className="w-4 h-4 text-accent shrink-0" />
-              <span className="text-xs font-medium truncate flex-1">{customMusicName}</span>
+          
+          {/* Music type tabs */}
+          <div className="flex gap-1 mb-3 bg-muted rounded-xl p-1">
+            {([
+              { type: "none" as const, label: "ללא", emoji: "🔇" },
+              { type: "builtin" as const, label: "שירים", emoji: "🎶" },
+              { type: "custom" as const, label: "העלאה", emoji: "📁" },
+            ]).map((opt) => (
               <button
-                onClick={() => { setCustomMusic(undefined); setCustomMusicName(""); }}
-                className="text-destructive hover:text-destructive/80 transition-colors"
+                key={opt.type}
+                onClick={() => setMusicType(opt.type)}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                  musicType === opt.type
+                    ? theme === "girl"
+                      ? "bg-game-pink text-primary-foreground shadow-sm"
+                      : "bg-game-blue text-secondary-foreground shadow-sm"
+                    : "text-muted-foreground"
+                }`}
               >
-                <Trash2 className="w-4 h-4" />
+                {opt.emoji} {opt.label}
               </button>
+            ))}
+          </div>
+
+          {/* Built-in melodies grid */}
+          {musicType === "builtin" && (
+            <div className="grid grid-cols-2 gap-2">
+              {BUILT_IN_MELODIES.map((mel) => (
+                <button
+                  key={mel.id}
+                  onClick={() => setBuiltinMelodyId(mel.id)}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
+                    builtinMelodyId === mel.id
+                      ? theme === "girl"
+                        ? "bg-game-pink/20 border-2 border-game-pink text-foreground shadow-sm"
+                        : "bg-game-blue/20 border-2 border-game-blue text-foreground shadow-sm"
+                      : "bg-muted/60 border-2 border-transparent text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  <span className="text-lg">{mel.emoji}</span>
+                  <span className="truncate">{mel.name}</span>
+                </button>
+              ))}
             </div>
-          ) : (
-            <button
-              onClick={() => audioRef.current?.click()}
-              className="w-full h-11 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 bg-muted text-muted-foreground hover:bg-muted/80 border-2 border-dashed border-muted-foreground/30"
-            >
-              <Upload className="w-4 h-4" />
-              העלו MP3 / רינגטון
-            </button>
           )}
-          <input
-            ref={audioRef}
-            type="file"
-            accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              setCustomMusicName(file.name);
-              const reader = new FileReader();
-              reader.onload = (ev) => setCustomMusic(ev.target?.result as string);
-              reader.readAsDataURL(file);
-            }}
-            className="hidden"
-          />
-          <p className="text-[10px] text-muted-foreground mt-1 text-center">
-            MP3, WAV, M4A, רינגטונים ועוד
-          </p>
+
+          {/* Custom upload */}
+          {musicType === "custom" && (
+            <div className="space-y-2">
+              {customMusic ? (
+                <div className="flex items-center gap-2 bg-muted rounded-xl px-3 py-2.5">
+                  <Music className="w-4 h-4 text-accent shrink-0" />
+                  <span className="text-xs font-medium truncate flex-1">{customMusicName}</span>
+                  <button
+                    onClick={() => { setCustomMusic(undefined); setCustomMusicName(""); }}
+                    className="text-destructive hover:text-destructive/80 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => audioRef.current?.click()}
+                  className="w-full h-11 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 bg-muted text-muted-foreground hover:bg-muted/80 border-2 border-dashed border-muted-foreground/30"
+                >
+                  <Upload className="w-4 h-4" />
+                  העלו MP3 / רינגטון / שיר
+                </button>
+              )}
+              <input
+                ref={audioRef}
+                type="file"
+                accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setCustomMusicName(file.name);
+                  const reader = new FileReader();
+                  reader.onload = (ev) => setCustomMusic(ev.target?.result as string);
+                  reader.readAsDataURL(file);
+                }}
+                className="hidden"
+              />
+              <p className="text-[10px] text-muted-foreground text-center">
+                MP3, WAV, M4A, רינגטונים, שירים ועוד
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

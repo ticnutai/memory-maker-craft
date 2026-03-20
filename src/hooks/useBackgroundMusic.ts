@@ -1,16 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
+import { MelodyInfo } from "@/lib/melodies";
 
-// Gentle pentatonic melody loop using Web Audio API
-const MELODY_NOTES = [
-  [392, 0.4, 0], [440, 0.4, 0.5], [523, 0.6, 1.0], [440, 0.4, 1.7],
-  [392, 0.6, 2.2], [330, 0.4, 2.9], [392, 0.8, 3.4], [440, 0.4, 4.3],
-  [523, 0.4, 4.8], [587, 0.6, 5.3], [523, 0.4, 6.0], [440, 0.6, 6.5],
-  [392, 0.8, 7.2],
-] as const;
-
-const LOOP_DURATION = 8.5;
-
-export function useBackgroundMusic(customMusicUrl?: string) {
+export function useBackgroundMusic(melody?: MelodyInfo, customMusicUrl?: string) {
   const ctxRef = useRef<AudioContext | null>(null);
   const gainRef = useRef<GainNode | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
@@ -20,9 +11,9 @@ export function useBackgroundMusic(customMusicUrl?: string) {
   const scheduleLoop = useCallback(() => {
     const ctx = ctxRef.current;
     const gain = gainRef.current;
-    if (!ctx || !gain) return;
+    if (!ctx || !gain || !melody) return;
 
-    MELODY_NOTES.forEach(([freq, dur, delay]) => {
+    melody.notes.forEach(([freq, dur, delay]) => {
       const osc = ctx.createOscillator();
       const noteGain = ctx.createGain();
       osc.type = "sine";
@@ -36,9 +27,10 @@ export function useBackgroundMusic(customMusicUrl?: string) {
       osc.start(ctx.currentTime + delay);
       osc.stop(ctx.currentTime + delay + dur);
     });
-  }, []);
+  }, [melody]);
 
   const startBuiltIn = useCallback(() => {
+    if (!melody) return;
     if (!ctxRef.current) {
       ctxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
@@ -50,8 +42,8 @@ export function useBackgroundMusic(customMusicUrl?: string) {
       gainRef.current.connect(ctx.destination);
     }
     scheduleLoop();
-    intervalRef.current = setInterval(scheduleLoop, LOOP_DURATION * 1000);
-  }, [scheduleLoop]);
+    intervalRef.current = setInterval(scheduleLoop, melody.loopDuration * 1000);
+  }, [melody, scheduleLoop]);
 
   const startCustom = useCallback(() => {
     if (!customMusicUrl) return;
@@ -65,11 +57,11 @@ export function useBackgroundMusic(customMusicUrl?: string) {
   const start = useCallback(() => {
     if (customMusicUrl) {
       startCustom();
-    } else {
+    } else if (melody) {
       startBuiltIn();
     }
     setIsPlaying(true);
-  }, [customMusicUrl, startCustom, startBuiltIn]);
+  }, [customMusicUrl, melody, startCustom, startBuiltIn]);
 
   const stop = useCallback(() => {
     if (intervalRef.current) {
@@ -78,6 +70,10 @@ export function useBackgroundMusic(customMusicUrl?: string) {
     }
     if (gainRef.current && ctxRef.current) {
       gainRef.current.gain.linearRampToValueAtTime(0.001, ctxRef.current.currentTime + 0.3);
+      // Reset gain node for next play
+      setTimeout(() => {
+        gainRef.current = null;
+      }, 500);
     }
     if (audioElRef.current) {
       audioElRef.current.pause();
