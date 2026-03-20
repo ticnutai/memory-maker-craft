@@ -89,7 +89,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
             ].map((lvl) => (
               <button
                 key={lvl.pairs}
-                onClick={() => setPairCount(lvl.pairs)}
+                onClick={() => updateSetting("pairCount", lvl.pairs)}
                 className={`flex-1 h-14 rounded-xl font-bold text-sm transition-all active:scale-95 flex flex-col items-center justify-center gap-0.5 ${
                   pairCount === lvl.pairs
                     ? theme === "girl"
@@ -114,7 +114,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
           <input
             type="range" min={280} max={700} step={20}
             value={cardMaxW}
-            onChange={(e) => setCardMaxW(Number(e.target.value))}
+            onChange={(e) => updateSetting("cardMaxW", Number(e.target.value))}
             className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`}
           />
           <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
@@ -131,7 +131,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
           <input
             type="range" min={0.5} max={2} step={0.1}
             value={emojiScale}
-            onChange={(e) => setEmojiScale(Number(e.target.value))}
+            onChange={(e) => updateSetting("emojiScale", Number(e.target.value))}
             className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`}
           />
           <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
@@ -151,7 +151,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
             ].map((opt) => (
               <button
                 key={opt.val}
-                onClick={() => setFlipDuration(opt.val)}
+                onClick={() => updateSetting("flipDuration", opt.val)}
                 className={`flex-1 h-11 rounded-xl font-bold text-xs transition-all active:scale-95 ${
                   flipDuration === opt.val
                     ? theme === "girl"
@@ -168,7 +168,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
 
         {/* Sound toggle */}
         <button
-          onClick={() => setSoundEnabled(!soundEnabled)}
+          onClick={() => updateSetting("soundEnabled", !soundEnabled)}
           className={`w-full h-11 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
             soundEnabled
               ? "bg-accent text-accent-foreground shadow-md"
@@ -193,7 +193,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
             ]).map((opt) => (
               <button
                 key={opt.type}
-                onClick={() => setMusicType(opt.type)}
+                onClick={() => updateSetting("musicType", opt.type)}
                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 ${
                   musicType === opt.type
                     ? theme === "girl"
@@ -213,7 +213,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
               {BUILT_IN_MELODIES.map((mel) => (
                 <button
                   key={mel.id}
-                  onClick={() => setBuiltinMelodyId(mel.id)}
+                  onClick={() => updateSetting("builtinMelodyId", mel.id)}
                   className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
                     builtinMelodyId === mel.id
                       ? theme === "girl"
@@ -237,7 +237,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
                   <Music className="w-4 h-4 text-accent shrink-0" />
                   <span className="text-xs font-medium truncate flex-1">{customMusicName}</span>
                   <button
-                    onClick={() => { setCustomMusic(undefined); setCustomMusicName(""); }}
+                    onClick={() => { updateSetting("customMusic", undefined); updateSetting("customMusicName", ""); }}
                     className="text-destructive hover:text-destructive/80 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -259,9 +259,9 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
-                  setCustomMusicName(file.name);
+                  updateSetting("customMusicName", file.name);
                   const reader = new FileReader();
-                  reader.onload = (ev) => setCustomMusic(ev.target?.result as string);
+                  reader.onload = (ev) => updateSetting("customMusic", ev.target?.result as string);
                   reader.readAsDataURL(file);
                 }}
                 className="hidden"
@@ -280,7 +280,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
                   <Music className="w-4 h-4 text-accent shrink-0" />
                   <span className="text-xs font-medium truncate flex-1">{customMusicName.replace("cloud:", "")}</span>
                   <button
-                    onClick={() => { setCustomMusic(undefined); setCustomMusicName(""); }}
+                    onClick={() => { updateSetting("customMusic", undefined); updateSetting("customMusicName", ""); }}
                     className="text-destructive hover:text-destructive/80 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -408,9 +408,9 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
           onSelect={() => {}}
           onSelectAudio={(url, name) => {
             setShowCloudAudio(false);
-            setMusicType("cloud");
-            setCustomMusic(url);
-            setCustomMusicName(`cloud:${name}`);
+            updateSetting("musicType", "cloud");
+            updateSetting("customMusic", url);
+            updateSetting("customMusicName", `cloud:${name}`);
           }}
         />
       )}
