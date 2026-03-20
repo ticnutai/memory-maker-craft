@@ -24,7 +24,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const activeMelody = settings.musicType === "builtin"
     ? BUILT_IN_MELODIES.find((m) => m.id === settings.builtinMelodyId)
     : undefined;
-  const customUrl = settings.musicType === "custom" ? settings.customMusic : undefined;
+  const customUrl = (settings.musicType === "custom" || settings.musicType === "cloud") ? settings.customMusic : undefined;
   const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(activeMelody, customUrl);
 
   useEffect(() => {
