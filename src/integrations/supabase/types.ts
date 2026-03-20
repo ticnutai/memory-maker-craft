@@ -36,6 +36,7 @@ export type Database = {
           music_type: string
           pair_count: number
           sound_enabled: boolean
+          speech_enabled: boolean | null
           theme: string | null
           updated_at: string
         }
@@ -60,6 +61,7 @@ export type Database = {
           music_type?: string
           pair_count?: number
           sound_enabled?: boolean
+          speech_enabled?: boolean | null
           theme?: string | null
           updated_at?: string
         }
@@ -84,6 +86,7 @@ export type Database = {
           music_type?: string
           pair_count?: number
           sound_enabled?: boolean
+          speech_enabled?: boolean | null
           theme?: string | null
           updated_at?: string
         }
