@@ -105,6 +105,7 @@ export function useCloudSettings(initialTheme: string) {
         emoji_scale: newSettings.emojiScale,
         sound_enabled: newSettings.soundEnabled,
         speech_enabled: newSettings.speechEnabled,
+        speech_rate: newSettings.speechRate,
         flip_duration: newSettings.flipDuration,
         music_type: newSettings.musicType,
         builtin_melody_id: newSettings.builtinMelodyId || "twinkle",
