@@ -220,6 +220,7 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
     setUploading(false);
     setShowCloudPicker(false);
     toast.success(`${newCards.length} קלפים יובאו מהענן! ☁️`);
+  };
 
   const updateCardLabel = async (setId: string, cardId: string, label: string) => {
     await supabase.from("custom_card_items").update({ label }).eq("id", cardId);
