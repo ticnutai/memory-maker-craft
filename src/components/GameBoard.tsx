@@ -54,6 +54,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   ));
 
   return (
+    <div dir="rtl">
     <ThemeBackground themeId={bgThemeId} girlTheme={theme === "girl"} className="flex flex-col" >
       <Confetti active={isGameOver} />
 
