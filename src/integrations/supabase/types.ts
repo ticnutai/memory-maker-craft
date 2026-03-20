@@ -37,6 +37,7 @@ export type Database = {
           pair_count: number
           sound_enabled: boolean
           speech_enabled: boolean | null
+          speech_rate: number | null
           theme: string | null
           updated_at: string
         }
@@ -62,6 +63,7 @@ export type Database = {
           pair_count?: number
           sound_enabled?: boolean
           speech_enabled?: boolean | null
+          speech_rate?: number | null
           theme?: string | null
           updated_at?: string
         }
@@ -87,6 +89,7 @@ export type Database = {
           pair_count?: number
           sound_enabled?: boolean
           speech_enabled?: boolean | null
+          speech_rate?: number | null
           theme?: string | null
           updated_at?: string
         }
