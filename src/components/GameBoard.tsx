@@ -16,7 +16,7 @@ interface GameBoardProps {
 export default function GameBoard({ theme, settings, customCards, onHome }: GameBoardProps) {
   const cardData = customCards || (theme === "girl" ? GIRL_ANIMALS : BOY_ANIMALS);
   const pairCount = Math.min(settings.pairCount, cardData.length);
-  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, settings.soundEnabled);
+  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, settings.soundEnabled, settings.flipDuration);
 
   useEffect(() => {
     startGame(cardData);
