@@ -66,6 +66,14 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
 
   const sliderTrack = theme === "girl" ? "accent-[hsl(var(--game-pink))]" : "accent-[hsl(var(--game-blue))]";
 
+  if (!loaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center min-h-screen gap-5 px-4 py-6 overflow-y-auto" dir="rtl">
       <Button variant="ghost" onClick={onBack} className="self-start text-muted-foreground">
