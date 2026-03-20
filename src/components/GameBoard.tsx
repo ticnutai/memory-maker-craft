@@ -77,16 +77,11 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              // Toggle speech — we modify settings in-place for the game session
-              settings.speechEnabled = !settings.speechEnabled;
-              // Force re-render by triggering a state-like mechanism
-              document.dispatchEvent(new CustomEvent("speech-toggle"));
-            }}
-            className={settings.speechEnabled ? "text-accent" : "text-muted-foreground"}
+            onClick={() => setSpeechOn(!speechOn)}
+            className={speechOn ? "text-accent" : "text-muted-foreground"}
             title="הכרזה קולית"
           >
-            {settings.speechEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+            {speechOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
           </Button>
         </div>
         <div className="flex items-center gap-3 text-sm font-bold">
