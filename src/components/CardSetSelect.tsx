@@ -21,7 +21,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
   const [emojiScale, setEmojiScale] = useState(1);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [flipDuration, setFlipDuration] = useState(1);
-  const [musicType, setMusicType] = useState<"none" | "builtin" | "custom">("none");
+  const [musicType, setMusicType] = useState<"none" | "builtin" | "custom" | "cloud">("none");
   const [builtinMelodyId, setBuiltinMelodyId] = useState<string>("twinkle");
   const [customMusic, setCustomMusic] = useState<string | undefined>();
   const [customMusicName, setCustomMusicName] = useState<string>("");
