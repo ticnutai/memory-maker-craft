@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CardData } from "@/lib/gameData";
-import { Plus, Trash2, Edit2, Play, X, Upload, Image, Download, FolderUp, Loader2, ChevronRight, ChevronLeft } from "lucide-react";
+import { Plus, Trash2, Edit2, Play, X, Upload, Image, Download, FolderUp, Loader2, ChevronRight, ChevronLeft, CloudDownload } from "lucide-react";
 import { toast } from "sonner";
 
 interface CustomSet {
@@ -51,6 +51,10 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
   const [formEmoji, setFormEmoji] = useState("📷");
   const [formColor, setFormColor] = useState("#60a5fa");
   const [uploading, setUploading] = useState(false);
+  const [showCloudPicker, setShowCloudPicker] = useState(false);
+  const [cloudImages, setCloudImages] = useState<{ name: string; url: string }[]>([]);
+  const [cloudSelected, setCloudSelected] = useState<Set<string>>(new Set());
+  const [loadingCloud, setLoadingCloud] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const deviceId = getDeviceId();
@@ -173,6 +177,51 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
     }));
   };
 
+  const openCloudPicker = async () => {
+    setShowCloudPicker(true);
+    setCloudSelected(new Set());
+    setLoadingCloud(true);
+    const { data } = await supabase.storage.from("game-images").list("", {
+      limit: 200,
+      sortBy: { column: "created_at", order: "desc" },
+    });
+    const results = (data || [])
+      .filter(f => f.name && !f.name.startsWith(".") && !f.name.startsWith("custom-sets"))
+      .map(f => ({
+        name: f.name,
+        url: supabase.storage.from("game-images").getPublicUrl(f.name).data.publicUrl,
+      }));
+    setCloudImages(results);
+    setLoadingCloud(false);
+  };
+
+  const importFromCloud = async (setId: string) => {
+    if (cloudSelected.size === 0) return;
+    setUploading(true);
+    const existingCount = (cards[setId] || []).length;
+    const newCards: CustomCard[] = [];
+    let i = 0;
+    for (const url of cloudSelected) {
+      const img = cloudImages.find(c => c.url === url);
+      const { data: insertData } = await supabase.from("custom_card_items").insert({
+        set_id: setId,
+        label: img?.name.replace(/\.[^.]+$/, "") || `קלף ${existingCount + i + 1}`,
+        emoji: "📷",
+        image_url: url,
+        sort_order: existingCount + i,
+      }).select().single();
+      if (insertData) newCards.push(insertData as CustomCard);
+      i++;
+    }
+    setCards(prev => ({
+      ...prev,
+      [setId]: [...(prev[setId] || []), ...newCards],
+    }));
+    setUploading(false);
+    setShowCloudPicker(false);
+    toast.success(`${newCards.length} קלפים יובאו מהענן! ☁️`);
+  };
+
   const updateCardLabel = async (setId: string, cardId: string, label: string) => {
     await supabase.from("custom_card_items").update({ label }).eq("id", cardId);
     setCards(prev => ({
@@ -250,7 +299,65 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             העלאת תמונות
           </Button>
+          <Button variant="outline" size="sm" onClick={openCloudPicker} disabled={uploading}
+            className="flex-1 rounded-xl gap-1">
+            <CloudDownload className="w-4 h-4" />
+            ייבוא מהענן
+          </Button>
         </div>
+
+        {/* Cloud picker modal */}
+        {showCloudPicker && (
+          <div className="bg-card rounded-2xl border-2 border-muted shadow-lg p-3 space-y-2 bounce-in">
+            <div className="flex items-center justify-between">
+              <h4 className="font-bold text-sm">☁️ בחירת תמונות מהענן</h4>
+              <button onClick={() => setShowCloudPicker(false)}>
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+            {loadingCloud ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : cloudImages.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">אין תמונות בענן. העלו תמונות דרך הגלריה!</p>
+            ) : (
+              <>
+                <div className="grid grid-cols-4 gap-1.5 max-h-48 overflow-y-auto">
+                  {cloudImages.map(img => {
+                    const isSel = cloudSelected.has(img.url);
+                    return (
+                      <button key={img.name} onClick={() => {
+                        setCloudSelected(prev => {
+                          const next = new Set(prev);
+                          if (next.has(img.url)) next.delete(img.url);
+                          else next.add(img.url);
+                          return next;
+                        });
+                      }}
+                        className={`aspect-square rounded-lg overflow-hidden border-2 transition-all active:scale-95 ${
+                          isSel ? "border-foreground ring-1 ring-foreground/30" : "border-muted hover:border-muted-foreground/40"
+                        }`}
+                      >
+                        <img src={img.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      </button>
+                    );
+                  })}
+                </div>
+                <Button
+                  variant={theme === "girl" ? "game-pink" : "game-blue"}
+                  size="sm"
+                  className="w-full rounded-xl"
+                  disabled={cloudSelected.size === 0 || uploading}
+                  onClick={() => importFromCloud(openSetId)}
+                >
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  ייבוא {cloudSelected.size} תמונות
+                </Button>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Cards grid */}
         {setItems.length === 0 ? (
