@@ -33,6 +33,8 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
     if (soundEnabled) {
       playFlipSound();
       playCardSound(card.id);
+      // Slight delay so the sound effect plays first, then the name
+      setTimeout(() => speakCardName(card.id), 150);
     }
 
     const newFlipped = [...flippedIds, uniqueId];
