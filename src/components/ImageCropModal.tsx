@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { X, RotateCw, ZoomIn, ZoomOut, Check, Maximize, Eraser, ImagePlus, Loader2, Sparkles, SlidersHorizontal } from "lucide-react";
+import { X, RotateCw, ZoomIn, ZoomOut, Check, Maximize, Eraser, ImagePlus, Loader2, Sparkles, SlidersHorizontal, CloudUpload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
