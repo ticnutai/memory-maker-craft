@@ -8,6 +8,7 @@ interface ImageCropModalProps {
   onSave: (croppedDataUrl: string) => void;
   onClose: () => void;
   theme: "girl" | "boy";
+  onCloudSaved?: () => void;
 }
 
 const BG_PRESETS = [
