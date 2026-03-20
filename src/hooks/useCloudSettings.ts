@@ -26,6 +26,7 @@ export interface StoredSettings {
   cardMaxW: number;
   emojiScale: number;
   soundEnabled: boolean;
+  speechEnabled: boolean;
   flipDuration: number;
   musicType: "none" | "builtin" | "custom" | "cloud";
   builtinMelodyId?: string;
@@ -42,6 +43,7 @@ export function useCloudSettings(initialTheme: string) {
     cardMaxW: 480,
     emojiScale: 1,
     soundEnabled: true,
+    speechEnabled: true,
     flipDuration: 1,
     musicType: "none",
     builtinMelodyId: "twinkle",
@@ -66,6 +68,7 @@ export function useCloudSettings(initialTheme: string) {
           cardMaxW: data.card_max_w,
           emojiScale: Number(data.emoji_scale),
           soundEnabled: data.sound_enabled,
+          speechEnabled: (data as any).speech_enabled ?? true,
           flipDuration: Number(data.flip_duration),
           musicType: data.music_type as StoredSettings["musicType"],
           builtinMelodyId: data.builtin_melody_id || "twinkle",
@@ -98,6 +101,7 @@ export function useCloudSettings(initialTheme: string) {
         card_max_w: newSettings.cardMaxW,
         emoji_scale: newSettings.emojiScale,
         sound_enabled: newSettings.soundEnabled,
+        speech_enabled: newSettings.speechEnabled,
         flip_duration: newSettings.flipDuration,
         music_type: newSettings.musicType,
         builtin_melody_id: newSettings.builtinMelodyId || "twinkle",
@@ -146,6 +150,7 @@ export function useCloudSettings(initialTheme: string) {
     cardMaxW: settings.cardMaxW,
     emojiScale: settings.emojiScale,
     soundEnabled: settings.soundEnabled,
+    speechEnabled: settings.speechEnabled,
     flipDuration: settings.flipDuration,
     musicType: settings.musicType,
     builtinMelodyId: settings.builtinMelodyId,

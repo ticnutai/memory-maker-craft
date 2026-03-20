@@ -4,7 +4,7 @@ import { playFlipSound, playMatchSound, playMismatchSound, playWinSound } from "
 import { playCardSound } from "@/lib/cardSounds";
 import { speakCardName } from "@/lib/cardSpeech";
 
-export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = true, flipDuration: number = 1) {
+export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = true, speechEnabled: boolean = true, flipDuration: number = 1) {
   const [cards, setCards] = useState<GameCard[]>([]);
   const [flippedIds, setFlippedIds] = useState<string[]>([]);
   const [moves, setMoves] = useState(0);
@@ -33,7 +33,8 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
     if (soundEnabled) {
       playFlipSound();
       playCardSound(card.id);
-      // Slight delay so the sound effect plays first, then the name
+    }
+    if (speechEnabled) {
       setTimeout(() => speakCardName(card.id), 150);
     }
 
