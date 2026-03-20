@@ -684,6 +684,11 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
         )}
       </div>
 
+        {/* ═══ BIRTHDAYS TAB ═══ */}
+        {activeTab === "birthdays" && (
+          <BirthdayManager theme={theme} />
+        )}
+
       {/* Modals */}
       {showCloudGallery && (
         <CloudGallery theme={theme}
