@@ -1,6 +1,7 @@
 import React from "react";
 
-export type BgThemeId = "default" | "clouds" | "stars" | "princess" | "ocean" | "candy" | "forest" | "bubbles";
+export type BgThemeId = "default" | "clouds" | "stars" | "princess" | "ocean" | "candy" | "forest" | "bubbles" 
+  | "rainbow" | "dolls" | "safari" | "space" | "flowers" | "dinosaurs" | "ice-cream" | "balloons" | "farm" | "circus" | "butterflies" | "trains";
 
 export interface BgThemeDef {
   id: BgThemeId;
@@ -75,6 +76,102 @@ const THEMES: BgThemeDef[] = [
     pattern: {},
     overlay: "bubbles",
   },
+  {
+    id: "rainbow",
+    label: "קשת",
+    emoji: "🌈",
+    bg: "linear-gradient(135deg, #ffcdd2 0%, #ffe0b2 17%, #fff9c4 33%, #c8e6c9 50%, #b3e5fc 67%, #d1c4e9 83%, #f8bbd0 100%)",
+    pattern: {},
+    overlay: "rainbow",
+  },
+  {
+    id: "dolls",
+    label: "בובות",
+    emoji: "🧸",
+    bg: "linear-gradient(135deg, #fce4ec 0%, #fff3e0 40%, #fce4ec 70%, #f3e5f5 100%)",
+    pattern: {},
+    overlay: "dolls",
+  },
+  {
+    id: "safari",
+    label: "ספארי",
+    emoji: "🦁",
+    bg: "linear-gradient(180deg, #fff8e1 0%, #ffecb3 30%, #ffe082 60%, #f9d976 100%)",
+    pattern: {},
+    overlay: "safari",
+  },
+  {
+    id: "space",
+    label: "חלל",
+    emoji: "🚀",
+    bg: "linear-gradient(180deg, #0d1b2a 0%, #1b2838 40%, #233145 70%, #2a3a52 100%)",
+    pattern: {},
+    overlay: "space",
+  },
+  {
+    id: "flowers",
+    label: "פרחים",
+    emoji: "🌸",
+    bg: "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 25%, #f3e5f5 50%, #e8f5e9 75%, #fff9c4 100%)",
+    pattern: {},
+    overlay: "flowers",
+  },
+  {
+    id: "dinosaurs",
+    label: "דינוזאורים",
+    emoji: "🦕",
+    bg: "linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 35%, #a5d6a7 65%, #dcedc8 100%)",
+    pattern: {},
+    overlay: "dinosaurs",
+  },
+  {
+    id: "ice-cream",
+    label: "גלידה",
+    emoji: "🍦",
+    bg: "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 20%, #fff9c4 40%, #b3e5fc 60%, #c8e6c9 80%, #e1bee7 100%)",
+    pattern: {},
+    overlay: "ice-cream",
+  },
+  {
+    id: "balloons",
+    label: "בלונים",
+    emoji: "🎈",
+    bg: "linear-gradient(180deg, #e3f2fd 0%, #bbdefb 40%, #e8eaf6 70%, #f3e5f5 100%)",
+    pattern: {},
+    overlay: "balloons",
+  },
+  {
+    id: "farm",
+    label: "חווה",
+    emoji: "🐄",
+    bg: "linear-gradient(180deg, #e3f2fd 0%, #c8e6c9 40%, #a5d6a7 70%, #8bc34a33 100%)",
+    pattern: {},
+    overlay: "farm",
+  },
+  {
+    id: "circus",
+    label: "קרקס",
+    emoji: "🎪",
+    bg: "linear-gradient(135deg, #ffcdd2 0%, #fff9c4 25%, #b3e5fc 50%, #c8e6c9 75%, #e1bee7 100%)",
+    pattern: {},
+    overlay: "circus",
+  },
+  {
+    id: "butterflies",
+    label: "פרפרים",
+    emoji: "🦋",
+    bg: "linear-gradient(135deg, #f3e5f5 0%, #e1bee7 30%, #f8bbd0 60%, #fce4ec 100%)",
+    pattern: {},
+    overlay: "butterflies",
+  },
+  {
+    id: "trains",
+    label: "רכבות",
+    emoji: "🚂",
+    bg: "linear-gradient(180deg, #e3f2fd 0%, #bbdefb 35%, #90caf9 65%, #e8eaf6 100%)",
+    pattern: {},
+    overlay: "trains",
+  },
 ];
 
 export function getBgThemes(): BgThemeDef[] {
@@ -94,6 +191,18 @@ const FLOAT_ITEMS: Record<string, string[]> = {
   "confetti-dots": ["🍬", "🍭", "🧁", "🍩", "🍪", "🎂", "🍰", "🍡"],
   leaves: ["🌿", "🍀", "🌻", "🐛", "🦋", "🌼", "🍄", "🐞"],
   bubbles: ["🫧", "🔮", "💜", "🦄", "🫧", "💫", "🔮", "💜"],
+  rainbow: ["🌈", "⭐", "☁️", "🦄", "💖", "🌟", "🎀", "✨", "💫", "🌸"],
+  dolls: ["🧸", "🎀", "👶", "🍼", "🧩", "🎁", "💝", "🪆", "🐻", "👗"],
+  safari: ["🦁", "🐘", "🦒", "🐵", "🦓", "🐆", "🌴", "🦜", "🐾", "🌺"],
+  space: ["🚀", "🌍", "🌙", "⭐", "🛸", "👽", "🪐", "💫", "☄️", "🌟"],
+  flowers: ["🌸", "🌺", "🌻", "🌹", "🌷", "💐", "🌼", "🦋", "🐝", "🌿"],
+  dinosaurs: ["🦕", "🦖", "🌋", "🥚", "🌿", "🦴", "🐾", "☄️", "🌴", "🪨"],
+  "ice-cream": ["🍦", "🍧", "🍨", "🧁", "🍰", "🎂", "🍬", "🍭", "🌈", "⭐"],
+  balloons: ["🎈", "🎉", "🎊", "🎁", "🎀", "🎈", "💖", "⭐", "🎈", "✨"],
+  farm: ["🐄", "🐔", "🐷", "🐴", "🐑", "🐓", "🌾", "🌻", "🚜", "🐶"],
+  circus: ["🎪", "🤡", "🎭", "🎈", "🎉", "🎠", "🦁", "🐘", "⭐", "🎩"],
+  butterflies: ["🦋", "🌸", "💜", "💖", "🌺", "✨", "🦋", "🌷", "💫", "🌿"],
+  trains: ["🚂", "🚃", "🚄", "🛤️", "🚦", "🏔️", "🌳", "🏠", "⭐", "💨"],
 };
 
 interface ThemeBackgroundProps {
