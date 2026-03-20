@@ -4,6 +4,8 @@ import { ThemeType, CardData, GameSettings, CardSetType, getCardSets } from "@/l
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import MemoryCard from "@/components/MemoryCard";
 import Confetti from "@/components/Confetti";
+import ThemeBackground from "@/components/ThemeBackground";
+import { BgThemeId } from "@/components/ThemeBackground";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { RotateCcw, Home, Music, VolumeX } from "lucide-react";
