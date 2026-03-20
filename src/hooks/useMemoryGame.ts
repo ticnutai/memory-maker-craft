@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { GameCard, CardData, createGameCards } from "@/lib/gameData";
 import { playFlipSound, playMatchSound, playMismatchSound, playWinSound } from "@/lib/sounds";
 
-export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = true) {
+export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = true, flipDuration: number = 1) {
   const [cards, setCards] = useState<GameCard[]>([]);
   const [flippedIds, setFlippedIds] = useState<string[]>([]);
   const [moves, setMoves] = useState(0);
@@ -71,7 +71,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
           );
           setFlippedIds([]);
           setIsChecking(false);
-        }, 1000);
+        }, flipDuration * 1000);
       }
     }
   }, [cards, flippedIds, isChecking, matchedCount, pairCount, soundEnabled]);

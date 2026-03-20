@@ -6,6 +6,7 @@ export interface GameSettings {
   pairCount: number;
   cardSize: CardSize;
   soundEnabled: boolean;
+  flipDuration: number; // seconds cards stay open before closing
 }
 
 export interface CardData {

@@ -15,10 +15,11 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
   const [pairCount, setPairCount] = useState(4);
   const [cardSize, setCardSize] = useState<CardSize>("medium");
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [flipDuration, setFlipDuration] = useState(1);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const accentBtn = theme === "girl" ? "game-pink" as const : "game-blue" as const;
-  const settings: GameSettings = { pairCount, cardSize, soundEnabled };
+  const settings: GameSettings = { pairCount, cardSize, soundEnabled, flipDuration };
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -111,6 +112,33 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
                 }`}
               >
                 {opt.emoji} {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Flip duration */}
+        <div>
+          <p className="font-bold text-sm mb-2">⏱️ זמן תצוגת קלפים</p>
+          <div className="flex gap-2">
+            {[
+              { val: 0.5, label: "חצי שנייה" },
+              { val: 1, label: "שנייה" },
+              { val: 2, label: "2 שניות" },
+              { val: 3, label: "3 שניות" },
+            ].map((opt) => (
+              <button
+                key={opt.val}
+                onClick={() => setFlipDuration(opt.val)}
+                className={`flex-1 h-11 rounded-xl font-bold text-xs transition-all active:scale-95 ${
+                  flipDuration === opt.val
+                    ? theme === "girl"
+                      ? "bg-game-pink text-primary-foreground shadow-md"
+                      : "bg-game-blue text-secondary-foreground shadow-md"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {opt.label}
               </button>
             ))}
           </div>
