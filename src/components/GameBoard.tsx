@@ -28,7 +28,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
 
   const restart = () => startGame(cardData);
 
-  const sizeConfig = CARD_SIZE_CONFIG[settings.cardSize];
+  const cardMaxW = settings.cardMaxW;
 
   // Grid columns based on total cards
   const totalCards = pairCount * 2;
