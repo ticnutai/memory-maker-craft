@@ -530,10 +530,10 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
               </div>
             </div>
 
-            {/* Back icon */}
+            {/* Back icon / custom text */}
             <div>
-              <p className="font-bold text-sm mb-2">✨ אייקון גב הקלף</p>
-              <div className="flex flex-wrap gap-2">
+              <p className="font-bold text-sm mb-2">✨ אייקון / טקסט על גב הקלף</p>
+              <div className="flex flex-wrap gap-2 mb-3">
                 {BACK_ICONS.map((icon) => (
                   <button key={icon}
                     onClick={() => updateCardStyle("backIcon", icon)}
@@ -549,6 +549,18 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
                   </button>
                 ))}
               </div>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  maxLength={10}
+                  placeholder="או הקלידו טקסט..."
+                  value={BACK_ICONS.includes(cardStyle.backIcon) ? "" : cardStyle.backIcon}
+                  onChange={(e) => updateCardStyle("backIcon", e.target.value || "⭐")}
+                  className="flex-1 h-10 rounded-xl bg-muted px-3 text-sm font-bold text-center border-2 border-muted-foreground/20 focus:border-foreground/40 outline-none transition-colors placeholder:text-muted-foreground/50"
+                  dir="auto"
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1 text-center">הקלידו שם, אות, או כל טקסט קצר</p>
             </div>
           </div>
         )}
