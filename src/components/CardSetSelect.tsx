@@ -147,6 +147,19 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
 
   useEffect(() => { loadCustomSets(); }, [loadCustomSets]);
 
+  // Load custom bg themes
+  useEffect(() => {
+    const loadBgThemes = async () => {
+      const { data } = await supabase
+        .from("custom_bg_themes")
+        .select("*")
+        .eq("device_id", deviceId)
+        .order("created_at", { ascending: false });
+      setCustomBgThemes(data || []);
+    };
+    loadBgThemes();
+  }, [deviceId]);
+
   // Play a custom set
   const playCustomSet = async (setPreview: CustomSetPreview) => {
     if (setPreview.cardCount < 2) {
