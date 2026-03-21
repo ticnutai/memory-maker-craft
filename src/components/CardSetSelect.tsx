@@ -203,6 +203,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     { id: "gallery", label: "גלריה", icon: <Image className="w-4 h-4" /> },
     { id: "birthdays", label: "ימי הולדת", icon: <Cake className="w-4 h-4" /> },
     { id: "recordings", label: "הקלטות", icon: <Mic className="w-4 h-4" /> },
+    { id: "dev", label: "פיתוח", icon: <Code2 className="w-4 h-4" /> },
   ];
 
   const previewCardStyle: React.CSSProperties = {
