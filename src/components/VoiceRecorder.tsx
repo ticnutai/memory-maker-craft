@@ -317,6 +317,22 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
     loadRecordings();
   };
 
+  const startEditEvents = (rec: Recording) => {
+    setEditingRecId(rec.id);
+    setEditingEvents(rec.event_type.split(",").filter(Boolean));
+  };
+
+  const saveEditEvents = async () => {
+    if (!editingRecId || editingEvents.length === 0) return;
+    await supabase
+      .from("voice_recordings")
+      .update({ event_type: editingEvents.join(",") } as any)
+      .eq("id", editingRecId);
+    setEditingRecId(null);
+    setEditingEvents([]);
+    loadRecordings();
+  };
+
   const playRecording = (url: string) => {
     if (playingRef.current) {
       playingRef.current.pause();
