@@ -403,24 +403,36 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
         הקליטו הודעות כמו "כל הכבוד!" ושייכו אותן לאירועי משחק
       </p>
 
-      {/* Event type selection */}
+      {/* Event type selection - multi-select */}
       <div>
-        <p className="font-bold text-sm mb-2">🎯 סוג אירוע</p>
+        <p className="font-bold text-sm mb-2">🎯 סוג אירוע <span className="text-[10px] text-muted-foreground font-normal">(ניתן לבחור כמה)</span></p>
         <div className="grid grid-cols-2 gap-2">
-          {EVENT_TYPES.map((ev) => (
-            <button
-              key={ev.id}
-              onClick={() => setSelectedEvent(ev.id)}
-              className={`h-10 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
-                selectedEvent === ev.id
-                  ? `${accent} text-primary-foreground shadow-md`
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              <span>{ev.emoji}</span>
-              <span>{ev.label}</span>
-            </button>
-          ))}
+          {EVENT_TYPES.map((ev) => {
+            const isSelected = selectedEvents.includes(ev.id);
+            return (
+              <button
+                key={ev.id}
+                onClick={() => {
+                  setSelectedEvents(prev => {
+                    if (isSelected) {
+                      const next = prev.filter(e => e !== ev.id);
+                      return next.length > 0 ? next : prev; // at least one must remain
+                    }
+                    return [...prev, ev.id];
+                  });
+                }}
+                className={`h-10 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
+                  isSelected
+                    ? `${accent} text-primary-foreground shadow-md`
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                <span>{ev.emoji}</span>
+                <span>{ev.label}</span>
+                {isSelected && <Check className="w-3 h-3" />}
+              </button>
+            );
+          })}
         </div>
       </div>
 
