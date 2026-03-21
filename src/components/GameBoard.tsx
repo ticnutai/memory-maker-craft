@@ -130,7 +130,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     startGame(cardData);
   };
 
-  const cardMaxW = settings.cardMaxW;
+  const cardMaxW = liveSettings.cardMaxW;
 
   // Grid columns based on total cards
   const totalCards = pairCount * 2;
