@@ -203,6 +203,25 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     ? selectedBgTheme.bg
     : "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 30%, #f3e5f5 60%, #fff9c4 100%)";
 
+  // Settings-only mode: render just the floating panel and modals
+  if (settingsOnly) {
+    return (
+      <>
+        <FloatingPanel
+          open={showSettings}
+          onClose={() => { setShowSettings(false); loadCustomSets(); }}
+          title="⚙️ הגדרות"
+          titleIcon={<Settings className="w-5 h-5" />}
+          defaultWidth={580}
+          defaultHeight={540}
+        >
+          {renderSettingsContent()}
+        </FloatingPanel>
+        {renderModals()}
+      </>
+    );
+  }
+
   return (
     <div
       className={`flex flex-col items-center min-h-screen gap-6 px-5 py-8 pb-28 overflow-y-auto relative ${cloud.animationsEnabled === false ? "no-animations" : ""}`}
