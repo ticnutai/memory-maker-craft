@@ -83,9 +83,11 @@ function getDeviceId(): string {
   return id;
 }
 
-export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
+export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsToggle }: CardSetSelectProps) {
   const theme = "girl";
-  const [showSettings, setShowSettings] = useState(false);
+  const [_showSettings, _setShowSettings] = useState(false);
+  const showSettings = settingsOpen !== undefined ? settingsOpen : _showSettings;
+  const setShowSettings = onSettingsToggle || _setShowSettings;
   const [settingsTab, setSettingsTab] = useState<SettingsTabId>("general");
   const [showCloudGallery, setShowCloudGallery] = useState(false);
   const [showCloudAudio, setShowCloudAudio] = useState(false);
