@@ -4,8 +4,9 @@ import { CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import {
   Upload, Volume2, VolumeX, Music, Trash2, Cloud, Loader2,
-  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move, Paintbrush
+  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move, Paintbrush, Code2
 } from "lucide-react";
+import DevPanel from "@/components/DevPanel";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import BirthdayManager from "@/components/BirthdayManager";
 import CloudGallery from "@/components/CloudGallery";
@@ -25,7 +26,7 @@ interface CardSetSelectProps {
   settingsOnly?: boolean;
 }
 
-type SettingsTabId = "general" | "music" | "cards" | "themes" | "gallery" | "custom-sets" | "birthdays" | "recordings";
+type SettingsTabId = "general" | "music" | "cards" | "themes" | "gallery" | "custom-sets" | "birthdays" | "recordings" | "dev";
 
 const BACK_ICONS = ["⭐", "❓", "🎴", "🃏", "💫", "🌟", "🎯", "🔮", "🎪", "🎨"];
 const BACK_COLORS = [
@@ -202,6 +203,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     { id: "gallery", label: "גלריה", icon: <Image className="w-4 h-4" /> },
     { id: "birthdays", label: "ימי הולדת", icon: <Cake className="w-4 h-4" /> },
     { id: "recordings", label: "הקלטות", icon: <Mic className="w-4 h-4" /> },
+    { id: "dev", label: "פיתוח", icon: <Code2 className="w-4 h-4" /> },
   ];
 
   const previewCardStyle: React.CSSProperties = {
@@ -746,6 +748,9 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
 
               {/* ═══ RECORDINGS ═══ */}
               {settingsTab === "recordings" && <VoiceRecorder theme={theme} />}
+
+              {/* ═══ DEV ═══ */}
+              {settingsTab === "dev" && <DevPanel deviceId={deviceId} />}
             </div>
       </FloatingPanel>
 
