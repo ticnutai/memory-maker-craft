@@ -197,7 +197,7 @@ export default function ThemeBackground({ themeId, children, className = "", gir
 
   const floatItems = theme.overlay ? FLOAT_ITEMS[theme.overlay] || [] : [];
   const isAnimatedTheme = theme.animated && animationsEnabled;
-  const animTypes = theme.overlay ? getAnimationForTheme(theme.overlay) : ["float"];
+  const animTypes: AnimationType[] = theme.overlay ? getAnimationForTheme(theme.overlay) : ["float" as AnimationType];
 
   // More items for animated themes
   const itemCount = isAnimatedTheme ? Math.min(floatItems.length * 2, 24) : floatItems.length;
