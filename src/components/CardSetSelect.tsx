@@ -487,7 +487,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                       <p className="text-[10px] text-muted-foreground">הפעלה/כיבוי של כל האנימציות, אפקטים חזותיים וקונפטי</p>
                     </div>
                     <button
-                      onClick={() => updateSetting("animationsEnabled" as any, cloud.animationsEnabled === false ? true : false)}
+                      onClick={() => updateSetting("animationsEnabled", cloud.animationsEnabled === false ? true : false)}
                       className={`w-12 h-7 rounded-full transition-all ${
                         cloud.animationsEnabled !== false ? "bg-accent" : "bg-muted-foreground/30"
                       } relative`}

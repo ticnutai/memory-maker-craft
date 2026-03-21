@@ -83,6 +83,7 @@ export function useCloudSettings(initialTheme: string) {
           customMusicName: data.custom_music_name || undefined,
           theme: data.theme || initialTheme,
           bgTheme: (data as any).bg_theme || "default",
+          animationsEnabled: (data as any).animations_enabled !== false,
           cardStyle: {
             borderRadius: data.card_border_radius ?? 16,
             borderWidth: data.card_border_width ?? 4,
@@ -117,6 +118,7 @@ export function useCloudSettings(initialTheme: string) {
         custom_music_name: newSettings.customMusicName || null,
         theme: newSettings.theme || initialTheme,
         bg_theme: newSettings.bgTheme || "default",
+        animations_enabled: newSettings.animationsEnabled !== false,
         card_border_radius: newSettings.cardStyle.borderRadius,
         card_border_width: newSettings.cardStyle.borderWidth,
         card_border_color: newSettings.cardStyle.borderColor,

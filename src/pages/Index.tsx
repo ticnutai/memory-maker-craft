@@ -3,12 +3,14 @@ import CardSetSelect from "@/components/CardSetSelect";
 import GameBoard from "@/components/GameBoard";
 import TreasureHuntGame from "@/components/TreasureHuntGame";
 import { CardSetType, CardData, GameSettings } from "@/lib/gameData";
+import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { Gamepad2, Map, Settings } from "lucide-react";
 
 type AppTab = "memory" | "treasure";
 type Screen = "home" | "game";
 
 const Index = () => {
+  const { settings: cloudSettings } = useCloudSettings("girl");
   const [tab, setTab] = useState<AppTab>("memory");
   const [screen, setScreen] = useState<Screen>("home");
   const [cardSetType, setCardSetType] = useState<CardSetType>("animals");
@@ -47,7 +49,7 @@ const Index = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: 'inherit' }}>
+    <div className={`flex flex-col min-h-screen ${cloudSettings.animationsEnabled === false ? "no-animations" : ""}`} style={{ background: 'inherit' }}>
       {/* Main content */}
       <div className="flex-1">
         {tab === "memory" && screen === "game" ? (

@@ -156,6 +156,7 @@ export type Database = {
       }
       game_settings: {
         Row: {
+          animations_enabled: boolean | null
           bg_theme: string | null
           builtin_melody_id: string | null
           card_back_color: string
@@ -183,6 +184,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          animations_enabled?: boolean | null
           bg_theme?: string | null
           builtin_melody_id?: string | null
           card_back_color?: string
@@ -210,6 +212,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          animations_enabled?: boolean | null
           bg_theme?: string | null
           builtin_melody_id?: string | null
           card_back_color?: string

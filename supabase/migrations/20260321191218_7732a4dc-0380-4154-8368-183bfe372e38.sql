@@ -1,0 +1,1 @@
+ALTER TABLE public.game_settings ADD COLUMN IF NOT EXISTS animations_enabled boolean DEFAULT true;
