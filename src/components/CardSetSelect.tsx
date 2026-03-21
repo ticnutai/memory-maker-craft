@@ -396,21 +396,6 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                       <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>איטי</span><span>רגיל</span><span>מהיר</span></div>
                     </div>
                   )}
-                  <div>
-                    <p className="font-bold text-sm mb-2">🎨 סגנון רקע</p>
-                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-60 overflow-y-auto pr-1">
-                      {getBgThemes().map((bg) => (
-                        <button key={bg.id} onClick={() => updateSetting("bgTheme" as any, bg.id)}
-                          className={`relative h-16 rounded-xl text-xs font-bold transition-all active:scale-95 flex flex-col items-center justify-center gap-0.5 ${
-                            (cloud.bgTheme || "default") === bg.id ? "bg-game-pink text-primary-foreground shadow-md ring-2 ring-game-pink ring-offset-1" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                          }`}>
-                          <span className="text-lg">{bg.emoji}</span>
-                          <span className="text-[10px]">{bg.label}</span>
-                          {bg.animated && <span className="absolute top-0.5 left-0.5 text-[8px] bg-game-orange text-primary-foreground rounded px-1 font-black">✨</span>}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
 
                   {/* Layout mode */}
                   <div>
