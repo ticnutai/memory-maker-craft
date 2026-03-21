@@ -336,7 +336,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
         {/* Add new set button — smaller */}
         <button
           onClick={() => { setShowSettings(true); setSettingsTab("custom-sets"); }}
-          className="rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-md hover:shadow-lg hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in border-2 border-dashed border-game-pink/30 bg-white/50 backdrop-blur-sm min-h-[120px]"
+          className="rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center gap-2 shadow-md hover:shadow-lg hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in border-2 border-dashed border-game-pink/30 bg-white/50 backdrop-blur-sm min-h-[100px] sm:min-h-[120px]"
           style={{ animationDelay: `${0.15 + (allCardSets.length + customSets.length) * 0.08}s` }}
         >
           <div className="w-9 h-9 rounded-full bg-game-pink/15 flex items-center justify-center">
