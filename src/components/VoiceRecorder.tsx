@@ -406,28 +406,48 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
         dir="auto"
       />
 
-      {/* Record button */}
-      <div className="flex justify-center">
-        {isRecording ? (
+      {/* Record / Upload buttons */}
+      <div className="flex justify-center gap-4 items-end">
+        <div className="flex flex-col items-center gap-1">
+          {isRecording ? (
+            <button
+              onClick={stopRecording}
+              disabled={loading}
+              className="w-20 h-20 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg animate-pulse transition-all active:scale-95"
+            >
+              <Square className="w-8 h-8" />
+            </button>
+          ) : (
+            <button
+              onClick={startRecording}
+              disabled={loading || processingEffect}
+              className={`w-20 h-20 rounded-full ${accent} text-primary-foreground flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95`}
+            >
+              <Mic className="w-8 h-8" />
+            </button>
+          )}
+          <span className="text-[10px] text-muted-foreground font-bold">הקלטה</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
           <button
-            onClick={stopRecording}
-            disabled={loading}
-            className="w-20 h-20 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg animate-pulse transition-all active:scale-95"
-          >
-            <Square className="w-8 h-8" />
-          </button>
-        ) : (
-          <button
-            onClick={startRecording}
+            onClick={() => fileInputRef.current?.click()}
             disabled={loading || processingEffect}
-            className={`w-20 h-20 rounded-full ${accent} text-primary-foreground flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95`}
+            className="w-16 h-16 rounded-full bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center shadow-md hover:shadow-lg transition-all active:scale-95 border-2 border-dashed border-muted-foreground/30"
           >
-            <Mic className="w-8 h-8" />
+            <Upload className="w-7 h-7" />
           </button>
-        )}
+          <span className="text-[10px] text-muted-foreground font-bold">העלאת קובץ</span>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="audio/*,.mp3,.wav,.m4a,.ogg,.aac,.webm"
+          className="hidden"
+          onChange={handleFileUpload}
+        />
       </div>
       <p className="text-[10px] text-muted-foreground text-center">
-        {isRecording ? "🔴 מקליט... לחצו לעצירה" : loading ? "⏳ שומר..." : processingEffect ? "✨ מעבד אפקט..." : "לחצו להקלטה"}
+        {isRecording ? "🔴 מקליט... לחצו לעצירה" : loading ? "⏳ שומר..." : processingEffect ? "✨ מעבד אפקט..." : "הקליטו או העלו קובץ MP3/WAV"}
       </p>
 
       {/* Recordings list grouped by event */}
