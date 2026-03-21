@@ -284,7 +284,7 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
       {/* Settings FAB */}
       <button
         onClick={() => setShowSettings(true)}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-14 h-14 rounded-full bg-game-pink text-primary-foreground shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all bounce-in"
+        className="fixed bottom-6 right-4 z-40 w-12 h-12 rounded-full bg-game-pink text-primary-foreground shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all bounce-in"
         style={{ animationDelay: "0.6s" }}
       >
         <Settings className="w-6 h-6" />
