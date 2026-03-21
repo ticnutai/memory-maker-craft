@@ -724,9 +724,7 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
               {/* ═══ RECORDINGS ═══ */}
               {settingsTab === "recordings" && <VoiceRecorder theme={theme} />}
             </div>
-          </div>
-        </div>
-      )}
+      </FloatingPanel>
 
       {/* Modals */}
       {showCloudGallery && (
