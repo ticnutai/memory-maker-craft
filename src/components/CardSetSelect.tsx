@@ -314,11 +314,11 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
           return (
             <button key={cs.id}
               onClick={() => playCustomSet(cs)}
-              className={`bg-gradient-to-br ${CUSTOM_GRADIENTS[gradientIdx]} rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground relative min-h-[120px]`}
+              className={`bg-gradient-to-br ${CUSTOM_GRADIENTS[gradientIdx]} rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground relative min-h-[100px] sm:min-h-[120px]`}
               style={{ animationDelay: `${0.15 + (allCardSets.length + i) * 0.08}s` }}
             >
-              <span className="text-5xl drop-shadow-sm">{cs.emoji}</span>
-              <span className="font-bold text-sm">{cs.name}</span>
+              <span className="text-4xl sm:text-5xl drop-shadow-sm">{cs.emoji}</span>
+              <span className="font-bold text-xs sm:text-sm">{cs.name}</span>
               {cs.cardCount > 0 && (
                 <span className="absolute top-2 left-2 text-[10px] bg-white/30 backdrop-blur-sm rounded-full px-2 py-0.5 font-bold">
                   {cs.cardCount} קלפים
