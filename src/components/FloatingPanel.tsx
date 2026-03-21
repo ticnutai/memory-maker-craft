@@ -35,15 +35,16 @@ export default function FloatingPanel({
   const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0, px: 0, py: 0 });
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Center on first open
+  // Center on first open — on mobile, go near-fullscreen
   useEffect(() => {
     if (open && pos.x === -1) {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const w = Math.min(defaultWidth, vw - 32);
-      const h = Math.min(defaultHeight, vh - 32);
+      const isMobile = vw < 640;
+      const w = isMobile ? vw - 16 : Math.min(defaultWidth, vw - 32);
+      const h = isMobile ? vh - 32 : Math.min(defaultHeight, vh - 32);
       setSize({ w, h });
-      setPos({ x: Math.max(16, (vw - w) / 2), y: Math.max(16, (vh - h) / 2) });
+      setPos({ x: isMobile ? 8 : Math.max(16, (vw - w) / 2), y: isMobile ? 16 : Math.max(16, (vh - h) / 2) });
     }
   }, [open, pos.x, defaultWidth, defaultHeight]);
 

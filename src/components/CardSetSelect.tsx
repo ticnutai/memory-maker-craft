@@ -288,14 +288,14 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
 
       {/* Title */}
       <div className="relative z-10 text-center bounce-in mt-2">
-        <h1 className="text-3xl sm:text-4xl font-black text-foreground leading-tight">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground leading-tight">
           🎮 משחקי זיכרון 🎮
         </h1>
         <p className="text-sm text-muted-foreground mt-2">בחרו ערכה להתחיל לשחק!</p>
       </div>
 
       {/* Card set grid — built-in + custom + add button */}
-      <div className="w-full max-w-lg relative z-10 grid grid-cols-3 gap-3 bounce-in" style={{ animationDelay: "0.1s" }}>
+      <div className="w-full max-w-lg relative z-10 grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 bounce-in" style={{ animationDelay: "0.1s" }}>
         {/* Built-in sets */}
         {allCardSets.map((set, i) => (
           <button key={set.type}

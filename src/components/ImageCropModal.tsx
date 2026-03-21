@@ -88,7 +88,7 @@ export default function ImageCropModal({ imageUrl, onSave, onClose, theme, onClo
   const [savingToCloud, setSavingToCloud] = useState(false);
 
   const accent = theme === "girl" ? "bg-game-pink" : "bg-game-blue";
-  const SIZE = 300;
+  const SIZE = Math.min(300, typeof window !== 'undefined' ? window.innerWidth - 80 : 300);
 
   const currentImageUrl = processedUrl || imageUrl;
 

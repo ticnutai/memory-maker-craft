@@ -318,12 +318,12 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
 
   // Grid columns based on total cards
   const totalCards = pairCount * 2;
-  let gridCols = "grid-cols-3";
+  let gridCols = "grid-cols-2 sm:grid-cols-3";
   if (totalCards <= 4) gridCols = "grid-cols-2";
-  else if (totalCards <= 6) gridCols = "grid-cols-3";
-  else if (totalCards <= 8) gridCols = "grid-cols-4";
+  else if (totalCards <= 6) gridCols = "grid-cols-2 sm:grid-cols-3";
+  else if (totalCards <= 8) gridCols = "grid-cols-2 sm:grid-cols-3 md:grid-cols-4";
   else if (totalCards <= 12) gridCols = "grid-cols-3 sm:grid-cols-4";
-  else gridCols = "grid-cols-4";
+  else gridCols = "grid-cols-3 sm:grid-cols-4";
 
   const bgThemeId = (liveSettings.bgTheme || "default") as BgThemeId;
 
@@ -345,8 +345,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
         <Confetti active={isGameOver && !animationsOff} />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm relative">
-          <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center justify-between px-2 sm:px-4 py-2 sm:py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm relative gap-y-1">
+          <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
             <Button variant="ghost" size="sm" onClick={() => { stopMusic(); onHome(); }}>
               <Home className="w-5 h-5" />
             </Button>
@@ -364,7 +364,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                 {musicPlaying && !globalMute ? <Music className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
               </Button>
               {volumePopup === "music" && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 bg-card border border-border rounded-xl shadow-xl p-3 w-44 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                <div className="absolute top-full right-0 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto mt-1 z-50 bg-card border border-border rounded-xl shadow-xl p-3 w-40 sm:w-44 space-y-1.5" onClick={(e) => e.stopPropagation()}>
                   <div className="flex justify-between items-center text-xs font-bold">
                     <span>🎵 עוצמת מוזיקה</span>
                     <span className="text-muted-foreground">{musicVolume}%</span>
@@ -386,7 +386,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                 <span className="text-[10px] mr-0.5">🔊</span>
               </Button>
               {volumePopup === "sound" && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 bg-card border border-border rounded-xl shadow-xl p-3 w-44 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                <div className="absolute top-full right-0 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto mt-1 z-50 bg-card border border-border rounded-xl shadow-xl p-3 w-40 sm:w-44 space-y-1.5" onClick={(e) => e.stopPropagation()}>
                   <div className="flex justify-between items-center text-xs font-bold">
                     <span>🔊 עוצמת צלילים</span>
                     <span className="text-muted-foreground">{soundVolume}%</span>
@@ -407,7 +407,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                 {speechOn && !globalMute ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
               </Button>
               {volumePopup === "speech" && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 bg-card border border-border rounded-xl shadow-xl p-3 w-44 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                <div className="absolute top-full right-0 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto mt-1 z-50 bg-card border border-border rounded-xl shadow-xl p-3 w-40 sm:w-44 space-y-1.5" onClick={(e) => e.stopPropagation()}>
                   <div className="flex justify-between items-center text-xs font-bold">
                     <span>🗣️ עוצמת הכרזה</span>
                     <span className="text-muted-foreground">{speechVolume}%</span>
@@ -445,7 +445,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
               </>
             )}
           </div>
-          <div className="flex items-center gap-3 text-sm font-bold">
+          <div className="flex items-center gap-1.5 sm:gap-3 text-xs sm:text-sm font-bold">
             <span>⏱️ {formatTime(timerSeconds)}</span>
             <span>🎯 {matchedCount}/{pairCount}</span>
             <span>🔄 {moves}</span>
@@ -455,7 +455,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1">
             {/* Hint */}
             <Button variant="ghost" size="sm" onClick={useHint} disabled={hintsLeft <= 0 || isGameOver}
               className="text-yellow-500" title={`רמז (${hintsLeft} נותרו)`}>
@@ -493,9 +493,9 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
 
         {/* Two-player indicator */}
         {twoPlayerMode && !isGameOver && (
-          <div className={`flex items-center justify-center gap-4 py-1.5 text-sm font-bold ${currentPlayer === 1 ? "bg-blue-500/15 text-blue-400" : "bg-pink-500/15 text-pink-400"}`}>
+          <div className={`flex items-center justify-center gap-2 sm:gap-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold flex-wrap ${currentPlayer === 1 ? "bg-blue-500/15 text-blue-400" : "bg-pink-500/15 text-pink-400"}`}>
             <span>👤 תור שחקן {currentPlayer}</span>
-            <span>|</span>
+            <span className="hidden sm:inline">|</span>
             <span>שחקן 1: {scores.p1}</span>
             <span>שחקן 2: {scores.p2}</span>
           </div>
@@ -578,7 +578,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             </div>
           ) : (
             /* ──── GRID LAYOUT ──── */
-            <div className={`grid ${gridCols} gap-3 sm:gap-4 w-full`} style={{ maxWidth: `${cardMaxW}px` }}>
+            <div className={`grid ${gridCols} gap-2 sm:gap-3 md:gap-4 w-full`} style={{ maxWidth: `${cardMaxW}px` }}>
               {cards.map((card, i) => {
                 const isHinted = hintCards.includes(card.uniqueId);
                 const showInTraining = trainingMode && trainingCountdown > 0 && !card.isMatched;

@@ -43,13 +43,13 @@ export default function ThemeSelect({ onSelect }: ThemeSelectProps) {
       </div>
 
       <div className="relative z-10 flex flex-col items-center gap-8">
-        <h1 className="text-4xl sm:text-5xl font-black text-foreground text-center leading-tight bounce-in">
+        <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-foreground text-center leading-tight bounce-in">
           🎮 משחק זיכרון 🎮
         </h1>
         <p className="text-lg text-muted-foreground text-center" style={{ animationDelay: "0.1s" }}>
           בחרו ערכה להתחיל לשחק!
         </p>
-        <div className="flex flex-col sm:flex-row gap-6 w-full max-w-md">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 w-full max-w-md">
           <Button
             variant="game-pink"
             size="xl"

@@ -68,13 +68,13 @@ const Index = () => {
       {/* Global Settings FAB — always visible */}
       <button
         onClick={() => setShowSettings(true)}
-        className="fixed bottom-6 right-4 z-40 w-12 h-12 rounded-full bg-game-pink text-primary-foreground shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+        className="fixed bottom-[max(1.5rem,calc(env(safe-area-inset-bottom)+0.5rem))] right-[max(1rem,calc(env(safe-area-inset-right)+0.5rem))] z-40 w-12 h-12 rounded-full bg-game-pink text-primary-foreground shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
       >
         <Settings className="w-6 h-6" />
       </button>
 
       {/* Bottom tab icons — floating, no bar */}
-      <div className="fixed bottom-6 left-4 z-50 flex items-center gap-3" dir="rtl">
+      <div className="fixed bottom-[max(1.5rem,calc(env(safe-area-inset-bottom)+0.5rem))] left-[max(1rem,calc(env(safe-area-inset-left)+0.5rem))] z-50 flex items-center gap-3" dir="rtl">
         <button
           onClick={() => { setTab("memory"); setScreen("home"); }}
           className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${

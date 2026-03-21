@@ -100,7 +100,7 @@ export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, 
           className={`card-face ${backColorClass} flex items-center justify-center shadow-lg cursor-pointer card-hover-effect`}
           style={{ ...borderStyle, borderColor: borderColor, ...backStyle }}
         >
-          <span className="text-3xl sm:text-4xl opacity-80 drop-shadow-sm back-icon-pulse">{cardStyle.backIcon}</span>
+          <span className="text-2xl sm:text-3xl md:text-4xl opacity-80 drop-shadow-sm back-icon-pulse">{cardStyle.backIcon}</span>
         </div>
         {/* Back (card face with emoji) */}
         <div
@@ -114,7 +114,7 @@ export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, 
               <span className={`select-none font-black ${isFlipped && !isMatched ? "emoji-reveal" : ""}`} style={{ fontSize: `${fontSize}rem`, lineHeight: 1.1 }}>
                 {emoji}
               </span>
-              {label && <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">{label}</span>}
+              {label && <span className="text-xs sm:text-sm text-muted-foreground font-medium">{label}</span>}
             </div>
           ) : (
             <span className={`select-none drop-shadow-sm ${isFlipped && !isMatched ? "emoji-reveal" : ""}`} style={{ fontSize: `${fontSize}rem`, lineHeight: 1.1 }}>

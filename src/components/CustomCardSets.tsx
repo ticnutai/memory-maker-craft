@@ -342,7 +342,7 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
               <p className="text-xs text-muted-foreground text-center py-4">אין תמונות בענן</p>
             ) : (
               <>
-                <div className="grid grid-cols-4 gap-1.5 max-h-48 overflow-y-auto">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto">
                   {cloudImages.map(img => {
                     const isSel = cloudSelected.has(img.url);
                     return (
@@ -389,7 +389,7 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
             <p className="text-sm text-muted-foreground">אין עדיין קלפים. העלו תמונות!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {setItems.map((card, i) => (
               <div key={card.id} className="relative group rounded-xl overflow-hidden border-2 border-muted bg-card bounce-in shadow-sm"
                 style={{ animationDelay: `${i * 0.04}s` }}>
