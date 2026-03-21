@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { X, Minimize2, Maximize2, GripVertical } from "lucide-react";
+import { X, Minimize2, Maximize2, GripVertical, Check } from "lucide-react";
 
 interface FloatingPanelProps {
   open: boolean;
   onClose: () => void;
+  onConfirm?: () => void;
   title: string;
   titleIcon?: React.ReactNode;
   children: React.ReactNode;
