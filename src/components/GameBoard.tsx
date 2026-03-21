@@ -141,7 +141,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   else if (totalCards <= 12) gridCols = "grid-cols-3 sm:grid-cols-4";
   else gridCols = "grid-cols-4";
 
-  const bgThemeId = (settings.bgTheme || "default") as BgThemeId;
+  const bgThemeId = (liveSettings.bgTheme || "default") as BgThemeId;
 
   const stars = Array.from({ length: matchedCount }, (_, i) => (
     <span key={i} className="text-xl bounce-in" style={{ animationDelay: `${i * 0.1}s` }}>⭐</span>
