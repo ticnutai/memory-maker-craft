@@ -25,7 +25,7 @@ interface CardSetSelectProps {
   settingsOnly?: boolean;
 }
 
-type SettingsTabId = "general" | "music" | "cards" | "gallery" | "custom-sets" | "birthdays" | "recordings";
+type SettingsTabId = "general" | "music" | "cards" | "themes" | "gallery" | "custom-sets" | "birthdays" | "recordings";
 
 const BACK_ICONS = ["⭐", "❓", "🎴", "🃏", "💫", "🌟", "🎯", "🔮", "🎪", "🎨"];
 const BACK_COLORS = [
