@@ -17,6 +17,7 @@ interface FloatingPanelProps {
 export default function FloatingPanel({
   open,
   onClose,
+  onConfirm,
   title,
   titleIcon,
   children,
