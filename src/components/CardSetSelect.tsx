@@ -369,7 +369,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                       <p className="font-bold text-sm">📐 גודל קלפים</p>
                       <span className="text-xs text-muted-foreground">{cardMaxW}px</span>
                     </div>
-                    <input type="range" min={280} max={700} step={20} value={cardMaxW}
+                    <input type="range" min={120} max={1200} step={20} value={cardMaxW}
                       onChange={(e) => updateSetting("cardMaxW", Number(e.target.value))}
                       className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`} />
                     <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>קטן</span><span>גדול</span></div>
@@ -379,7 +379,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                       <p className="font-bold text-sm">🔤 גודל אלמנט</p>
                       <span className="text-xs text-muted-foreground">×{emojiScale.toFixed(1)}</span>
                     </div>
-                    <input type="range" min={0.5} max={2} step={0.1} value={emojiScale}
+                    <input type="range" min={0.3} max={4} step={0.1} value={emojiScale}
                       onChange={(e) => updateSetting("emojiScale", Number(e.target.value))}
                       className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`} />
                     <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>קטן</span><span>גדול</span></div>

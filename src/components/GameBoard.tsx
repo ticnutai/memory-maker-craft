@@ -1,5 +1,6 @@
 import { useMemoryGame } from "@/hooks/useMemoryGame";
 import { useBackgroundMusic } from "@/hooks/useBackgroundMusic";
+import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { ThemeType, CardData, GameSettings, CardSetType, getCardSets, CardPosition } from "@/lib/gameData";
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import MemoryCard from "@/components/MemoryCard";
@@ -19,6 +20,8 @@ interface GameBoardProps {
 }
 
 export default function GameBoard({ theme, settings, cardSetType, customCards, onHome }: GameBoardProps) {
+  const { settings: liveCloud, toGameSettings } = useCloudSettings("girl");
+  const liveSettings = { ...settings, ...toGameSettings() };
   const [speechOn, setSpeechOn] = useState(settings.speechEnabled);
   const setInfo = getCardSets(theme).find((s) => s.type === cardSetType);
   const cardData = customCards || setInfo?.cards || getCardSets(theme)[0].cards;
@@ -127,7 +130,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     startGame(cardData);
   };
 
-  const cardMaxW = settings.cardMaxW;
+  const cardMaxW = liveSettings.cardMaxW;
 
   // Grid columns based on total cards
   const totalCards = pairCount * 2;
@@ -138,13 +141,13 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   else if (totalCards <= 12) gridCols = "grid-cols-3 sm:grid-cols-4";
   else gridCols = "grid-cols-4";
 
-  const bgThemeId = (settings.bgTheme || "default") as BgThemeId;
+  const bgThemeId = (liveSettings.bgTheme || "default") as BgThemeId;
 
   const stars = Array.from({ length: matchedCount }, (_, i) => (
     <span key={i} className="text-xl bounce-in" style={{ animationDelay: `${i * 0.1}s` }}>⭐</span>
   ));
 
-  const animationsOff = settings.animationsEnabled === false;
+  const animationsOff = liveSettings.animationsEnabled === false;
 
   return (
     <div dir="rtl" className={animationsOff ? "no-animations" : ""}>
@@ -257,8 +260,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                       isFlipped={card.isFlipped}
                       isMatched={card.isMatched}
                       theme={theme}
-                      emojiScale={settings.emojiScale}
-                      cardStyle={settings.cardStyle}
+                      emojiScale={liveSettings.emojiScale}
+                      cardStyle={liveSettings.cardStyle}
                       onClick={() => { if (!editMode) flipCard(card.uniqueId); }}
                     />
                   </div>
@@ -277,8 +280,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                     isFlipped={card.isFlipped}
                     isMatched={card.isMatched}
                     theme={theme}
-                    emojiScale={settings.emojiScale}
-                    cardStyle={settings.cardStyle}
+                    emojiScale={liveSettings.emojiScale}
+                    cardStyle={liveSettings.cardStyle}
                     onClick={() => flipCard(card.uniqueId)}
                   />
                 </div>
