@@ -147,7 +147,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     <span key={i} className="text-xl bounce-in" style={{ animationDelay: `${i * 0.1}s` }}>⭐</span>
   ));
 
-  const animationsOff = settings.animationsEnabled === false;
+  const animationsOff = liveSettings.animationsEnabled === false;
 
   return (
     <div dir="rtl" className={animationsOff ? "no-animations" : ""}>
