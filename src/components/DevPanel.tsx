@@ -639,7 +639,7 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
   };
 
   return (
-    <div className="space-y-3" dir="rtl">
+    <div className="space-y-3 overflow-y-auto" dir="rtl">
       <p className="font-bold text-lg text-center flex items-center justify-center gap-2">
         <Code2 className="w-5 h-5" /> פיתוח
       </p>

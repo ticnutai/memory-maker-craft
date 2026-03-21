@@ -182,7 +182,7 @@ export default function FloatingPanel({
 
         {/* Content */}
         {!minimized && (
-          <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col">
             {children}
           </div>
         )}
