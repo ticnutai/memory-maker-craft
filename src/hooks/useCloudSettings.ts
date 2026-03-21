@@ -36,6 +36,9 @@ export interface StoredSettings {
   theme?: string;
   bgTheme?: string;
   cardStyle: CardStyle;
+  layoutMode?: "grid" | "free";
+  snapToGrid?: boolean;
+  gridSize?: number;
 }
 
 export function useCloudSettings(initialTheme: string) {
