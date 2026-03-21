@@ -51,9 +51,9 @@ const Index = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen" style={{ background: 'inherit' }}>
       {/* Main content */}
-      <div className="flex-1 pb-16">
+      <div className="flex-1">
         {tab === "memory" && <CardSetSelect onSelectSet={handleCardSet} />}
         {tab === "treasure" && <TreasureHuntGame onHome={() => setTab("memory")} />}
       </div>
