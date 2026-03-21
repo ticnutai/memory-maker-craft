@@ -203,51 +203,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     ? selectedBgTheme.bg
     : "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 30%, #f3e5f5 60%, #fff9c4 100%)";
 
-  const renderSettingsContent = () => (
-    <>
-      {/* Tabs */}
-      <div className="flex gap-1 bg-muted px-3 py-2 overflow-x-auto shrink-0">
-        {SETTINGS_TABS.map((t) => (
-          <button key={t.id} onClick={() => setSettingsTab(t.id)}
-            className={`shrink-0 py-2 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 ${
-              settingsTab === t.id ? `${accent} text-primary-foreground shadow-md` : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t.icon}
-            {t.label}
-          </button>
-        ))}
-      </div>
-    </>
-  );
 
-  const renderModals = () => (
-    <>
-      {showCloudGallery && (
-        <CloudGallery theme={theme}
-          onClose={() => setShowCloudGallery(false)}
-          onSelect={(urls) => {
-            setShowCloudGallery(false);
-            const cards: CardData[] = urls.map((url, i) => ({ id: `cloud-${i}`, emoji: "☁️", image: url }));
-            const cloudPairCount = Math.min(pairCount, cards.length);
-            onSelectSet("custom", { ...settings, pairCount: cloudPairCount }, cards);
-          }}
-        />
-      )}
-      {showCloudAudio && (
-        <CloudGallery theme={theme} mode="audio"
-          onClose={() => setShowCloudAudio(false)}
-          onSelect={() => {}}
-          onSelectAudio={(url, name) => {
-            setShowCloudAudio(false);
-            updateSetting("musicType", "cloud");
-            updateSetting("customMusic", url);
-            updateSetting("customMusicName", `cloud:${name}`);
-          }}
-        />
-      )}
-    </>
-  );
 
   return (
     <>
