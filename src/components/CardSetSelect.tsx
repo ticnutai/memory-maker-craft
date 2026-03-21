@@ -288,10 +288,10 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
 
       {/* Title */}
       <div className="relative z-10 text-center bounce-in mt-2">
-        <h1 className="text-3xl sm:text-4xl font-black text-foreground leading-tight">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground leading-tight">
           🎮 משחקי זיכרון 🎮
         </h1>
-        <p className="text-sm text-muted-foreground mt-2">בחרו ערכה להתחיל לשחק!</p>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">בחרו ערכה להתחיל לשחק!</p>
       </div>
 
       {/* Card set grid — built-in + custom + add button */}
