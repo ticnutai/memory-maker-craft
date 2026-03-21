@@ -118,6 +118,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
     { id: "music", label: "מוזיקה", icon: <Music className="w-4 h-4" /> },
     { id: "cards", label: "קלפים", icon: <Palette className="w-4 h-4" /> },
     { id: "birthdays", label: "ימי הולדת", icon: <Cake className="w-4 h-4" /> },
+    { id: "recordings", label: "הקלטות", icon: <Mic className="w-4 h-4" /> },
   ];
 
   // Card preview for the cards tab
