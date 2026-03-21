@@ -58,28 +58,28 @@ const Index = () => {
         {tab === "treasure" && <TreasureHuntGame onHome={() => setTab("memory")} />}
       </div>
 
-      {/* Bottom tab bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-t border-border shadow-lg" dir="rtl">
-        <div className="flex items-center justify-around max-w-lg mx-auto">
-          <button
-            onClick={() => { setTab("memory"); setScreen("home"); }}
-            className={`flex flex-col items-center gap-0.5 py-2.5 px-6 transition-all ${
-              tab === "memory" ? "text-game-pink scale-105" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Gamepad2 className="w-5 h-5" />
-            <span className="text-[11px] font-bold">זיכרון</span>
-          </button>
-          <button
-            onClick={() => { setTab("treasure"); setScreen("home"); }}
-            className={`flex flex-col items-center gap-0.5 py-2.5 px-6 transition-all ${
-              tab === "treasure" ? "text-game-pink scale-105" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Map className="w-5 h-5" />
-            <span className="text-[11px] font-bold">מטמון</span>
-          </button>
-        </div>
+      {/* Bottom tab icons — floating, no bar */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3" dir="rtl">
+        <button
+          onClick={() => { setTab("memory"); setScreen("home"); }}
+          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+            tab === "memory"
+              ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
+              : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
+          }`}
+        >
+          <Gamepad2 className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => { setTab("treasure"); setScreen("home"); }}
+          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+            tab === "treasure"
+              ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
+              : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
+          }`}
+        >
+          <Map className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );
