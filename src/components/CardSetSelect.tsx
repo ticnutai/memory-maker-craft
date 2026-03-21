@@ -704,6 +704,11 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
           <BirthdayManager theme={theme} />
         )}
 
+        {/* ═══ RECORDINGS TAB ═══ */}
+        {activeTab === "recordings" && (
+          <VoiceRecorder theme={theme} />
+        )}
+
       {/* Modals */}
       {showCloudGallery && (
         <CloudGallery theme={theme}
