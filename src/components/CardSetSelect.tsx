@@ -336,7 +336,8 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
           <span className="font-bold text-xs text-game-pink">ערכה חדשה</span>
         </button>
       </div>
-
+    </div>
+    )}
 
       {/* ══════════════════ Settings Panel (Floating) ══════════════════ */}
       <FloatingPanel
