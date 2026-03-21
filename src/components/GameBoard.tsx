@@ -46,6 +46,12 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const [alignLines, setAlignLines] = useState<{ x?: number; y?: number }>({});
   const boardRef = useRef<HTMLDivElement>(null);
 
+  // הפעל מצב עריכה אוטומטית כשעוברים למצב חופשי
+  useEffect(() => {
+    if (isFreeLayout) setEditMode(true);
+    else setEditMode(false);
+  }, [isFreeLayout]);
+
   useEffect(() => {
     startGame(cardData);
   }, []);
@@ -171,15 +177,14 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             {isFreeLayout && (
               <>
                 <Button variant="ghost" size="sm" onClick={() => setEditMode(!editMode)}
-                  className={editMode ? "text-game-orange" : "text-muted-foreground"} title="מצב עריכה">
+                  className={editMode ? "text-game-orange font-bold" : "text-muted-foreground"} title="מצב עריכה (גרירה)">
                   {editMode ? <Unlock className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                  <span className="text-xs ml-1">{editMode ? "גרירה" : "נעול"}</span>
                 </Button>
-                {editMode && (
-                  <Button variant="ghost" size="sm" onClick={() => setShowGrid(!showGrid)}
-                    className={showGrid ? "text-game-blue" : "text-muted-foreground"} title="הצג גריד">
-                    <Grid3X3 className="w-5 h-5" />
-                  </Button>
-                )}
+                <Button variant="ghost" size="sm" onClick={() => setShowGrid(!showGrid)}
+                  className={showGrid ? "text-game-blue" : "text-muted-foreground"} title="הצג/הסתר גריד">
+                  <Grid3X3 className="w-5 h-5" />
+                </Button>
               </>
             )}
           </div>
@@ -193,10 +198,10 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
         </div>
 
         {/* Edit mode banner */}
-        {isFreeLayout && editMode && (
+        {isFreeLayout && (
           <div className="flex items-center justify-center gap-2 py-1.5 bg-game-orange/20 text-game-orange text-xs font-bold">
             <Move className="w-3.5 h-3.5" />
-            <span>מצב עריכה — גררו קלפים למיקום הרצוי</span>
+            <span>{editMode ? "מצב גרירה פעיל — גררו קלפים למיקום הרצוי" : "מצב חופשי — לחצו 🔓 לגרירת קלפים"}</span>
           </div>
         )}
 
@@ -215,10 +220,10 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
               onPointerLeave={handlePointerUp}
-              style={{ touchAction: editMode ? "none" : "auto" }}
+              style={{ touchAction: isFreeLayout ? "none" : "auto" }}
             >
-              {/* Grid overlay */}
-              {editMode && showGrid && (
+              {/* Grid overlay — מוצג תמיד במצב חופשי */}
+              {showGrid && (
                 <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" style={{ opacity: 0.12 }}>
                   <defs>
                     <pattern id="grid" width={gridSize} height={gridSize} patternUnits="userSpaceOnUse">
