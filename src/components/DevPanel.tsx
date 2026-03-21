@@ -144,7 +144,7 @@ function NetworkMonitor({ entries }: { entries: NetworkEntry[] }) {
               <Download className="w-3 h-3" />
             </button>
           </div>
-          <div className="h-32 overflow-y-auto p-1.5 space-y-0.5 font-mono text-[10px]">
+          <div className="min-h-[8rem] max-h-[50vh] overflow-y-auto overflow-x-auto p-1.5 space-y-0.5 font-mono text-[10px]">
             {entries.length === 0 && (
               <p className="text-white/30 text-center py-4 text-xs">אין בקשות...</p>
             )}
@@ -159,7 +159,7 @@ function NetworkMonitor({ entries }: { entries: NetworkEntry[] }) {
                   {e.status || "..."}
                 </span>
                 <span className="text-blue-400/60 shrink-0">{e.method}</span>
-                <span className="text-white/60 truncate">{e.url.replace(/https?:\/\/[^/]+/, "")}</span>
+                <span className="text-white/60 whitespace-nowrap">{e.url.replace(/https?:\/\/[^/]+/, "")}</span>
                 {e.duration !== null && (
                   <span className="text-white/30 shrink-0">{e.duration}ms</span>
                 )}
@@ -679,7 +679,7 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
           </div>
         </div>
         <LogFilter filter={logFilter} setFilter={setLogFilter} search={logSearch} setSearch={setLogSearch} />
-        <div className="h-48 overflow-y-auto p-2 space-y-1 font-mono text-xs">
+        <div className="min-h-[10rem] max-h-[50vh] overflow-y-auto overflow-x-auto p-2 space-y-1 font-mono text-xs">
           {filteredLogs.length === 0 && (
             <p className="text-white/40 text-center py-8 text-sm">
               {logs.length === 0 ? "אין הודעות עדיין..." : "אין תוצאות לסינון"}
@@ -689,7 +689,7 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
             <div key={i} className={`flex gap-2 leading-relaxed ${logColors[log.type]}`}>
               <span className="text-white/50 shrink-0">{log.time}</span>
               <span className="text-white/60 shrink-0 font-bold">[{log.type}]</span>
-              <span className="break-all">{log.message}</span>
+              <span className="whitespace-nowrap">{log.message}</span>
             </div>
           ))}
           <div ref={logsEndRef} />
