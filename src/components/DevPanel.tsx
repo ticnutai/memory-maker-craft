@@ -689,7 +689,7 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
             <div key={i} className={`flex gap-2 leading-relaxed ${logColors[log.type]}`}>
               <span className="text-white/50 shrink-0">{log.time}</span>
               <span className="text-white/60 shrink-0 font-bold">[{log.type}]</span>
-              <span className="break-all">{log.message}</span>
+              <span className="whitespace-nowrap">{log.message}</span>
             </div>
           ))}
           <div ref={logsEndRef} />
