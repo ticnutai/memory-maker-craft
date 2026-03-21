@@ -262,7 +262,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     <>
     {!settingsOnly && (
     <div
-      className={`flex flex-col items-center min-h-screen gap-6 px-5 py-8 pb-28 overflow-y-auto relative ${cloud.animationsEnabled === false ? "no-animations" : ""}`}
+      className={`flex flex-col items-center min-h-screen gap-4 sm:gap-6 px-3 sm:px-5 py-6 sm:py-8 pb-24 sm:pb-28 overflow-y-auto relative ${cloud.animationsEnabled === false ? "no-animations" : ""}`}
       dir="rtl"
       style={{ background: homeBg }}
     >
