@@ -39,6 +39,7 @@ export interface StoredSettings {
   layoutMode?: "grid" | "free";
   snapToGrid?: boolean;
   gridSize?: number;
+  animationsEnabled?: boolean;
 }
 
 export function useCloudSettings(initialTheme: string) {
