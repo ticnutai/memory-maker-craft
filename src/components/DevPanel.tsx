@@ -437,31 +437,67 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
     };
   }, []);
 
-  // Intercept fetch for network monitor
+  // Intercept fetch for network monitor + auto-log significant requests
   useEffect(() => {
     const origFetch = window.fetch;
+
+    const classifyRequest = (url: string, method: string): { label: string; type: LogEntry["type"] } | null => {
+      const lower = url.toLowerCase();
+      if (lower.includes("/functions/v1/")) return { label: "⚡ Edge Function", type: "info" };
+      if (lower.includes("supabase") && lower.includes("/rest/")) return { label: "🗄️ Database", type: "log" };
+      if (lower.includes("supabase") && lower.includes("/storage/")) return { label: "📦 Storage", type: "log" };
+      if (lower.includes("supabase") && lower.includes("/auth/")) return { label: "🔐 Auth", type: "info" };
+      if (lower.includes("github")) return { label: "🐙 GitHub", type: "info" };
+      if (lower.includes("deploy") || lower.includes("publish")) return { label: "🚀 Deploy", type: "info" };
+      if (lower.includes("supabase")) return { label: "☁️ Cloud", type: "log" };
+      return null;
+    };
+
     window.fetch = async (...args) => {
       const url = typeof args[0] === "string" ? args[0] : (args[0] as Request)?.url || "";
       const method = (args[1]?.method || "GET").toUpperCase();
       const start = Date.now();
+      const classification = classifyRequest(url, method);
+
       try {
         const res = await origFetch(...args);
+        const duration = Date.now() - start;
+        const shortUrl = url.replace(/https?:\/\/[^/]+/, "");
+
         setNetworkEntries(prev => [...prev.slice(-49), {
           time: new Date().toLocaleTimeString("he-IL"),
-          method,
-          url,
-          status: res.status,
-          duration: Date.now() - start,
+          method, url, status: res.status, duration,
         }]);
+
+        // Auto-log significant requests to console
+        if (classification) {
+          const statusEmoji = res.status < 300 ? "✅" : res.status < 400 ? "↗️" : "❌";
+          const logType: LogEntry["type"] = res.status >= 400 ? "error" : classification.type;
+          setLogs(prev => [...prev.slice(-199), {
+            time: new Date().toLocaleTimeString("he-IL"),
+            type: logType,
+            message: `${classification.label} ${statusEmoji} ${method} ${shortUrl} → ${res.status} (${duration}ms)`,
+          }]);
+        }
+
         return res;
       } catch (err) {
+        const duration = Date.now() - start;
+        const shortUrl = url.replace(/https?:\/\/[^/]+/, "");
+
         setNetworkEntries(prev => [...prev.slice(-49), {
           time: new Date().toLocaleTimeString("he-IL"),
-          method,
-          url,
-          status: null,
-          duration: Date.now() - start,
+          method, url, status: null, duration,
         }]);
+
+        if (classification) {
+          setLogs(prev => [...prev.slice(-199), {
+            time: new Date().toLocaleTimeString("he-IL"),
+            type: "error",
+            message: `${classification.label} ❌ ${method} ${shortUrl} → FAILED (${duration}ms)`,
+          }]);
+        }
+
         throw err;
       }
     };
