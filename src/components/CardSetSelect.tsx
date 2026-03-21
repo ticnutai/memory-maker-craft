@@ -19,6 +19,8 @@ import FloatingPanel from "@/components/FloatingPanel";
 
 interface CardSetSelectProps {
   onSelectSet: (set: CardSetType, settings: GameSettings, customCards?: CardData[]) => void;
+  settingsOpen?: boolean;
+  onSettingsToggle?: (open: boolean) => void;
 }
 
 type SettingsTabId = "general" | "music" | "cards" | "gallery" | "custom-sets" | "birthdays" | "recordings";
