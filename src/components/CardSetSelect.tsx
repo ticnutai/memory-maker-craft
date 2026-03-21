@@ -181,7 +181,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
   };
 
   const deletePreset = async (id: string) => {
-    await supabase.from("layout_presets").delete().eq("id", id);
+    await (supabase as any).from("layout_presets").delete().eq("id", id);
     loadLayoutPresets();
   };
 

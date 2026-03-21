@@ -152,7 +152,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     const name = window.prompt("שם לפריסה החדשה:");
     if (!name?.trim()) return;
     const posArr = cards.map(c => positions[c.uniqueId] || { x: 0, y: 0 });
-    await supabase.from("layout_presets").insert({
+    await (supabase as any).from("layout_presets").insert({
       device_id: getDeviceId(),
       name: name.trim(),
       positions: posArr,
