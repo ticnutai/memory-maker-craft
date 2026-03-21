@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Play, Trash2, Check, Upload } from "lucide-react";
+import { Mic, Square, Play, Trash2, Check, Upload, Tags, Pencil } from "lucide-react";
 
 const EVENT_TYPES = [
   { id: "match", label: "התאמה מוצלחת", emoji: "✅" },
