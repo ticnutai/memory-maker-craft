@@ -262,13 +262,21 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
           defaultHeight={540}
         >
           {renderSettingsContent()}
+          <div className="flex-1 overflow-y-auto px-5 py-4">
+            {settingsTab === "general" && renderGeneralTab()}
+            {settingsTab === "cards" && renderCardsTab()}
+            {settingsTab === "music" && renderMusicTab()}
+            {settingsTab === "custom-sets" && renderCustomSetsTab()}
+            {settingsTab === "gallery" && renderGalleryTab()}
+            {settingsTab === "birthdays" && <BirthdayManager theme={theme} />}
+            {settingsTab === "recordings" && <VoiceRecorder theme={theme} />}
+          </div>
         </FloatingPanel>
         {renderModals()}
       </>
     );
   }
 
-  return (
     <div
       className={`flex flex-col items-center min-h-screen gap-6 px-5 py-8 pb-28 overflow-y-auto relative ${cloud.animationsEnabled === false ? "no-animations" : ""}`}
       dir="rtl"
