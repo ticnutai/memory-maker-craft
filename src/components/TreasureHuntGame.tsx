@@ -325,7 +325,7 @@ export default function TreasureHuntGame({ onHome }: { onHome: () => void }) {
           : "linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%)"
         }}
       >
-        {showConfetti && <Confetti />}
+        {showConfetti && <Confetti active />}
         <div className="text-center bounce-in">
           <span className="text-7xl">{phase === "won" ? "🏆" : "⏰"}</span>
           <h1 className="text-3xl font-black text-white mt-4 drop-shadow-lg">
