@@ -402,6 +402,68 @@ function GameStats() {
   );
 }
 
+function GitHubStatus({ networkEntries, addLog }: { networkEntries: NetworkEntry[]; addLog: (type: LogEntry["type"], msg: string) => void }) {
+  const githubEntries = useMemo(() => networkEntries.filter(e => e.url.toLowerCase().includes("github")), [networkEntries]);
+  const lastEntry = githubEntries[githubEntries.length - 1] || null;
+  const successCount = githubEntries.filter(e => e.status && e.status < 300).length;
+  const errorCount = githubEntries.filter(e => e.status && e.status >= 400).length;
+
+  const triggerTestLog = useCallback(() => {
+    addLog("info", "🐙 GitHub — בדיקת חיבור... סנכרון מתבצע אוטומטית דרך הפלטפורמה");
+  }, [addLog]);
+
+  return (
+    <div className="bg-muted/50 rounded-xl p-3 space-y-2">
+      <h4 className="font-bold text-xs flex items-center gap-2">
+        <Github className="w-3.5 h-3.5" /> GitHub
+        <span className={`mr-auto text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+          githubEntries.length === 0 ? "bg-muted text-muted-foreground" :
+          errorCount > 0 ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"
+        }`}>
+          {githubEntries.length === 0 ? "ממתין" : errorCount > 0 ? `${errorCount} שגיאות` : `${successCount} הצלחות`}
+        </span>
+      </h4>
+
+      {/* Live activity feed */}
+      {githubEntries.length > 0 && (
+        <div className="bg-background/50 rounded-lg p-2 space-y-1 max-h-24 overflow-y-auto font-mono text-[10px]">
+          {githubEntries.slice(-5).map((e, i) => (
+            <div key={i} className="flex items-center gap-1.5">
+              <span className={`shrink-0 w-1.5 h-1.5 rounded-full ${e.status && e.status < 300 ? "bg-green-400" : "bg-red-400"}`} />
+              <span className="text-muted-foreground shrink-0">{e.time}</span>
+              <span className="text-foreground/70 truncate">{e.method} {e.url.replace(/https?:\/\/[^/]+/, "")}</span>
+              <span className="text-muted-foreground shrink-0">{e.duration}ms</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {githubEntries.length === 0 && (
+        <p className="text-[10px] text-muted-foreground leading-relaxed">
+          אין פעילות GitHub עדיין. בקשות GitHub יופיעו כאן ובקונסול אוטומטית.
+        </p>
+      )}
+
+      <div className="flex gap-1.5">
+        <button
+          onClick={triggerTestLog}
+          className="flex-1 h-8 rounded-lg bg-muted text-foreground font-bold text-[10px] flex items-center justify-center gap-1.5 hover:bg-muted/80 transition-all active:scale-95"
+        >
+          <RefreshCw className="w-3 h-3" /> בדיקת חיבור
+        </button>
+        <a
+          href="https://lovable.dev"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 h-8 rounded-lg bg-[#24292f] text-white font-bold text-[10px] flex items-center justify-center gap-1.5 hover:bg-[#24292f]/90 transition-all active:scale-95"
+        >
+          <Github className="w-3 h-3" /> הגדרות
+        </a>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main DevPanel ───
 export default function DevPanel({ deviceId }: { deviceId: string }) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
