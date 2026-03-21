@@ -217,7 +217,7 @@ export default function ThemeBackground({ themeId, children, className = "", gir
             const top = (i * 17.3 + 5 + (i > floatItems.length ? 12 : 0)) % 95;
             const delay = i * (isAnimatedTheme ? 0.8 : 1.2);
             const duration = isAnimatedTheme ? (6 + (i % 5) * 2) : (8 + (i % 4) * 3);
-            const animType = animTypes[i % animTypes.length];
+            const animType: AnimationType = animTypes[i % animTypes.length];
             const anim = isAnimatedTheme
               ? getAnimationCSS(animType, duration, delay)
               : `floatBg ${duration}s ease-in-out ${delay}s infinite alternate`;
