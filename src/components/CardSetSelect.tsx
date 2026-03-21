@@ -796,6 +796,6 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
           }}
         />
       )}
-    </div>
+    </>
   );
 }
