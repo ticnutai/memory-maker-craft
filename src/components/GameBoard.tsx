@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, Lightbulb, Timer, Eye, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { setSoundVolumeMultiplier } from "@/lib/sounds";
+import { setSpeechVolumeMultiplier } from "@/lib/cardSpeech";
 
 interface GameBoardProps {
   theme: ThemeType;
@@ -37,7 +39,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const customUrl = (liveSettings.musicType === "custom" || liveSettings.musicType === "cloud") ? liveSettings.customMusic : undefined;
   const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(
     globalMute ? undefined : activeMelody,
-    globalMute ? undefined : customUrl
+    globalMute ? undefined : customUrl,
+    (liveCloud.musicVolume ?? 50) / 100
   );
 
   const isFreeLayout = liveSettings.layoutMode === "free";
@@ -71,6 +74,27 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const [twoPlayerMode, setTwoPlayerMode] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState<1 | 2>(1);
   const [scores, setScores] = useState({ p1: 0, p2: 0 });
+
+  // ── Volume slider popup ──
+  const [volumePopup, setVolumePopup] = useState<"music" | "sound" | "speech" | null>(null);
+  const volumePopupTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  // Volume values from cloud (0-100)
+  const musicVolume = liveCloud.musicVolume ?? 50;
+  const soundVolume = liveCloud.soundVolume ?? 50;
+  const speechVolume = liveCloud.speechVolume ?? 50;
+
+  // Sync volume multipliers to sound engines
+  useEffect(() => { setSoundVolumeMultiplier(soundVolume / 100); }, [soundVolume]);
+  useEffect(() => { setSpeechVolumeMultiplier(speechVolume / 100); }, [speechVolume]);
+
+  // Close volume popup on outside click
+  useEffect(() => {
+    if (!volumePopup) return;
+    const close = () => setVolumePopup(null);
+    const timer = setTimeout(() => document.addEventListener("click", close), 100);
+    return () => { clearTimeout(timer); document.removeEventListener("click", close); };
+  }, [volumePopup]);
 
   // ── Previous state refs for detecting match/mismatch ──
   const prevMatchedRef = useRef(matchedCount);
@@ -321,23 +345,80 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
         <Confetti active={isGameOver && !animationsOff} />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm">
+        <div className="flex items-center justify-between px-4 py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm relative">
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="sm" onClick={() => { stopMusic(); onHome(); }}>
               <Home className="w-5 h-5" />
             </Button>
+            {/* Global mute */}
             <Button variant="ghost" size="sm" onClick={() => { setGlobalMute(!globalMute); if (!globalMute) stopMusic(); }}
               className={globalMute ? "text-destructive" : "text-green-500"} title={globalMute ? "הפעל הכל" : "השתק הכל"}>
               {globalMute ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
             </Button>
-            <Button variant="ghost" size="sm" onClick={toggleMusic} disabled={globalMute}
-              className={musicPlaying && !globalMute ? "text-accent" : "text-muted-foreground"} title="מוזיקת רקע">
-              {musicPlaying && !globalMute ? <Music className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setSpeechOn(!speechOn)} disabled={globalMute}
-              className={speechOn && !globalMute ? "text-accent" : "text-muted-foreground"} title="הכרזה קולית">
-              {speechOn && !globalMute ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
-            </Button>
+            {/* Music — click toggle, double-click volume */}
+            <div className="relative">
+              <Button variant="ghost" size="sm" disabled={globalMute}
+                onClick={toggleMusic}
+                onDoubleClick={(e) => { e.stopPropagation(); setVolumePopup(volumePopup === "music" ? null : "music"); }}
+                className={musicPlaying && !globalMute ? "text-accent" : "text-muted-foreground"} title="לחיצה: הפעל/כבה | לחיצה כפולה: עוצמה">
+                {musicPlaying && !globalMute ? <Music className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+              </Button>
+              {volumePopup === "music" && (
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 bg-card border border-border rounded-xl shadow-xl p-3 w-44 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span>🎵 עוצמת מוזיקה</span>
+                    <span className="text-muted-foreground">{musicVolume}%</span>
+                  </div>
+                  <input type="range" min={0} max={100} step={5} value={musicVolume}
+                    onChange={(e) => updateSetting("musicVolume" as any, Number(e.target.value))}
+                    className="w-full h-2 rounded-full cursor-pointer accent-pink-500" />
+                  <div className="flex justify-between text-[9px] text-muted-foreground"><span>🔇</span><span>🔊</span></div>
+                </div>
+              )}
+            </div>
+            {/* Sound effects — click toggle, double-click volume */}
+            <div className="relative">
+              <Button variant="ghost" size="sm" disabled={globalMute}
+                onClick={() => updateSetting("soundEnabled", !liveSettings.soundEnabled)}
+                onDoubleClick={(e) => { e.stopPropagation(); setVolumePopup(volumePopup === "sound" ? null : "sound"); }}
+                className={liveSettings.soundEnabled && !globalMute ? "text-accent" : "text-muted-foreground"} title="לחיצה: הפעל/כבה | לחיצה כפולה: עוצמה">
+                {liveSettings.soundEnabled && !globalMute ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                <span className="text-[10px] mr-0.5">🔊</span>
+              </Button>
+              {volumePopup === "sound" && (
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 bg-card border border-border rounded-xl shadow-xl p-3 w-44 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span>🔊 עוצמת צלילים</span>
+                    <span className="text-muted-foreground">{soundVolume}%</span>
+                  </div>
+                  <input type="range" min={0} max={100} step={5} value={soundVolume}
+                    onChange={(e) => updateSetting("soundVolume" as any, Number(e.target.value))}
+                    className="w-full h-2 rounded-full cursor-pointer accent-pink-500" />
+                  <div className="flex justify-between text-[9px] text-muted-foreground"><span>🔇</span><span>🔊</span></div>
+                </div>
+              )}
+            </div>
+            {/* Speech — click toggle, double-click volume */}
+            <div className="relative">
+              <Button variant="ghost" size="sm" disabled={globalMute}
+                onClick={() => setSpeechOn(!speechOn)}
+                onDoubleClick={(e) => { e.stopPropagation(); setVolumePopup(volumePopup === "speech" ? null : "speech"); }}
+                className={speechOn && !globalMute ? "text-accent" : "text-muted-foreground"} title="לחיצה: הפעל/כבה | לחיצה כפולה: עוצמה">
+                {speechOn && !globalMute ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+              </Button>
+              {volumePopup === "speech" && (
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 bg-card border border-border rounded-xl shadow-xl p-3 w-44 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span>🗣️ עוצמת הכרזה</span>
+                    <span className="text-muted-foreground">{speechVolume}%</span>
+                  </div>
+                  <input type="range" min={0} max={100} step={5} value={speechVolume}
+                    onChange={(e) => updateSetting("speechVolume" as any, Number(e.target.value))}
+                    className="w-full h-2 rounded-full cursor-pointer accent-pink-500" />
+                  <div className="flex justify-between text-[9px] text-muted-foreground"><span>🔇</span><span>🔊</span></div>
+                </div>
+              )}
+            </div>
             {isFreeLayout && (
               <>
                 <Button variant="ghost" size="sm" onClick={() => setEditMode(!editMode)}

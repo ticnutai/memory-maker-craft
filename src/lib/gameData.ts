@@ -34,6 +34,9 @@ export interface GameSettings {
   gridSize?: number;
   cardPositions?: CardPosition[];
   animationsEnabled?: boolean;
+  musicVolume?: number;
+  soundVolume?: number;
+  speechVolume?: number;
 }
 
 export interface CardData {

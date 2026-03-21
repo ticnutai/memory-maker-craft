@@ -1,12 +1,24 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { MelodyInfo } from "@/lib/melodies";
 
-export function useBackgroundMusic(melody?: MelodyInfo, customMusicUrl?: string) {
+export function useBackgroundMusic(melody?: MelodyInfo, customMusicUrl?: string, volume: number = 0.5) {
   const ctxRef = useRef<AudioContext | null>(null);
   const gainRef = useRef<GainNode | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const volumeRef = useRef(volume);
+
+  // Update volume live
+  useEffect(() => {
+    volumeRef.current = volume;
+    if (gainRef.current && ctxRef.current) {
+      gainRef.current.gain.setValueAtTime(volume, ctxRef.current.currentTime);
+    }
+    if (audioElRef.current) {
+      audioElRef.current.volume = volume;
+    }
+  }, [volume]);
 
   const scheduleLoop = useCallback(() => {
     const ctx = ctxRef.current;
@@ -38,7 +50,7 @@ export function useBackgroundMusic(melody?: MelodyInfo, customMusicUrl?: string)
     if (ctx.state === "suspended") ctx.resume();
     if (!gainRef.current) {
       gainRef.current = ctx.createGain();
-      gainRef.current.gain.setValueAtTime(0.5, ctx.currentTime);
+      gainRef.current.gain.setValueAtTime(volumeRef.current, ctx.currentTime);
       gainRef.current.connect(ctx.destination);
     }
     scheduleLoop();
@@ -49,7 +61,7 @@ export function useBackgroundMusic(melody?: MelodyInfo, customMusicUrl?: string)
     if (!customMusicUrl) return;
     const audio = new Audio(customMusicUrl);
     audio.loop = true;
-    audio.volume = 0.5;
+    audio.volume = volumeRef.current;
     audio.play().catch(() => {});
     audioElRef.current = audio;
   }, [customMusicUrl]);
