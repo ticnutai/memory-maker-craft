@@ -293,7 +293,7 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
       {/* ══════════════════ Settings Panel ══════════════════ */}
       {showSettings && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" dir="rtl">
-          <div className="bg-card w-full max-w-lg max-h-[90vh] rounded-2xl shadow-2xl border-2 border-muted flex flex-col overflow-hidden bounce-in">
+          <div className="bg-card w-full max-w-2xl max-h-[90vh] rounded-2xl shadow-2xl border-2 border-muted flex flex-col overflow-hidden bounce-in">
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-muted">
               <h3 className="text-xl font-black flex items-center gap-2">
