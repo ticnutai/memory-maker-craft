@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GameSettings, CardStyle } from "@/lib/gameData";
 
+const SETTINGS_SYNC_EVENT = "memory-settings-sync";
+
 function getDeviceId(): string {
   const key = "memory-game-device-id";
   let id = localStorage.getItem(key);
@@ -101,6 +103,13 @@ export function useCloudSettings(initialTheme: string) {
     };
     load();
 
+    // סנכרון מיידי בין מופעים באותו טאב דרך CustomEvent
+    const syncHandler = (e: Event) => {
+      const next = (e as CustomEvent<StoredSettings>).detail;
+      setSettings(next);
+    };
+    window.addEventListener(SETTINGS_SYNC_EVENT, syncHandler);
+
     // Real-time subscription — כל שינוי ב-Supabase מתפשט מיד לכל המופעים
     const channel = supabase
       .channel(`settings-${deviceId.current}`)
@@ -119,6 +128,7 @@ export function useCloudSettings(initialTheme: string) {
       .subscribe();
 
     return () => {
+      window.removeEventListener(SETTINGS_SYNC_EVENT, syncHandler);
       supabase.removeChannel(channel);
     };
   }, [initialTheme, applyData]);
@@ -154,29 +164,36 @@ export function useCloudSettings(initialTheme: string) {
     }, 500);
   }, [initialTheme]);
 
+  const broadcast = useCallback((next: StoredSettings) => {
+    window.dispatchEvent(new CustomEvent(SETTINGS_SYNC_EVENT, { detail: next }));
+  }, []);
+
   const updateSetting = useCallback(<K extends keyof StoredSettings>(key: K, value: StoredSettings[K]) => {
     setSettings((prev) => {
       const next = { ...prev, [key]: value };
       saveToCloud(next);
+      broadcast(next);
       return next;
     });
-  }, [saveToCloud]);
+  }, [saveToCloud, broadcast]);
 
   const updateCardStyle = useCallback(<K extends keyof CardStyle>(key: K, value: CardStyle[K]) => {
     setSettings((prev) => {
       const next = { ...prev, cardStyle: { ...prev.cardStyle, [key]: value } };
       saveToCloud(next);
+      broadcast(next);
       return next;
     });
-  }, [saveToCloud]);
+  }, [saveToCloud, broadcast]);
 
   const updateMultiple = useCallback((partial: Partial<StoredSettings>) => {
     setSettings((prev) => {
       const next = { ...prev, ...partial };
       saveToCloud(next);
+      broadcast(next);
       return next;
     });
-  }, [saveToCloud]);
+  }, [saveToCloud, broadcast]);
 
   const toGameSettings = useCallback((): GameSettings => ({
     pairCount: settings.pairCount,
