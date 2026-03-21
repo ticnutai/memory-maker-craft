@@ -14,6 +14,7 @@ import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { getBgThemes } from "@/components/ThemeBackground";
 import { supabase } from "@/integrations/supabase/client";
 import FloatingPanel from "@/components/FloatingPanel";
+import ThemeBuilder from "@/components/ThemeBuilder";
 
 
 
