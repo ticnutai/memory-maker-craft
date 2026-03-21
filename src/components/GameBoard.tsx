@@ -280,8 +280,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                     isFlipped={card.isFlipped}
                     isMatched={card.isMatched}
                     theme={theme}
-                    emojiScale={settings.emojiScale}
-                    cardStyle={settings.cardStyle}
+                    emojiScale={liveSettings.emojiScale}
+                    cardStyle={liveSettings.cardStyle}
                     onClick={() => flipCard(card.uniqueId)}
                   />
                 </div>
