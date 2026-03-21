@@ -195,51 +195,44 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
         <Confetti active={isGameOver && !animationsOff} />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm">
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={() => { stopMusic(); onHome(); }}>
-              <Home className="w-5 h-5" />
+        <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
+            <Button variant="ghost" size="sm" className="w-8 h-8 sm:w-9 sm:h-9 p-0" onClick={() => { stopMusic(); onHome(); }}>
+              <Home className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={toggleMusic}
-              className={musicPlaying ? "text-accent" : "text-muted-foreground"} title="מוזיקת רקע">
-              {musicPlaying ? <Music className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+            <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${musicPlaying ? "text-accent" : "text-muted-foreground"}`} onClick={toggleMusic} title="מוזיקת רקע">
+              {musicPlaying ? <Music className="w-4 h-4 sm:w-5 sm:h-5" /> : <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setSpeechOn(!speechOn)}
-              className={speechOn ? "text-accent" : "text-muted-foreground"} title="הכרזה קולית">
-              {speechOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+            <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${speechOn ? "text-accent" : "text-muted-foreground"}`} onClick={() => setSpeechOn(!speechOn)} title="הכרזה קולית">
+              {speechOn ? <Mic className="w-4 h-4 sm:w-5 sm:h-5" /> : <MicOff className="w-4 h-4 sm:w-5 sm:h-5" />}
             </Button>
             {isFreeLayout && (
               <>
-                <Button variant="ghost" size="sm" onClick={() => setEditMode(!editMode)}
-                  className={editMode ? "text-game-orange font-bold" : "text-muted-foreground"} title="מצב עריכה (גרירה)">
-                  {editMode ? <Unlock className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
-                  <span className="text-xs ml-1">{editMode ? "גרירה" : "נעול"}</span>
+                <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${editMode ? "text-game-orange font-bold" : "text-muted-foreground"}`} onClick={() => setEditMode(!editMode)} title="מצב עריכה">
+                  {editMode ? <Unlock className="w-4 h-4 sm:w-5 sm:h-5" /> : <Lock className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setShowGrid(!showGrid)}
-                  className={showGrid ? "text-game-blue" : "text-muted-foreground"} title="הצג/הסתר גריד">
-                  <Grid3X3 className="w-5 h-5" />
+                <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${showGrid ? "text-game-blue" : "text-muted-foreground"}`} onClick={() => setShowGrid(!showGrid)} title="גריד">
+                  <Grid3X3 className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
                 {editMode && (
                   <>
-                    <Button variant="ghost" size="sm" onClick={saveLayout}
-                      className={saveFlash ? "text-green-500" : "text-muted-foreground"} title="שמור פריסה (דורס)">
-                      <Save className="w-5 h-5" />
+                    <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${saveFlash ? "text-green-500" : "text-muted-foreground"}`} onClick={saveLayout} title="שמור">
+                      <Save className="w-4 h-4 sm:w-5 sm:h-5" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={duplicateLayout}
-                      className="text-muted-foreground" title="שכפל ושמור">
-                      <Copy className="w-5 h-5" />
+                    <Button variant="ghost" size="sm" className="w-8 h-8 sm:w-9 sm:h-9 p-0 text-muted-foreground" onClick={duplicateLayout} title="שכפל">
+                      <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
                     </Button>
                   </>
                 )}
               </>
             )}
           </div>
-          <div className="flex items-center gap-3 text-sm font-bold">
+          <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-bold shrink-0">
             <span>🎯 {matchedCount}/{pairCount}</span>
             <span>🔄 {moves}</span>
           </div>
-          <Button variant="ghost" size="sm" onClick={restart}>
-            <RotateCcw className="w-5 h-5" />
+          <Button variant="ghost" size="sm" className="w-8 h-8 sm:w-9 sm:h-9 p-0" onClick={restart}>
+            <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
         </div>
 
