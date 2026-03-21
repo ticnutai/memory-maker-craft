@@ -4,7 +4,7 @@ import { CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import {
   Upload, Volume2, VolumeX, Music, Trash2, Cloud, Loader2,
-  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers
+  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move
 } from "lucide-react";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import BirthdayManager from "@/components/BirthdayManager";
