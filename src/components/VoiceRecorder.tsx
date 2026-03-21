@@ -200,6 +200,8 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
   const [selectedEffect, setSelectedEffect] = useState("none");
   const [loading, setLoading] = useState(false);
   const [processingEffect, setProcessingEffect] = useState(false);
+  const [editingRecId, setEditingRecId] = useState<string | null>(null);
+  const [editingEvents, setEditingEvents] = useState<string[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const playingRef = useRef<HTMLAudioElement | null>(null);
