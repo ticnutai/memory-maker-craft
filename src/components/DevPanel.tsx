@@ -603,16 +603,16 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
           </div>
         </div>
         <LogFilter filter={logFilter} setFilter={setLogFilter} search={logSearch} setSearch={setLogSearch} />
-        <div className="h-48 overflow-y-auto p-2 space-y-0.5 font-mono text-[11px]">
+        <div className="h-48 overflow-y-auto p-2 space-y-1 font-mono text-xs">
           {filteredLogs.length === 0 && (
-            <p className="text-white/30 text-center py-8 text-xs">
+            <p className="text-white/40 text-center py-8 text-sm">
               {logs.length === 0 ? "אין הודעות עדיין..." : "אין תוצאות לסינון"}
             </p>
           )}
           {filteredLogs.map((log, i) => (
-            <div key={i} className={`flex gap-2 leading-tight ${logColors[log.type]}`}>
-              <span className="text-white/30 shrink-0">{log.time}</span>
-              <span className="text-white/50 shrink-0">[{log.type}]</span>
+            <div key={i} className={`flex gap-2 leading-relaxed ${logColors[log.type]}`}>
+              <span className="text-white/50 shrink-0">{log.time}</span>
+              <span className="text-white/60 shrink-0 font-bold">[{log.type}]</span>
               <span className="break-all">{log.message}</span>
             </div>
           ))}
