@@ -53,6 +53,36 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_bg_themes: {
+        Row: {
+          config: Json
+          created_at: string
+          device_id: string
+          emoji: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          device_id: string
+          emoji?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          device_id?: string
+          emoji?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       custom_card_items: {
         Row: {
           created_at: string
