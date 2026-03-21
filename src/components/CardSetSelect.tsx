@@ -4,8 +4,9 @@ import { ThemeType, CardData, CardSetType, GameSettings, getCardSets, CardStyle 
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import {
   Upload, Volume2, VolumeX, Music, Trash2, Cloud, Loader2,
-  Image, Layers, Palette, LayoutGrid, Cake
+  Image, Layers, Palette, LayoutGrid, Cake, Mic
 } from "lucide-react";
+import VoiceRecorder from "@/components/VoiceRecorder";
 import BirthdayManager from "@/components/BirthdayManager";
 import CloudGallery from "@/components/CloudGallery";
 import CustomCardSets from "@/components/CustomCardSets";
