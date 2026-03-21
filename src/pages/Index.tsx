@@ -59,10 +59,10 @@ const Index = () => {
       </div>
 
       {/* Bottom tab icons — floating, no bar */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3" dir="rtl">
+      <div className="fixed bottom-6 left-4 z-50 flex items-center gap-3" dir="rtl">
         <button
           onClick={() => { setTab("memory"); setScreen("home"); }}
-          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+          className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
             tab === "memory"
               ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
               : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
@@ -72,7 +72,7 @@ const Index = () => {
         </button>
         <button
           onClick={() => { setTab("treasure"); setScreen("home"); }}
-          className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+          className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
             tab === "treasure"
               ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
               : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
