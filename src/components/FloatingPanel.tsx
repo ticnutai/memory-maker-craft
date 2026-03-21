@@ -153,6 +153,16 @@ export default function FloatingPanel({
             </h3>
           </div>
           <div className="flex items-center gap-1">
+            {onConfirm && (
+              <button
+                onClick={onConfirm}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-green-500 hover:text-green-600 hover:bg-green-100 transition-colors"
+                onPointerDown={e => e.stopPropagation()}
+                title="אישור ושמירה"
+              >
+                <Check className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => setMinimized(!minimized)}
               className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
