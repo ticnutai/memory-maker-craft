@@ -295,7 +295,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
       </div>
 
       {/* Card set grid — built-in + custom + add button */}
-      <div className="w-full max-w-lg relative z-10 grid grid-cols-2 gap-4 bounce-in" style={{ animationDelay: "0.1s" }}>
+      <div className="w-full max-w-lg relative z-10 grid grid-cols-2 gap-3 sm:gap-4 bounce-in" style={{ animationDelay: "0.1s" }}>
         {/* Built-in sets */}
         {allCardSets.map((set, i) => (
           <button key={set.type}
