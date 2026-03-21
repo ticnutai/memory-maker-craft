@@ -540,46 +540,91 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
         <div className="space-y-3 pt-2">
           <p className="font-bold text-sm">📋 הקלטות שמורות</p>
           {EVENT_TYPES.map((ev) => {
-            const evRecs = recordings.filter((r) => r.event_type === ev.id);
+            const evRecs = recordings.filter((r) => r.event_type.split(",").includes(ev.id));
             if (evRecs.length === 0) return null;
             return (
               <div key={ev.id} className="space-y-1.5">
                 <p className="text-xs font-bold text-muted-foreground">
                   {ev.emoji} {ev.label}
                 </p>
-                {evRecs.map((rec) => (
-                  <div
-                    key={rec.id}
-                    className={`flex items-center gap-2 rounded-xl px-3 py-2 transition-all ${
-                      rec.is_active ? "bg-accent/20 border border-accent" : "bg-muted/60 border border-transparent opacity-60"
-                    }`}
-                  >
-                    <button
-                      onClick={() => playRecording(rec.audio_url)}
-                      className="text-accent hover:scale-110 transition-transform"
-                    >
-                      <Play className="w-4 h-4" />
-                    </button>
-                    <span className="text-xs font-bold flex-1 truncate">{rec.name}</span>
-                    <button
-                      onClick={() => toggleActive(rec)}
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
-                        rec.is_active
-                          ? `${accent} text-primary-foreground`
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                      title={rec.is_active ? "פעיל" : "כבוי"}
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => deleteRecording(rec)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                {evRecs.map((rec) => {
+                  const recEvents = rec.event_type.split(",").filter(Boolean);
+                  const isEditing = editingRecId === rec.id;
+                  return (
+                    <div key={`${ev.id}-${rec.id}`}>
+                      <div
+                        className={`flex items-center gap-2 rounded-xl px-3 py-2 transition-all ${
+                          rec.is_active ? "bg-accent/20 border border-accent" : "bg-muted/60 border border-transparent opacity-60"
+                        }`}
+                      >
+                        <button onClick={() => playRecording(rec.audio_url)} className="text-accent hover:scale-110 transition-transform">
+                          <Play className="w-4 h-4" />
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs font-bold truncate block">{rec.name}</span>
+                          {recEvents.length > 1 && (
+                            <div className="flex gap-1 mt-0.5 flex-wrap">
+                              {recEvents.map(eId => {
+                                const evInfo = EVENT_TYPES.find(e => e.id === eId);
+                                return evInfo ? (
+                                  <span key={eId} className="text-[9px] bg-muted rounded-md px-1.5 py-0.5">{evInfo.emoji}</span>
+                                ) : null;
+                              })}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => isEditing ? saveEditEvents() : startEditEvents(rec)}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                            isEditing ? "bg-green-500 text-white" : "bg-muted text-muted-foreground hover:text-foreground"
+                          }`}
+                          title="שייך לאירועים"
+                        >
+                          {isEditing ? <Check className="w-3.5 h-3.5" /> : <Tags className="w-3.5 h-3.5" />}
+                        </button>
+                        <button
+                          onClick={() => toggleActive(rec)}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                            rec.is_active ? `${accent} text-primary-foreground` : "bg-muted text-muted-foreground"
+                          }`}
+                          title={rec.is_active ? "פעיל" : "כבוי"}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => deleteRecording(rec)} className="text-destructive hover:text-destructive/80 transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {isEditing && (
+                        <div className="grid grid-cols-2 gap-1.5 mt-1.5 px-2">
+                          {EVENT_TYPES.map(evOpt => {
+                            const active = editingEvents.includes(evOpt.id);
+                            return (
+                              <button
+                                key={evOpt.id}
+                                onClick={() => {
+                                  setEditingEvents(prev => {
+                                    if (active) {
+                                      const next = prev.filter(e => e !== evOpt.id);
+                                      return next.length > 0 ? next : prev;
+                                    }
+                                    return [...prev, evOpt.id];
+                                  });
+                                }}
+                                className={`h-8 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
+                                  active ? `${accent} text-primary-foreground` : "bg-muted text-muted-foreground"
+                                }`}
+                              >
+                                {evOpt.emoji} {evOpt.label}
+                                {active && <Check className="w-2.5 h-2.5" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             );
           })}
