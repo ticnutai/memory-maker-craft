@@ -3,6 +3,7 @@ import CardSetSelect from "@/components/CardSetSelect";
 import GameBoard from "@/components/GameBoard";
 import TreasureHuntGame from "@/components/TreasureHuntGame";
 import { CardSetType, CardData, GameSettings } from "@/lib/gameData";
+import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { Gamepad2, Map, Settings } from "lucide-react";
 
 type AppTab = "memory" | "treasure";
