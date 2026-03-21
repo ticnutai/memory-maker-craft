@@ -1,10 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { CardData, CardSetType, GameSettings, getCardSets, CardStyle } from "@/lib/gameData";
+import { CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData";
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import {
   Upload, Volume2, VolumeX, Music, Trash2, Cloud, Loader2,
-  Image, Layers, Palette, LayoutGrid, Cake, Mic, Settings, X
+  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers
 } from "lucide-react";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import BirthdayManager from "@/components/BirthdayManager";
@@ -12,12 +12,13 @@ import CloudGallery from "@/components/CloudGallery";
 import CustomCardSets from "@/components/CustomCardSets";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { getBgThemes } from "@/components/ThemeBackground";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CardSetSelectProps {
   onSelectSet: (set: CardSetType, settings: GameSettings, customCards?: CardData[]) => void;
 }
 
-type SettingsTabId = "general" | "music" | "cards" | "gallery" | "birthdays" | "recordings";
+type SettingsTabId = "general" | "music" | "cards" | "gallery" | "custom-sets" | "birthdays" | "recordings";
 
 const BACK_ICONS = ["⭐", "❓", "🎴", "🃏", "💫", "🌟", "🎯", "🔮", "🎪", "🎨"];
 const BACK_COLORS = [
@@ -47,15 +48,44 @@ const SHAPES = [
 
 const FLOATING_EMOJIS = ["🧸", "🎈", "🌈", "⭐", "🦄", "🎀", "🍭", "🌸", "💖", "🎪", "🐰", "🦋"];
 
+// Gradient palette for custom sets
+const CUSTOM_GRADIENTS = [
+  "from-pink-400 to-rose-500",
+  "from-purple-400 to-violet-500",
+  "from-sky-400 to-blue-500",
+  "from-emerald-400 to-green-500",
+  "from-orange-400 to-amber-500",
+  "from-fuchsia-400 to-pink-500",
+  "from-teal-400 to-cyan-500",
+  "from-indigo-400 to-purple-500",
+];
+
+interface CustomSetPreview {
+  id: string;
+  name: string;
+  emoji: string;
+  color: string;
+  cardCount: number;
+}
+
+function getDeviceId(): string {
+  const key = "memory-game-device-id";
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = `dev-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
 export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
-  const theme = "girl"; // unified theme
+  const theme = "girl";
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTabId>("general");
-  const [customImages, setCustomImages] = useState<string[]>([]);
-  const [showUpload, setShowUpload] = useState(false);
   const [showCloudGallery, setShowCloudGallery] = useState(false);
   const [showCloudAudio, setShowCloudAudio] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [customSets, setCustomSets] = useState<CustomSetPreview[]>([]);
+  const [loadingSets, setLoadingSets] = useState(true);
   const audioRef = useRef<HTMLInputElement>(null);
 
   const { settings: cloud, loaded, updateSetting, updateCardStyle, toGameSettings } = useCloudSettings(theme);
@@ -74,34 +104,62 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
   const accent = "bg-game-pink";
   const sliderTrack = "accent-[hsl(var(--game-pink))]";
   const settings = toGameSettings();
+  const deviceId = getDeviceId();
 
-  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setCustomImages((prev) => {
-          if (prev.length >= 8) return prev;
-          return [...prev, ev.target?.result as string];
-        });
-      };
-      reader.readAsDataURL(file);
-    });
-  };
+  // Load custom sets for home page display
+  const loadCustomSets = useCallback(async () => {
+    setLoadingSets(true);
+    const { data: sets } = await supabase
+      .from("custom_card_sets")
+      .select("id, name, emoji, color")
+      .eq("device_id", deviceId)
+      .order("created_at", { ascending: false });
 
-  const removeImage = (idx: number) => {
-    setCustomImages((prev) => prev.filter((_, i) => i !== idx));
-  };
+    if (sets && sets.length > 0) {
+      // Get card counts
+      const { data: items } = await supabase
+        .from("custom_card_items")
+        .select("set_id")
+        .in("set_id", sets.map(s => s.id));
 
-  const startCustom = () => {
-    if (customImages.length < 2) return;
-    const cards: CardData[] = customImages.map((img, i) => ({
-      id: `custom-${i}`,
-      emoji: "📷",
-      image: img,
+      const counts: Record<string, number> = {};
+      (items || []).forEach(i => { counts[i.set_id] = (counts[i.set_id] || 0) + 1; });
+
+      setCustomSets(sets.map(s => ({
+        ...s,
+        cardCount: counts[s.id] || 0,
+      })));
+    } else {
+      setCustomSets([]);
+    }
+    setLoadingSets(false);
+  }, [deviceId]);
+
+  useEffect(() => { loadCustomSets(); }, [loadCustomSets]);
+
+  // Play a custom set
+  const playCustomSet = async (setPreview: CustomSetPreview) => {
+    if (setPreview.cardCount < 2) {
+      // Open settings to manage this set
+      setShowSettings(true);
+      setSettingsTab("custom-sets");
+      return;
+    }
+    const { data } = await supabase
+      .from("custom_card_items")
+      .select("*")
+      .eq("set_id", setPreview.id)
+      .order("sort_order", { ascending: true });
+
+    if (!data || data.length < 2) return;
+    const gameCards: CardData[] = data.map((c, i) => ({
+      id: `custom-set-${setPreview.id}-${i}`,
+      emoji: c.emoji || "📷",
+      label: c.label || undefined,
+      image: c.image_url || undefined,
     }));
-    const customPairCount = Math.min(pairCount, cards.length);
-    onSelectSet("custom", { ...settings, pairCount: customPairCount }, cards);
+    const customPairCount = Math.min(settings.pairCount, gameCards.length);
+    onSelectSet("custom", { ...settings, pairCount: customPairCount }, gameCards);
   };
 
   if (!loaded) {
@@ -116,6 +174,7 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
     { id: "general", label: "כללי", icon: <LayoutGrid className="w-4 h-4" /> },
     { id: "cards", label: "קלפים", icon: <Palette className="w-4 h-4" /> },
     { id: "music", label: "מוזיקה", icon: <Music className="w-4 h-4" /> },
+    { id: "custom-sets", label: "ערכות", icon: <Layers className="w-4 h-4" /> },
     { id: "gallery", label: "גלריה", icon: <Image className="w-4 h-4" /> },
     { id: "birthdays", label: "ימי הולדת", icon: <Cake className="w-4 h-4" /> },
     { id: "recordings", label: "הקלטות", icon: <Mic className="w-4 h-4" /> },
@@ -128,12 +187,11 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
     borderStyle: "solid",
   };
 
-  // Merge both girl and boy card sets into one unified list (use girl variants for animals)
   const allCardSets = getCardSets("girl");
 
   return (
     <div
-      className="flex flex-col items-center min-h-screen gap-4 px-4 py-6 overflow-y-auto relative"
+      className="flex flex-col items-center min-h-screen gap-4 px-4 py-6 pb-24 overflow-y-auto relative"
       dir="rtl"
       style={{
         background: "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 30%, #f3e5f5 60%, #fff9c4 100%)",
@@ -167,8 +225,9 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
         <p className="text-sm text-muted-foreground mt-1">בחרו ערכה להתחיל לשחק!</p>
       </div>
 
-      {/* Card set grid */}
+      {/* Card set grid — built-in + custom + add button */}
       <div className="w-full max-w-md relative z-10 grid grid-cols-2 gap-3 bounce-in" style={{ animationDelay: "0.1s" }}>
+        {/* Built-in sets */}
         {allCardSets.map((set, i) => (
           <button key={set.type}
             onClick={() => onSelectSet(set.type, settings)}
@@ -179,65 +238,44 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
             <span className="font-bold text-sm">{set.label}</span>
           </button>
         ))}
-      </div>
 
-      {/* Custom card sets */}
-      <div className="w-full max-w-md relative z-10 bounce-in" style={{ animationDelay: "0.4s" }}>
-        <p className="font-bold text-sm mb-2 text-center">🎴 ערכות מותאמות אישית</p>
-        <CustomCardSets
-          theme={theme}
-          onPlay={(cards, name) => {
-            const customPairCount = Math.min(settings.pairCount, cards.length);
-            onSelectSet("custom", { ...settings, pairCount: customPairCount }, cards);
-          }}
-        />
-      </div>
+        {/* Custom sets as identical cards */}
+        {customSets.map((cs, i) => {
+          const gradientIdx = i % CUSTOM_GRADIENTS.length;
+          return (
+            <button key={cs.id}
+              onClick={() => playCustomSet(cs)}
+              className={`bg-gradient-to-br ${CUSTOM_GRADIENTS[gradientIdx]} rounded-2xl p-5 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground relative`}
+              style={{ animationDelay: `${0.15 + (allCardSets.length + i) * 0.08}s` }}
+            >
+              <span className="text-4xl drop-shadow-sm">{cs.emoji}</span>
+              <span className="font-bold text-sm">{cs.name}</span>
+              {cs.cardCount > 0 && (
+                <span className="absolute top-2 left-2 text-[10px] bg-white/30 backdrop-blur-sm rounded-full px-2 py-0.5 font-bold">
+                  {cs.cardCount} קלפים
+                </span>
+              )}
+              {cs.cardCount < 2 && (
+                <span className="absolute bottom-1.5 text-[9px] bg-white/30 backdrop-blur-sm rounded-full px-2 py-0.5 font-bold">
+                  ערכה ריקה
+                </span>
+              )}
+            </button>
+          );
+        })}
 
-      {/* Gallery quick buttons */}
-      <div className="w-full max-w-md relative z-10 grid grid-cols-2 gap-3 bounce-in" style={{ animationDelay: "0.5s" }}>
+        {/* Add new set button */}
         <button
-          onClick={() => setShowUpload(true)}
-          className="bg-gradient-to-br from-game-orange to-amber-500 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 text-primary-foreground"
+          onClick={() => { setShowSettings(true); setSettingsTab("custom-sets"); }}
+          className="rounded-2xl p-5 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in border-3 border-dashed border-game-pink/40 bg-white/60 backdrop-blur-sm"
+          style={{ animationDelay: `${0.15 + (allCardSets.length + customSets.length) * 0.08}s` }}
         >
-          <span className="text-3xl">📸</span>
-          <span className="font-bold text-xs">תמונות מהמכשיר</span>
-        </button>
-        <button
-          onClick={() => setShowCloudGallery(true)}
-          className="bg-gradient-to-br from-sky-400 to-blue-500 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 text-primary-foreground"
-        >
-          <span className="text-3xl">☁️</span>
-          <span className="font-bold text-xs">גלריית ענן</span>
-        </button>
-      </div>
-
-      {/* Upload panel */}
-      {showUpload && (
-        <div className="w-full max-w-md relative z-10 bg-card rounded-2xl p-5 shadow-xl border-2 border-muted space-y-4 bounce-in">
-          <p className="font-bold text-center">העלו תמונות או GIF לזוגות</p>
-          <p className="text-xs text-muted-foreground text-center">תומך בתמונות ו-GIF • מינימום 2, מקסימום 8</p>
-          <div className="grid grid-cols-4 gap-2">
-            {customImages.map((img, i) => (
-              <div key={i} className="relative aspect-square rounded-xl overflow-hidden border-2 border-muted bounce-in">
-                <img src={img} alt="" className="w-full h-full object-cover" />
-                <button onClick={() => removeImage(i)}
-                  className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">✕</button>
-              </div>
-            ))}
-            {customImages.length < 8 && (
-              <button onClick={() => fileRef.current?.click()}
-                className="aspect-square rounded-xl border-2 border-dashed border-muted-foreground/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary hover:text-primary transition-colors">
-                <Upload className="w-5 h-5" />
-                <span className="text-[10px]">הוספה</span>
-              </button>
-            )}
+          <div className="w-12 h-12 rounded-full bg-game-pink/20 flex items-center justify-center">
+            <Plus className="w-7 h-7 text-game-pink" />
           </div>
-          <input ref={fileRef} type="file" accept="image/*,.gif" multiple onChange={handleFiles} className="hidden" />
-          <Button variant="game-pink" size="lg" className="w-full text-lg" disabled={customImages.length < 2} onClick={startCustom}>
-            🎮 התחלת משחק ({customImages.length} תמונות)
-          </Button>
-        </div>
-      )}
+          <span className="font-bold text-sm text-game-pink">ערכה חדשה</span>
+        </button>
+      </div>
 
       {/* Settings FAB */}
       <button
@@ -248,7 +286,7 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
         <Settings className="w-6 h-6" />
       </button>
 
-      {/* Settings Panel (Full screen overlay) */}
+      {/* ══════════════════ Settings Panel ══════════════════ */}
       {showSettings && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" dir="rtl">
           <div className="bg-card w-full max-w-lg max-h-[90vh] rounded-2xl shadow-2xl border-2 border-muted flex flex-col overflow-hidden bounce-in">
@@ -257,7 +295,7 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
               <h3 className="text-xl font-black flex items-center gap-2">
                 <Settings className="w-5 h-5" /> ⚙️ הגדרות
               </h3>
-              <button onClick={() => setShowSettings(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+              <button onClick={() => { setShowSettings(false); loadCustomSets(); }} className="text-muted-foreground hover:text-foreground transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -265,13 +303,9 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
             {/* Tabs */}
             <div className="flex gap-1 bg-muted px-3 py-2 overflow-x-auto">
               {SETTINGS_TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setSettingsTab(tab.id)}
+                <button key={tab.id} onClick={() => setSettingsTab(tab.id)}
                   className={`shrink-0 py-2 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 ${
-                    settingsTab === tab.id
-                      ? `${accent} text-primary-foreground shadow-md`
-                      : "text-muted-foreground hover:text-foreground"
+                    settingsTab === tab.id ? `${accent} text-primary-foreground shadow-md` : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {tab.icon}
@@ -286,13 +320,10 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
               {/* ═══ GENERAL ═══ */}
               {settingsTab === "general" && (
                 <div className="space-y-4">
-                  {/* Pair count */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <p className="font-bold text-sm">🎯 מספר זוגות</p>
-                      <span className={`text-sm font-black px-3 py-0.5 rounded-full ${accent} text-primary-foreground`}>
-                        {pairCount} זוגות
-                      </span>
+                      <span className={`text-sm font-black px-3 py-0.5 rounded-full ${accent} text-primary-foreground`}>{pairCount} זוגות</span>
                     </div>
                     <input type="range" min={2} max={16} step={1} value={pairCount}
                       onChange={(e) => updateSetting("pairCount", Number(e.target.value))}
@@ -301,8 +332,6 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                       <span>2 קל 😊</span><span>8 בינוני 🤔</span><span>16 קשה 🔥</span>
                     </div>
                   </div>
-
-                  {/* Card size */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <p className="font-bold text-sm">📐 גודל קלפים</p>
@@ -311,12 +340,8 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                     <input type="range" min={280} max={700} step={20} value={cardMaxW}
                       onChange={(e) => updateSetting("cardMaxW", Number(e.target.value))}
                       className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`} />
-                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                      <span>קטן</span><span>גדול</span>
-                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>קטן</span><span>גדול</span></div>
                   </div>
-
-                  {/* Emoji scale */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <p className="font-bold text-sm">🔤 גודל אלמנט</p>
@@ -325,55 +350,34 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                     <input type="range" min={0.5} max={2} step={0.1} value={emojiScale}
                       onChange={(e) => updateSetting("emojiScale", Number(e.target.value))}
                       className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`} />
-                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                      <span>קטן</span><span>גדול</span>
-                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>קטן</span><span>גדול</span></div>
                   </div>
-
-                  {/* Flip duration */}
                   <div>
                     <p className="font-bold text-sm mb-2">⏱️ זמן תצוגת קלפים</p>
                     <div className="flex gap-2">
-                      {[
-                        { val: 0.5, label: "חצי שנייה" },
-                        { val: 1, label: "שנייה" },
-                        { val: 2, label: "2 שניות" },
-                        { val: 3, label: "3 שניות" },
-                      ].map((opt) => (
-                        <button key={opt.val}
-                          onClick={() => updateSetting("flipDuration", opt.val)}
+                      {[{ val: 0.5, label: "חצי שנייה" }, { val: 1, label: "שנייה" }, { val: 2, label: "2 שניות" }, { val: 3, label: "3 שניות" }].map((opt) => (
+                        <button key={opt.val} onClick={() => updateSetting("flipDuration", opt.val)}
                           className={`flex-1 h-11 rounded-xl font-bold text-xs transition-all active:scale-95 ${
-                            flipDuration === opt.val
-                              ? "bg-game-pink text-primary-foreground shadow-md"
-                              : "bg-muted text-muted-foreground hover:bg-muted/80"
-                          }`}
-                        >{opt.label}</button>
+                            flipDuration === opt.val ? "bg-game-pink text-primary-foreground shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          }`}>{opt.label}</button>
                       ))}
                     </div>
                   </div>
-
-                  {/* Sound toggles */}
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => updateSetting("soundEnabled", !soundEnabled)}
+                    <button onClick={() => updateSetting("soundEnabled", !soundEnabled)}
                       className={`flex-1 h-11 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
                         soundEnabled ? "bg-accent text-accent-foreground shadow-md" : "bg-muted text-muted-foreground"
-                      }`}
-                    >
+                      }`}>
                       {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                       {soundEnabled ? "🔊 צלילים" : "🔇 צלילים"}
                     </button>
-                    <button
-                      onClick={() => updateSetting("speechEnabled", !cloud.speechEnabled)}
+                    <button onClick={() => updateSetting("speechEnabled", !cloud.speechEnabled)}
                       className={`flex-1 h-11 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
                         cloud.speechEnabled ? "bg-accent text-accent-foreground shadow-md" : "bg-muted text-muted-foreground"
-                      }`}
-                    >
+                      }`}>
                       {cloud.speechEnabled ? "🗣️ הכרזה" : "🔇 הכרזה"}
                     </button>
                   </div>
-
-                  {/* Speech rate */}
                   {cloud.speechEnabled && (
                     <div>
                       <div className="flex justify-between items-center mb-2">
@@ -383,30 +387,20 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                       <input type="range" min={0.3} max={1.5} step={0.1} value={cloud.speechRate || 0.9}
                         onChange={(e) => updateSetting("speechRate", Number(e.target.value))}
                         className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`} />
-                      <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                        <span>איטי</span><span>רגיל</span><span>מהיר</span>
-                      </div>
+                      <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>איטי</span><span>רגיל</span><span>מהיר</span></div>
                     </div>
                   )}
-
-                  {/* Background theme */}
                   <div>
                     <p className="font-bold text-sm mb-2">🎨 סגנון רקע</p>
                     <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-60 overflow-y-auto pr-1">
                       {getBgThemes().map((bg) => (
-                        <button key={bg.id}
-                          onClick={() => updateSetting("bgTheme" as any, bg.id)}
+                        <button key={bg.id} onClick={() => updateSetting("bgTheme" as any, bg.id)}
                           className={`relative h-16 rounded-xl text-xs font-bold transition-all active:scale-95 flex flex-col items-center justify-center gap-0.5 ${
-                            (cloud.bgTheme || "default") === bg.id
-                              ? "bg-game-pink text-primary-foreground shadow-md ring-2 ring-game-pink ring-offset-1"
-                              : "bg-muted text-muted-foreground hover:bg-muted/80"
-                          }`}
-                        >
+                            (cloud.bgTheme || "default") === bg.id ? "bg-game-pink text-primary-foreground shadow-md ring-2 ring-game-pink ring-offset-1" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          }`}>
                           <span className="text-lg">{bg.emoji}</span>
                           <span className="text-[10px]">{bg.label}</span>
-                          {bg.animated && (
-                            <span className="absolute top-0.5 left-0.5 text-[8px] bg-game-orange text-primary-foreground rounded px-1 font-black">✨</span>
-                          )}
+                          {bg.animated && <span className="absolute top-0.5 left-0.5 text-[8px] bg-game-orange text-primary-foreground rounded px-1 font-black">✨</span>}
                         </button>
                       ))}
                     </div>
@@ -418,47 +412,32 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
               {settingsTab === "cards" && (
                 <div className="space-y-5">
                   <p className="font-bold text-lg text-center">🎨 עיצוב הקלפים</p>
-
-                  {/* Live preview */}
                   <div className="flex justify-center gap-3 py-2">
                     <div className="w-20 h-24 flex items-center justify-center shadow-lg transition-all duration-300"
                       style={{
                         ...previewCardStyle,
                         ...(/^#/.test(cardStyle.backColor)
                           ? { background: cardStyle.backColor2 ? `linear-gradient(135deg, ${cardStyle.backColor}, ${cardStyle.backColor2})` : cardStyle.backColor }
-                          : cardStyle.backColor === "default"
-                            ? { background: "linear-gradient(135deg, hsl(var(--game-pink)), hsl(var(--primary)))" }
-                            : {}),
-                      }}
-                    >
+                          : cardStyle.backColor === "default" ? { background: "linear-gradient(135deg, hsl(var(--game-pink)), hsl(var(--primary)))" } : {}),
+                      }}>
                       <span className="text-2xl drop-shadow-sm">{cardStyle.backIcon}</span>
                     </div>
                     <div className="w-20 h-24 bg-card flex items-center justify-center shadow-lg transition-all duration-300"
-                      style={{ ...previewCardStyle, borderColor: /^#/.test(cardStyle.borderColor) ? cardStyle.borderColor : previewCardStyle.borderColor }}
-                    >
+                      style={{ ...previewCardStyle, borderColor: /^#/.test(cardStyle.borderColor) ? cardStyle.borderColor : previewCardStyle.borderColor }}>
                       <span className="text-2xl">🐰</span>
                     </div>
                   </div>
-
-                  {/* Shape */}
                   <div>
                     <p className="font-bold text-sm mb-2">📐 צורת הקלף</p>
                     <div className="flex gap-2">
                       {SHAPES.map((s) => (
-                        <button key={s.id}
-                          onClick={() => { updateCardStyle("shape", s.id); updateCardStyle("borderRadius", s.radius); }}
+                        <button key={s.id} onClick={() => { updateCardStyle("shape", s.id); updateCardStyle("borderRadius", s.radius); }}
                           className={`flex-1 h-12 font-bold text-xs transition-all active:scale-95 flex items-center justify-center ${
-                            cardStyle.shape === s.id
-                              ? "bg-game-pink text-primary-foreground shadow-md"
-                              : "bg-muted text-muted-foreground hover:bg-muted/80"
-                          }`}
-                          style={{ borderRadius: `${Math.min(s.radius, 16)}px` }}
-                        >{s.label}</button>
+                            cardStyle.shape === s.id ? "bg-game-pink text-primary-foreground shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          }`} style={{ borderRadius: `${Math.min(s.radius, 16)}px` }}>{s.label}</button>
                       ))}
                     </div>
                   </div>
-
-                  {/* Border width */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <p className="font-bold text-sm">🖼️ עובי מסגרת</p>
@@ -467,50 +446,37 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                     <input type="range" min={0} max={8} step={1} value={cardStyle.borderWidth}
                       onChange={(e) => updateCardStyle("borderWidth", Number(e.target.value))}
                       className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`} />
-                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                      <span>ללא</span><span>עבה</span>
-                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>ללא</span><span>עבה</span></div>
                   </div>
-
-                  {/* Border color */}
                   <div>
                     <p className="font-bold text-sm mb-2">🎨 צבע מסגרת</p>
                     <div className="flex items-center gap-3">
                       <div className="flex flex-wrap gap-2 flex-1">
                         {BORDER_COLORS.map((c) => (
-                          <button key={c.id}
-                            onClick={() => updateCardStyle("borderColor", c.id)}
-                            className={`w-9 h-9 rounded-full transition-all active:scale-90 shadow-sm ${
-                              cardStyle.borderColor === c.id ? "ring-2 ring-offset-2 ring-foreground scale-110" : "hover:scale-105"
-                            }`}
+                          <button key={c.id} onClick={() => updateCardStyle("borderColor", c.id)}
+                            className={`w-9 h-9 rounded-full transition-all active:scale-90 shadow-sm ${cardStyle.borderColor === c.id ? "ring-2 ring-offset-2 ring-foreground scale-110" : "hover:scale-105"}`}
                             style={{ backgroundColor: c.color }} title={c.label} />
                         ))}
                       </div>
                       <label className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-dashed border-muted-foreground/40 cursor-pointer hover:scale-105 transition-all shrink-0" title="בחרו צבע מותאם">
-                        <input type="color"
-                          value={/^#/.test(cardStyle.borderColor) ? cardStyle.borderColor : "#ffffff"}
+                        <input type="color" value={/^#/.test(cardStyle.borderColor) ? cardStyle.borderColor : "#ffffff"}
                           onChange={(e) => updateCardStyle("borderColor", e.target.value)}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                         <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground"
-                          style={{ backgroundColor: /^#/.test(cardStyle.borderColor) ? cardStyle.borderColor : undefined }}
-                        >{!/^#/.test(cardStyle.borderColor) && "🎨"}</div>
+                          style={{ backgroundColor: /^#/.test(cardStyle.borderColor) ? cardStyle.borderColor : undefined }}>
+                          {!/^#/.test(cardStyle.borderColor) && "🎨"}
+                        </div>
                       </label>
                     </div>
                   </div>
-
-                  {/* Back color */}
                   <div>
                     <p className="font-bold text-sm mb-2">🃏 צבע גב הקלף</p>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {BACK_COLORS.map((c) => (
-                        <button key={c.id}
-                          onClick={() => { updateCardStyle("backColor", c.id); updateCardStyle("backColor2" as any, undefined); }}
+                        <button key={c.id} onClick={() => { updateCardStyle("backColor", c.id); updateCardStyle("backColor2" as any, undefined); }}
                           className={`h-9 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-                            cardStyle.backColor === c.id
-                              ? "bg-game-pink text-primary-foreground shadow-md"
-                              : "bg-muted text-muted-foreground hover:bg-muted/80"
-                          }`}
-                        >{c.label}</button>
+                            cardStyle.backColor === c.id ? "bg-game-pink text-primary-foreground shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          }`}>{c.label}</button>
                       ))}
                     </div>
                     <div className="flex items-center gap-3">
@@ -528,15 +494,10 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                         <label className="flex flex-col items-center gap-1 cursor-pointer">
                           <span className="text-[10px] text-muted-foreground font-bold">צבע 2</span>
                           <div className="relative w-10 h-10 rounded-xl overflow-hidden border-2 border-muted shadow-sm">
-                            <input type="color"
-                              value={cardStyle.backColor2 && /^#/.test(cardStyle.backColor2) ? cardStyle.backColor2 : "#6366f1"}
-                              onChange={(e) => {
-                                if (!/^#/.test(cardStyle.backColor)) updateCardStyle("backColor", "#ff6b9d");
-                                updateCardStyle("backColor2" as any, e.target.value);
-                              }}
+                            <input type="color" value={cardStyle.backColor2 && /^#/.test(cardStyle.backColor2) ? cardStyle.backColor2 : "#6366f1"}
+                              onChange={(e) => { if (!/^#/.test(cardStyle.backColor)) updateCardStyle("backColor", "#ff6b9d"); updateCardStyle("backColor2" as any, e.target.value); }}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                            <div className="w-full h-full"
-                              style={{ backgroundColor: cardStyle.backColor2 && /^#/.test(cardStyle.backColor2) ? cardStyle.backColor2 : "#6366f1" }} />
+                            <div className="w-full h-full" style={{ backgroundColor: cardStyle.backColor2 && /^#/.test(cardStyle.backColor2) ? cardStyle.backColor2 : "#6366f1" }} />
                           </div>
                         </label>
                       </div>
@@ -547,28 +508,21 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1.5 text-center">בחרו 2 צבעים ליצירת גרדיאנט</p>
                   </div>
-
-                  {/* Back icon */}
                   <div>
                     <p className="font-bold text-sm mb-2">✨ אייקון / טקסט על גב הקלף</p>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {BACK_ICONS.map((icon) => (
-                        <button key={icon}
-                          onClick={() => updateCardStyle("backIcon", icon)}
+                        <button key={icon} onClick={() => updateCardStyle("backIcon", icon)}
                           className={`w-11 h-11 rounded-xl text-xl flex items-center justify-center transition-all active:scale-90 ${
-                            cardStyle.backIcon === icon
-                              ? "bg-game-pink/20 border-2 border-game-pink shadow-sm"
-                              : "bg-muted border-2 border-transparent hover:bg-muted/80"
-                          }`}
-                        >{icon}</button>
+                            cardStyle.backIcon === icon ? "bg-game-pink/20 border-2 border-game-pink shadow-sm" : "bg-muted border-2 border-transparent hover:bg-muted/80"
+                          }`}>{icon}</button>
                       ))}
                     </div>
                     <div className="flex gap-2 items-center">
                       <input type="text" maxLength={10} placeholder="או הקלידו טקסט..."
                         value={BACK_ICONS.includes(cardStyle.backIcon) ? "" : cardStyle.backIcon}
                         onChange={(e) => updateCardStyle("backIcon", e.target.value || "⭐")}
-                        className="flex-1 h-10 rounded-xl bg-muted px-3 text-sm font-bold text-center border-2 border-muted-foreground/20 focus:border-foreground/40 outline-none transition-colors placeholder:text-muted-foreground/50"
-                        dir="auto" />
+                        className="flex-1 h-10 rounded-xl bg-muted px-3 text-sm font-bold text-center border-2 border-muted-foreground/20 focus:border-foreground/40 outline-none transition-colors placeholder:text-muted-foreground/50" dir="auto" />
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1 text-center">הקלידו שם, אות, או כל טקסט קצר</p>
                   </div>
@@ -586,35 +540,25 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                       { type: "custom" as const, label: "העלאה", emoji: "📁" },
                       { type: "cloud" as const, label: "ענן", emoji: "☁️" },
                     ]).map((opt) => (
-                      <button key={opt.type}
-                        onClick={() => updateSetting("musicType", opt.type)}
+                      <button key={opt.type} onClick={() => updateSetting("musicType", opt.type)}
                         className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 ${
-                          musicType === opt.type
-                            ? "bg-game-pink text-primary-foreground shadow-sm"
-                            : "text-muted-foreground"
-                        }`}
-                      >{opt.emoji} {opt.label}</button>
+                          musicType === opt.type ? "bg-game-pink text-primary-foreground shadow-sm" : "text-muted-foreground"
+                        }`}>{opt.emoji} {opt.label}</button>
                     ))}
                   </div>
-
                   {musicType === "builtin" && (
                     <div className="grid grid-cols-2 gap-2">
                       {BUILT_IN_MELODIES.map((mel) => (
-                        <button key={mel.id}
-                          onClick={() => updateSetting("builtinMelodyId", mel.id)}
+                        <button key={mel.id} onClick={() => updateSetting("builtinMelodyId", mel.id)}
                           className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-                            builtinMelodyId === mel.id
-                              ? "bg-game-pink/20 border-2 border-game-pink text-foreground shadow-sm"
-                              : "bg-muted/60 border-2 border-transparent text-muted-foreground hover:bg-muted"
-                          }`}
-                        >
+                            builtinMelodyId === mel.id ? "bg-game-pink/20 border-2 border-game-pink text-foreground shadow-sm" : "bg-muted/60 border-2 border-transparent text-muted-foreground hover:bg-muted"
+                          }`}>
                           <span className="text-lg">{mel.emoji}</span>
                           <span className="truncate">{mel.name}</span>
                         </button>
                       ))}
                     </div>
                   )}
-
                   {musicType === "custom" && (
                     <div className="space-y-2">
                       {customMusic ? (
@@ -622,9 +566,7 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                           <Music className="w-4 h-4 text-accent shrink-0" />
                           <span className="text-xs font-medium truncate flex-1">{customMusicName}</span>
                           <button onClick={() => { updateSetting("customMusic", undefined); updateSetting("customMusicName", ""); }}
-                            className="text-destructive hover:text-destructive/80 transition-colors">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            className="text-destructive hover:text-destructive/80 transition-colors"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       ) : (
                         <button onClick={() => audioRef.current?.click()}
@@ -634,18 +576,15 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                       )}
                       <input ref={audioRef} type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac"
                         onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
+                          const file = e.target.files?.[0]; if (!file) return;
                           updateSetting("customMusicName", file.name);
                           const reader = new FileReader();
                           reader.onload = (ev) => updateSetting("customMusic", ev.target?.result as string);
                           reader.readAsDataURL(file);
-                        }}
-                        className="hidden" />
+                        }} className="hidden" />
                       <p className="text-[10px] text-muted-foreground text-center">MP3, WAV, M4A, רינגטונים, שירים ועוד</p>
                     </div>
                   )}
-
                   {musicType === "cloud" && (
                     <div className="space-y-2">
                       {customMusic && customMusicName.startsWith("cloud:") ? (
@@ -653,9 +592,7 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                           <Music className="w-4 h-4 text-accent shrink-0" />
                           <span className="text-xs font-medium truncate flex-1">{customMusicName.replace("cloud:", "")}</span>
                           <button onClick={() => { updateSetting("customMusic", undefined); updateSetting("customMusicName", ""); }}
-                            className="text-destructive hover:text-destructive/80 transition-colors">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            className="text-destructive hover:text-destructive/80 transition-colors"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       ) : (
                         <button onClick={() => setShowCloudAudio(true)}
@@ -669,20 +606,35 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                 </div>
               )}
 
+              {/* ═══ CUSTOM SETS ═══ */}
+              {settingsTab === "custom-sets" && (
+                <div className="space-y-3">
+                  <p className="font-bold text-lg text-center">🎴 ערכות מותאמות אישית</p>
+                  <CustomCardSets
+                    theme={theme}
+                    onPlay={(cards, name) => {
+                      setShowSettings(false);
+                      const customPairCount = Math.min(settings.pairCount, cards.length);
+                      onSelectSet("custom", { ...settings, pairCount: customPairCount }, cards);
+                    }}
+                  />
+                </div>
+              )}
+
               {/* ═══ GALLERY ═══ */}
               {settingsTab === "gallery" && (
                 <div className="space-y-3 text-center">
                   <p className="font-bold text-lg">📸 גלריה</p>
                   <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => { setShowSettings(false); setShowUpload(true); }}
-                      className="bg-gradient-to-br from-game-orange to-amber-500 rounded-2xl p-5 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all active:scale-95 text-primary-foreground">
-                      <span className="text-4xl">📸</span>
-                      <span className="font-bold text-sm">תמונות מהמכשיר</span>
-                    </button>
                     <button onClick={() => { setShowSettings(false); setShowCloudGallery(true); }}
                       className="bg-gradient-to-br from-sky-400 to-blue-500 rounded-2xl p-5 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all active:scale-95 text-primary-foreground">
                       <span className="text-4xl">☁️</span>
                       <span className="font-bold text-sm">גלריית ענן</span>
+                    </button>
+                    <button onClick={() => { setShowSettings(false); setShowCloudGallery(true); }}
+                      className="bg-gradient-to-br from-game-orange to-amber-500 rounded-2xl p-5 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all active:scale-95 text-primary-foreground">
+                      <span className="text-4xl">📸</span>
+                      <span className="font-bold text-sm">ניהול תמונות</span>
                     </button>
                   </div>
                 </div>
