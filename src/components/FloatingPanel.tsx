@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { X, Minimize2, Maximize2, GripVertical } from "lucide-react";
+import { X, Minimize2, Maximize2, GripVertical, Check } from "lucide-react";
 
 interface FloatingPanelProps {
   open: boolean;
   onClose: () => void;
+  onConfirm?: () => void;
   title: string;
   titleIcon?: React.ReactNode;
   children: React.ReactNode;
@@ -16,6 +17,7 @@ interface FloatingPanelProps {
 export default function FloatingPanel({
   open,
   onClose,
+  onConfirm,
   title,
   titleIcon,
   children,
@@ -44,6 +46,16 @@ export default function FloatingPanel({
       setPos({ x: Math.max(16, (vw - w) / 2), y: Math.max(16, (vh - h) / 2) });
     }
   }, [open, pos.x, defaultWidth, defaultHeight]);
+
+  // ESC to close
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, onClose]);
 
   // Drag
   const onDragStart = useCallback((e: React.PointerEvent) => {
@@ -141,6 +153,16 @@ export default function FloatingPanel({
             </h3>
           </div>
           <div className="flex items-center gap-1">
+            {onConfirm && (
+              <button
+                onClick={onConfirm}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-green-500 hover:text-green-600 hover:bg-green-100 transition-colors"
+                onPointerDown={e => e.stopPropagation()}
+                title="אישור ושמירה"
+              >
+                <Check className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => setMinimized(!minimized)}
               className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"

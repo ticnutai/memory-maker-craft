@@ -326,6 +326,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
       <FloatingPanel
         open={showSettings}
         onClose={() => { setShowSettings(false); loadCustomSets(); }}
+        onConfirm={() => { setShowSettings(false); loadCustomSets(); }}
         title="⚙️ הגדרות"
         titleIcon={<Settings className="w-5 h-5" />}
         defaultWidth={580}
