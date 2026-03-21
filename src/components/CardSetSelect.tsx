@@ -249,38 +249,11 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     </>
   );
 
-
-  if (settingsOnly) {
-    return (
-      <>
-        <FloatingPanel
-          open={showSettings}
-          onClose={() => { setShowSettings(false); loadCustomSets(); }}
-          title="⚙️ הגדרות"
-          titleIcon={<Settings className="w-5 h-5" />}
-          defaultWidth={580}
-          defaultHeight={540}
-        >
-          {renderSettingsContent()}
-          <div className="flex-1 overflow-y-auto px-5 py-4">
-            {settingsTab === "general" && renderGeneralTab()}
-            {settingsTab === "cards" && renderCardsTab()}
-            {settingsTab === "music" && renderMusicTab()}
-            {settingsTab === "custom-sets" && renderCustomSetsTab()}
-            {settingsTab === "gallery" && renderGalleryTab()}
-            {settingsTab === "birthdays" && <BirthdayManager theme={theme} />}
-            {settingsTab === "recordings" && <VoiceRecorder theme={theme} />}
-          </div>
-        </FloatingPanel>
-        {renderModals()}
-      </>
-    );
-  }
-
+  return (
     <div
-      className={`flex flex-col items-center min-h-screen gap-6 px-5 py-8 pb-28 overflow-y-auto relative ${cloud.animationsEnabled === false ? "no-animations" : ""}`}
+      className={`${settingsOnly ? "hidden" : ""} flex flex-col items-center min-h-screen gap-6 px-5 py-8 pb-28 overflow-y-auto relative ${cloud.animationsEnabled === false ? "no-animations" : ""}`}
       dir="rtl"
-      style={{ background: homeBg }}
+      style={{ background: settingsOnly ? 'transparent' : homeBg }}
     >
       {/* Floating decorations */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
