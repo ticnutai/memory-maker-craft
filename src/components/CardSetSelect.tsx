@@ -293,22 +293,17 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
         <Settings className="w-6 h-6" />
       </button>
 
-      {/* ══════════════════ Settings Panel ══════════════════ */}
-      {showSettings && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" dir="rtl">
-          <div className="bg-card w-full max-w-2xl max-h-[90vh] rounded-2xl shadow-2xl border-2 border-muted flex flex-col overflow-hidden bounce-in">
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-muted">
-              <h3 className="text-xl font-black flex items-center gap-2">
-                <Settings className="w-5 h-5" /> ⚙️ הגדרות
-              </h3>
-              <button onClick={() => { setShowSettings(false); loadCustomSets(); }} className="text-muted-foreground hover:text-foreground transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
+      {/* ══════════════════ Settings Panel (Floating) ══════════════════ */}
+      <FloatingPanel
+        open={showSettings}
+        onClose={() => { setShowSettings(false); loadCustomSets(); }}
+        title="⚙️ הגדרות"
+        titleIcon={<Settings className="w-5 h-5" />}
+        defaultWidth={580}
+        defaultHeight={540}
+      >
             {/* Tabs */}
-            <div className="flex gap-1 bg-muted px-3 py-2 overflow-x-auto">
+            <div className="flex gap-1 bg-muted px-3 py-2 overflow-x-auto shrink-0">
               {SETTINGS_TABS.map((tab) => (
                 <button key={tab.id} onClick={() => setSettingsTab(tab.id)}
                   className={`shrink-0 py-2 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 ${
