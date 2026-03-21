@@ -60,6 +60,34 @@ export function useCloudSettings(initialTheme: string) {
   const deviceId = useRef(getDeviceId());
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>();
 
+  const applyData = useCallback((data: any) => {
+    setSettings({
+      pairCount: data.pair_count,
+      cardMaxW: data.card_max_w,
+      emojiScale: Number(data.emoji_scale),
+      soundEnabled: data.sound_enabled,
+      speechEnabled: (data as any).speech_enabled ?? true,
+      speechRate: Number((data as any).speech_rate ?? 0.9),
+      flipDuration: Number(data.flip_duration),
+      musicType: data.music_type as StoredSettings["musicType"],
+      builtinMelodyId: data.builtin_melody_id || "twinkle",
+      customMusic: data.custom_music || undefined,
+      customMusicName: data.custom_music_name || undefined,
+      theme: data.theme || initialTheme,
+      bgTheme: (data as any).bg_theme || "default",
+      animationsEnabled: (data as any).animations_enabled !== false,
+      cardStyle: {
+        borderRadius: data.card_border_radius ?? 16,
+        borderWidth: data.card_border_width ?? 4,
+        borderColor: data.card_border_color || "default",
+        backColor: data.card_back_color || "default",
+        backColor2: (data as any).card_back_color_2 || undefined,
+        backIcon: data.card_back_icon || "⭐",
+        shape: data.card_shape || "square",
+      },
+    });
+  }, [initialTheme]);
+
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
@@ -68,37 +96,32 @@ export function useCloudSettings(initialTheme: string) {
         .eq("device_id", deviceId.current)
         .maybeSingle();
 
-      if (data) {
-        setSettings({
-          pairCount: data.pair_count,
-          cardMaxW: data.card_max_w,
-          emojiScale: Number(data.emoji_scale),
-          soundEnabled: data.sound_enabled,
-          speechEnabled: (data as any).speech_enabled ?? true,
-          speechRate: Number((data as any).speech_rate ?? 0.9),
-          flipDuration: Number(data.flip_duration),
-          musicType: data.music_type as StoredSettings["musicType"],
-          builtinMelodyId: data.builtin_melody_id || "twinkle",
-          customMusic: data.custom_music || undefined,
-          customMusicName: data.custom_music_name || undefined,
-          theme: data.theme || initialTheme,
-          bgTheme: (data as any).bg_theme || "default",
-          animationsEnabled: (data as any).animations_enabled !== false,
-          cardStyle: {
-            borderRadius: data.card_border_radius ?? 16,
-            borderWidth: data.card_border_width ?? 4,
-            borderColor: data.card_border_color || "default",
-            backColor: data.card_back_color || "default",
-            backColor2: (data as any).card_back_color_2 || undefined,
-            backIcon: data.card_back_icon || "⭐",
-            shape: data.card_shape || "square",
-          },
-        });
-      }
+      if (data) applyData(data);
       setLoaded(true);
     };
     load();
-  }, [initialTheme]);
+
+    // Real-time subscription — כל שינוי ב-Supabase מתפשט מיד לכל המופעים
+    const channel = supabase
+      .channel(`settings-${deviceId.current}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "game_settings",
+          filter: `device_id=eq.${deviceId.current}`,
+        },
+        (payload) => {
+          if (payload.new) applyData(payload.new);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [initialTheme, applyData]);
 
   const saveToCloud = useCallback((newSettings: StoredSettings) => {
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
