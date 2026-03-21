@@ -748,6 +748,9 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
 
               {/* ═══ RECORDINGS ═══ */}
               {settingsTab === "recordings" && <VoiceRecorder theme={theme} />}
+
+              {/* ═══ DEV ═══ */}
+              {settingsTab === "dev" && <DevPanel deviceId={deviceId} />}
             </div>
       </FloatingPanel>
 
