@@ -164,7 +164,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
 
   // Load layout presets
   const loadLayoutPresets = useCallback(async () => {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("layout_presets")
       .select("*")
       .eq("device_id", deviceId)
