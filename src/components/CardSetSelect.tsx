@@ -213,11 +213,22 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
 
   const allCardSets = getCardSets("girl");
 
-  // Get home page background from selected theme
-  const selectedBgTheme = getBgThemes().find(t => t.id === (cloud.bgTheme || "default"));
-  const homeBg = selectedBgTheme?.bg && selectedBgTheme.bg !== "transparent"
-    ? selectedBgTheme.bg
-    : "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 30%, #f3e5f5 60%, #fff9c4 100%)";
+  // Get home page background from selected theme (builtin or custom)
+  const bgThemeId = cloud.bgTheme || "default";
+  let homeBg = "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 30%, #f3e5f5 60%, #fff9c4 100%)";
+  if (bgThemeId.startsWith("custom:")) {
+    const cid = bgThemeId.replace("custom:", "");
+    const ct = customBgThemes.find((t: any) => t.id === cid);
+    if (ct && ct.config) {
+      const cfg = ct.config;
+      homeBg = cfg.bgType === "solid" ? cfg.bgColor1 : `linear-gradient(${cfg.gradientAngle || 135}deg, ${cfg.bgColor1} 0%, ${cfg.bgColor2} 50%, ${cfg.bgColor3} 100%)`;
+    }
+  } else {
+    const selectedBgTheme = getBgThemes().find(t => t.id === bgThemeId);
+    if (selectedBgTheme?.bg && selectedBgTheme.bg !== "transparent") {
+      homeBg = selectedBgTheme.bg;
+    }
+  }
 
 
 
