@@ -42,6 +42,7 @@ export interface StoredSettings {
   snapToGrid?: boolean;
   gridSize?: number;
   animationsEnabled?: boolean;
+  cardPositions?: { x: number; y: number }[];
 }
 
 export function useCloudSettings(initialTheme: string) {
@@ -78,6 +79,10 @@ export function useCloudSettings(initialTheme: string) {
       theme: data.theme || initialTheme,
       bgTheme: (data as any).bg_theme || "default",
       animationsEnabled: (data as any).animations_enabled !== false,
+      layoutMode: (data as any).layout_mode || "grid",
+      snapToGrid: (data as any).snap_to_grid !== false,
+      gridSize: Number((data as any).grid_size) || 20,
+      cardPositions: (data as any).card_positions || [],
       cardStyle: {
         borderRadius: data.card_border_radius ?? 16,
         borderWidth: data.card_border_width ?? 4,
@@ -159,6 +164,10 @@ export function useCloudSettings(initialTheme: string) {
         card_back_color_2: newSettings.cardStyle.backColor2 || "",
         card_back_icon: newSettings.cardStyle.backIcon,
         card_shape: newSettings.cardStyle.shape,
+        layout_mode: newSettings.layoutMode || "grid",
+        snap_to_grid: newSettings.snapToGrid !== false,
+        grid_size: newSettings.gridSize || 20,
+        card_positions: newSettings.cardPositions || [],
         updated_at: new Date().toISOString(),
       }, { onConflict: "device_id" });
     }, 500);
@@ -212,6 +221,7 @@ export function useCloudSettings(initialTheme: string) {
     snapToGrid: settings.snapToGrid !== false,
     gridSize: settings.gridSize || 20,
     animationsEnabled: settings.animationsEnabled !== false,
+    cardPositions: settings.cardPositions || [],
   }), [settings]);
 
   return { settings, loaded, updateSetting, updateCardStyle, updateMultiple, toGameSettings };

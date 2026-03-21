@@ -9,7 +9,8 @@ import ThemeBackground from "@/components/ThemeBackground";
 import { BgThemeId } from "@/components/ThemeBackground";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { RotateCcw, Home, Music, VolumeX, Mic, MicOff, Grid3X3, Move, Lock, Unlock } from "lucide-react";
+import { RotateCcw, Home, Music, VolumeX, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GameBoardProps {
   theme: ThemeType;
@@ -20,7 +21,7 @@ interface GameBoardProps {
 }
 
 export default function GameBoard({ theme, settings, cardSetType, customCards, onHome }: GameBoardProps) {
-  const { settings: liveCloud, toGameSettings } = useCloudSettings("girl");
+  const { settings: liveCloud, toGameSettings, updateSetting } = useCloudSettings("girl");
   const liveSettings = { ...settings, ...toGameSettings() };
   const [speechOn, setSpeechOn] = useState(settings.speechEnabled);
   const setInfo = getCardSets(theme).find((s) => s.type === cardSetType);
@@ -44,6 +45,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [showGrid, setShowGrid] = useState(true);
   const [alignLines, setAlignLines] = useState<{ x?: number; y?: number }>({});
+  const [saveFlash, setSaveFlash] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
 
   // הפעל מצב עריכה אוטומטית כשעוברים למצב חופשי
@@ -59,27 +61,33 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   // Initialize positions when cards change in free mode
   useEffect(() => {
     if (isFreeLayout && cards.length > 0 && Object.keys(positions).length === 0) {
-      const savedPos = settings.cardPositions || {};
-      if (Object.keys(savedPos).length > 0) {
-        setPositions(savedPos);
-      } else {
-        // Auto-arrange in grid initially with dynamic card size
-        const cols = Math.ceil(Math.sqrt(cards.length));
-        const cardW = freeCardSize;
-        const cardH = Math.round(freeCardSize * 1.2);
-        const gap = 16;
-        const startX = 20;
-        const startY = 20;
+      const savedPosArr = liveSettings.cardPositions || [];
+      if (Array.isArray(savedPosArr) && savedPosArr.length > 0) {
         const init: Record<string, CardPosition> = {};
         cards.forEach((c, i) => {
-          const col = i % cols;
-          const row = Math.floor(i / cols);
-          init[c.uniqueId] = { x: startX + col * (cardW + gap), y: startY + row * (cardH + gap) };
+          if (savedPosArr[i]) init[c.uniqueId] = savedPosArr[i];
         });
-        setPositions(init);
+        if (Object.keys(init).length > 0) {
+          setPositions(init);
+          return;
+        }
       }
+      // Auto-arrange in grid initially with dynamic card size
+      const cols = Math.ceil(Math.sqrt(cards.length));
+      const cardW = freeCardSize;
+      const cardH = Math.round(freeCardSize * 1.2);
+      const gap = 16;
+      const startX = 20;
+      const startY = 20;
+      const init: Record<string, CardPosition> = {};
+      cards.forEach((c, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        init[c.uniqueId] = { x: startX + col * (cardW + gap), y: startY + row * (cardH + gap) };
+      });
+      setPositions(init);
     }
-  }, [isFreeLayout, cards, positions, settings.cardPositions]);
+  }, [isFreeLayout, cards, positions, liveSettings.cardPositions]);
 
   const snapValue = (val: number) => {
     if (!snapEnabled) return val;
@@ -116,7 +124,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     let x = e.clientX - rect.left - dragOffset.x;
     let y = e.clientY - rect.top - dragOffset.y;
     x = Math.max(0, Math.min(x, rect.width - 100));
-    y = Math.max(0, Math.min(y, rect.height - 120));
+    y = Math.max(0, Math.min(y, rect.height - 20));
     x = snapValue(x);
     y = snapValue(y);
     const guides = getAlignGuides(dragging, x, y);
@@ -129,6 +137,29 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const handlePointerUp = () => {
     setDragging(null);
     setAlignLines({});
+  };
+
+  const getDeviceId = () => localStorage.getItem("memory-game-device-id") || "unknown";
+
+  const saveLayout = () => {
+    const posArr = cards.map(c => positions[c.uniqueId] || { x: 0, y: 0 });
+    updateSetting("cardPositions" as any, posArr);
+    setSaveFlash(true);
+    setTimeout(() => setSaveFlash(false), 1200);
+  };
+
+  const duplicateLayout = async () => {
+    const name = window.prompt("שם לפריסה החדשה:");
+    if (!name?.trim()) return;
+    const posArr = cards.map(c => positions[c.uniqueId] || { x: 0, y: 0 });
+    await supabase.from("layout_presets").insert({
+      device_id: getDeviceId(),
+      name: name.trim(),
+      positions: posArr,
+      pair_count: pairCount,
+    } as any);
+    setSaveFlash(true);
+    setTimeout(() => setSaveFlash(false), 1200);
   };
 
   const restart = () => {
@@ -188,6 +219,18 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                   className={showGrid ? "text-game-blue" : "text-muted-foreground"} title="הצג/הסתר גריד">
                   <Grid3X3 className="w-5 h-5" />
                 </Button>
+                {editMode && (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={saveLayout}
+                      className={saveFlash ? "text-green-500" : "text-muted-foreground"} title="שמור פריסה (דורס)">
+                      <Save className="w-5 h-5" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={duplicateLayout}
+                      className="text-muted-foreground" title="שכפל ושמור">
+                      <Copy className="w-5 h-5" />
+                    </Button>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -219,11 +262,11 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             /* ──── FREE LAYOUT ──── */
             <div
               ref={boardRef}
-              className="relative w-full h-full min-h-[400px]"
+              className="relative w-full h-full"
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
               onPointerLeave={handlePointerUp}
-              style={{ touchAction: isFreeLayout ? "none" : "auto" }}
+              style={{ touchAction: isFreeLayout ? "none" : "auto", minHeight: "calc(100vh - 160px)" }}
             >
               {/* Grid overlay — מוצג תמיד במצב חופשי */}
               {showGrid && (

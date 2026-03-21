@@ -32,7 +32,7 @@ export interface GameSettings {
   layoutMode?: "grid" | "free";
   snapToGrid?: boolean;
   gridSize?: number;
-  cardPositions?: Record<string, CardPosition>;
+  cardPositions?: CardPosition[];
   animationsEnabled?: boolean;
 }
 

@@ -4,7 +4,7 @@ import { CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import {
   Upload, Volume2, VolumeX, Music, Trash2, Cloud, Loader2,
-  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move, Paintbrush, Code2
+  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move, Paintbrush, Code2, FolderOpen
 } from "lucide-react";
 import DevPanel from "@/components/DevPanel";
 import VoiceRecorder from "@/components/VoiceRecorder";
@@ -97,6 +97,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
   const [customSets, setCustomSets] = useState<CustomSetPreview[]>([]);
   const [loadingSets, setLoadingSets] = useState(true);
   const [customBgThemes, setCustomBgThemes] = useState<any[]>([]);
+  const [layoutPresets, setLayoutPresets] = useState<any[]>([]);
   const audioRef = useRef<HTMLInputElement>(null);
 
   const { settings: cloud, loaded, updateSetting, updateCardStyle, toGameSettings } = useCloudSettings(theme);
@@ -160,6 +161,29 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     };
     loadBgThemes();
   }, [deviceId]);
+
+  // Load layout presets
+  const loadLayoutPresets = useCallback(async () => {
+    const { data } = await supabase
+      .from("layout_presets")
+      .select("*")
+      .eq("device_id", deviceId)
+      .order("created_at", { ascending: false });
+    setLayoutPresets(data || []);
+  }, [deviceId]);
+
+  useEffect(() => { loadLayoutPresets(); }, [loadLayoutPresets]);
+
+  const loadPreset = (preset: any) => {
+    if (preset.positions) {
+      updateSetting("cardPositions" as any, preset.positions);
+    }
+  };
+
+  const deletePreset = async (id: string) => {
+    await supabase.from("layout_presets").delete().eq("id", id);
+    loadLayoutPresets();
+  };
 
   // Play a custom set
   const playCustomSet = async (setPreview: CustomSetPreview) => {
@@ -479,6 +503,30 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                           </div>
                         )}
                         <p className="text-[10px] text-muted-foreground">💡 במשחק לחצו על 🔓 כדי להפעיל מצב עריכה וגררו את הקלפים</p>
+
+                        {/* Saved layout presets */}
+                        {layoutPresets.length > 0 && (
+                          <div className="space-y-2 pt-2 border-t border-muted">
+                            <p className="text-xs font-bold">📦 פריסות שמורות</p>
+                            {layoutPresets.map((p: any) => (
+                              <div key={p.id} className="flex items-center gap-2 bg-background/60 rounded-lg px-2.5 py-1.5">
+                                <FolderOpen className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                <span className="text-xs font-bold flex-1 truncate">{p.name}</span>
+                                <span className="text-[10px] text-muted-foreground">{p.pair_count} זוגות</span>
+                                <button
+                                  onClick={() => loadPreset(p)}
+                                  className="text-[10px] font-bold text-game-blue hover:underline"
+                                >טען</button>
+                                <button
+                                  onClick={() => deletePreset(p.id)}
+                                  className="text-destructive hover:text-destructive/80"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                    </div>
