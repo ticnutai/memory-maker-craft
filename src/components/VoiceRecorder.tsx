@@ -196,7 +196,7 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingName, setRecordingName] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState("match");
+  const [selectedEvents, setSelectedEvents] = useState<string[]>(["match"]);
   const [selectedEffect, setSelectedEffect] = useState("none");
   const [loading, setLoading] = useState(false);
   const [processingEffect, setProcessingEffect] = useState(false);
