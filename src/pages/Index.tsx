@@ -74,26 +74,26 @@ const Index = () => {
       </button>
 
       {/* Bottom tab icons — floating, no bar */}
-      <div className="fixed bottom-6 left-4 z-50 flex items-center gap-3" dir="rtl">
+      <div className="fixed bottom-4 sm:bottom-6 left-3 sm:left-4 z-50 flex items-center gap-2 sm:gap-3" dir="rtl">
         <button
           onClick={() => { setTab("memory"); setScreen("home"); }}
-          className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
             tab === "memory"
               ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
               : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
           }`}
         >
-          <Gamepad2 className="w-5 h-5" />
+          <Gamepad2 className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={() => { setTab("treasure"); setScreen("home"); }}
-          className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
             tab === "treasure"
               ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
               : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
           }`}
         >
-          <Map className="w-5 h-5" />
+          <Map className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
 
