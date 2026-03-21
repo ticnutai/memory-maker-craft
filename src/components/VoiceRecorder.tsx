@@ -385,7 +385,7 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
     await supabase.from("voice_recordings").insert({
       device_id: getDeviceId(),
       name: nameWithEffect,
-      event_type: selectedEvent,
+      event_type: selectedEvents.join(","),
       audio_url: urlData.publicUrl,
       is_active: true,
     } as any);
