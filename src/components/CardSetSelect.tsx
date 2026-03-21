@@ -191,7 +191,7 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
 
   return (
     <div
-      className="flex flex-col items-center min-h-screen gap-4 px-4 py-6 pb-24 overflow-y-auto relative"
+      className="flex flex-col items-center min-h-screen gap-6 px-5 py-8 pb-28 overflow-y-auto relative"
       dir="rtl"
       style={{
         background: "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 30%, #f3e5f5 60%, #fff9c4 100%)",
@@ -218,23 +218,23 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
       </div>
 
       {/* Title */}
-      <div className="relative z-10 text-center bounce-in">
+      <div className="relative z-10 text-center bounce-in mt-2">
         <h1 className="text-3xl sm:text-4xl font-black text-foreground leading-tight">
           🎮 משחקי זיכרון 🎮
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">בחרו ערכה להתחיל לשחק!</p>
+        <p className="text-sm text-muted-foreground mt-2">בחרו ערכה להתחיל לשחק!</p>
       </div>
 
       {/* Card set grid — built-in + custom + add button */}
-      <div className="w-full max-w-md relative z-10 grid grid-cols-2 gap-3 bounce-in" style={{ animationDelay: "0.1s" }}>
+      <div className="w-full max-w-lg relative z-10 grid grid-cols-2 gap-4 bounce-in" style={{ animationDelay: "0.1s" }}>
         {/* Built-in sets */}
         {allCardSets.map((set, i) => (
           <button key={set.type}
             onClick={() => onSelectSet(set.type, settings)}
-            className={`bg-gradient-to-br ${set.color} rounded-2xl p-5 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground`}
+            className={`bg-gradient-to-br ${set.color} rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground min-h-[120px]`}
             style={{ animationDelay: `${0.15 + i * 0.08}s` }}
           >
-            <span className="text-4xl drop-shadow-sm">{set.emoji}</span>
+            <span className="text-5xl drop-shadow-sm">{set.emoji}</span>
             <span className="font-bold text-sm">{set.label}</span>
           </button>
         ))}
@@ -245,10 +245,10 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
           return (
             <button key={cs.id}
               onClick={() => playCustomSet(cs)}
-              className={`bg-gradient-to-br ${CUSTOM_GRADIENTS[gradientIdx]} rounded-2xl p-5 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground relative`}
+              className={`bg-gradient-to-br ${CUSTOM_GRADIENTS[gradientIdx]} rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground relative min-h-[120px]`}
               style={{ animationDelay: `${0.15 + (allCardSets.length + i) * 0.08}s` }}
             >
-              <span className="text-4xl drop-shadow-sm">{cs.emoji}</span>
+              <span className="text-5xl drop-shadow-sm">{cs.emoji}</span>
               <span className="font-bold text-sm">{cs.name}</span>
               {cs.cardCount > 0 && (
                 <span className="absolute top-2 left-2 text-[10px] bg-white/30 backdrop-blur-sm rounded-full px-2 py-0.5 font-bold">
@@ -264,16 +264,16 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
           );
         })}
 
-        {/* Add new set button */}
+        {/* Add new set button — smaller */}
         <button
           onClick={() => { setShowSettings(true); setSettingsTab("custom-sets"); }}
-          className="rounded-2xl p-5 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in border-3 border-dashed border-game-pink/40 bg-white/60 backdrop-blur-sm"
+          className="rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-md hover:shadow-lg hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in border-2 border-dashed border-game-pink/30 bg-white/50 backdrop-blur-sm min-h-[120px]"
           style={{ animationDelay: `${0.15 + (allCardSets.length + customSets.length) * 0.08}s` }}
         >
-          <div className="w-12 h-12 rounded-full bg-game-pink/20 flex items-center justify-center">
-            <Plus className="w-7 h-7 text-game-pink" />
+          <div className="w-9 h-9 rounded-full bg-game-pink/15 flex items-center justify-center">
+            <Plus className="w-5 h-5 text-game-pink" />
           </div>
-          <span className="font-bold text-sm text-game-pink">ערכה חדשה</span>
+          <span className="font-bold text-xs text-game-pink">ערכה חדשה</span>
         </button>
       </div>
 
