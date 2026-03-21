@@ -144,10 +144,12 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     <span key={i} className="text-xl bounce-in" style={{ animationDelay: `${i * 0.1}s` }}>⭐</span>
   ));
 
+  const animationsOff = settings.animationsEnabled === false;
+
   return (
-    <div dir="rtl">
+    <div dir="rtl" className={animationsOff ? "no-animations" : ""}>
       <ThemeBackground themeId={bgThemeId} girlTheme={theme === "girl"} className="flex flex-col">
-        <Confetti active={isGameOver} />
+        <Confetti active={isGameOver && !animationsOff} />
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm">

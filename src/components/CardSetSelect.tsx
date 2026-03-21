@@ -197,7 +197,7 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
 
   return (
     <div
-      className="flex flex-col items-center min-h-screen gap-6 px-5 py-8 pb-28 overflow-y-auto relative"
+      className={`flex flex-col items-center min-h-screen gap-6 px-5 py-8 pb-28 overflow-y-auto relative ${cloud.animationsEnabled === false ? "no-animations" : ""}`}
       dir="rtl"
       style={{ background: homeBg }}
     >
