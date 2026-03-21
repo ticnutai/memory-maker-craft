@@ -95,12 +95,13 @@ const Index = () => {
         </button>
       </div>
 
-      {/* Settings panel renders via CardSetSelect when on home, need it for game/treasure too */}
-      {(tab !== "memory" || screen !== "home") && showSettings && (
+      {/* Settings panel for non-home pages */}
+      {(tab !== "memory" || screen !== "home") && (
         <CardSetSelect
           onSelectSet={handleCardSet}
           settingsOpen={showSettings}
           onSettingsToggle={setShowSettings}
+          settingsOnly
         />
       )}
     </div>
