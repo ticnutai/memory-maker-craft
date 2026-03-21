@@ -182,6 +182,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
   const SETTINGS_TABS: { id: SettingsTabId; label: string; icon: React.ReactNode }[] = [
     { id: "general", label: "כללי", icon: <LayoutGrid className="w-4 h-4" /> },
     { id: "cards", label: "קלפים", icon: <Palette className="w-4 h-4" /> },
+    { id: "themes", label: "ערכות נושא", icon: <Paintbrush className="w-4 h-4" /> },
     { id: "music", label: "מוזיקה", icon: <Music className="w-4 h-4" /> },
     { id: "custom-sets", label: "ערכות", icon: <Layers className="w-4 h-4" /> },
     { id: "gallery", label: "גלריה", icon: <Image className="w-4 h-4" /> },
