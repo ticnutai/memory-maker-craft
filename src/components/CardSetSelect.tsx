@@ -189,13 +189,17 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
 
   const allCardSets = getCardSets("girl");
 
+  // Get home page background from selected theme
+  const selectedBgTheme = getBgThemes().find(t => t.id === (cloud.bgTheme || "default"));
+  const homeBg = selectedBgTheme?.bg && selectedBgTheme.bg !== "transparent"
+    ? selectedBgTheme.bg
+    : "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 30%, #f3e5f5 60%, #fff9c4 100%)";
+
   return (
     <div
       className="flex flex-col items-center min-h-screen gap-6 px-5 py-8 pb-28 overflow-y-auto relative"
       dir="rtl"
-      style={{
-        background: "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 30%, #f3e5f5 60%, #fff9c4 100%)",
-      }}
+      style={{ background: homeBg }}
     >
       {/* Floating decorations */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
