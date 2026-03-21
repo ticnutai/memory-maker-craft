@@ -373,7 +373,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
             </div>
 
             {/* Settings content */}
-            <div className="flex-1 overflow-y-auto px-5 py-4">
+            <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-3 sm:py-4">
 
               {/* ═══ GENERAL ═══ */}
               {settingsTab === "general" && (
