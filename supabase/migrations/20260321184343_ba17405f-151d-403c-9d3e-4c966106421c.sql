@@ -1,0 +1,1 @@
+ALTER TABLE public.custom_card_sets ADD COLUMN IF NOT EXISTS settings_json jsonb DEFAULT '{}'::jsonb;
