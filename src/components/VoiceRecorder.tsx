@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Play, Trash2, Check, Upload } from "lucide-react";
+import { Mic, Square, Play, Trash2, Check, Upload, Tags, Pencil } from "lucide-react";
 
 const EVENT_TYPES = [
   { id: "match", label: "התאמה מוצלחת", emoji: "✅" },
@@ -196,10 +196,12 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingName, setRecordingName] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState("match");
+  const [selectedEvents, setSelectedEvents] = useState<string[]>(["match"]);
   const [selectedEffect, setSelectedEffect] = useState("none");
   const [loading, setLoading] = useState(false);
   const [processingEffect, setProcessingEffect] = useState(false);
+  const [editingRecId, setEditingRecId] = useState<string | null>(null);
+  const [editingEvents, setEditingEvents] = useState<string[]>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const playingRef = useRef<HTMLAudioElement | null>(null);
@@ -289,7 +291,7 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
     await supabase.from("voice_recordings").insert({
       device_id: getDeviceId(),
       name: nameWithEffect,
-      event_type: selectedEvent,
+      event_type: selectedEvents.join(","),
       audio_url: urlData.publicUrl,
       is_active: true,
     } as any);
@@ -312,6 +314,22 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
       .from("voice_recordings")
       .update({ is_active: !rec.is_active } as any)
       .eq("id", rec.id);
+    loadRecordings();
+  };
+
+  const startEditEvents = (rec: Recording) => {
+    setEditingRecId(rec.id);
+    setEditingEvents(rec.event_type.split(",").filter(Boolean));
+  };
+
+  const saveEditEvents = async () => {
+    if (!editingRecId || editingEvents.length === 0) return;
+    await supabase
+      .from("voice_recordings")
+      .update({ event_type: editingEvents.join(",") } as any)
+      .eq("id", editingRecId);
+    setEditingRecId(null);
+    setEditingEvents([]);
     loadRecordings();
   };
 
@@ -385,7 +403,7 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
     await supabase.from("voice_recordings").insert({
       device_id: getDeviceId(),
       name: nameWithEffect,
-      event_type: selectedEvent,
+      event_type: selectedEvents.join(","),
       audio_url: urlData.publicUrl,
       is_active: true,
     } as any);
@@ -403,24 +421,36 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
         הקליטו הודעות כמו "כל הכבוד!" ושייכו אותן לאירועי משחק
       </p>
 
-      {/* Event type selection */}
+      {/* Event type selection - multi-select */}
       <div>
-        <p className="font-bold text-sm mb-2">🎯 סוג אירוע</p>
+        <p className="font-bold text-sm mb-2">🎯 סוג אירוע <span className="text-[10px] text-muted-foreground font-normal">(ניתן לבחור כמה)</span></p>
         <div className="grid grid-cols-2 gap-2">
-          {EVENT_TYPES.map((ev) => (
-            <button
-              key={ev.id}
-              onClick={() => setSelectedEvent(ev.id)}
-              className={`h-10 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
-                selectedEvent === ev.id
-                  ? `${accent} text-primary-foreground shadow-md`
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              <span>{ev.emoji}</span>
-              <span>{ev.label}</span>
-            </button>
-          ))}
+          {EVENT_TYPES.map((ev) => {
+            const isSelected = selectedEvents.includes(ev.id);
+            return (
+              <button
+                key={ev.id}
+                onClick={() => {
+                  setSelectedEvents(prev => {
+                    if (isSelected) {
+                      const next = prev.filter(e => e !== ev.id);
+                      return next.length > 0 ? next : prev; // at least one must remain
+                    }
+                    return [...prev, ev.id];
+                  });
+                }}
+                className={`h-10 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
+                  isSelected
+                    ? `${accent} text-primary-foreground shadow-md`
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                <span>{ev.emoji}</span>
+                <span>{ev.label}</span>
+                {isSelected && <Check className="w-3 h-3" />}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -510,46 +540,91 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
         <div className="space-y-3 pt-2">
           <p className="font-bold text-sm">📋 הקלטות שמורות</p>
           {EVENT_TYPES.map((ev) => {
-            const evRecs = recordings.filter((r) => r.event_type === ev.id);
+            const evRecs = recordings.filter((r) => r.event_type.split(",").includes(ev.id));
             if (evRecs.length === 0) return null;
             return (
               <div key={ev.id} className="space-y-1.5">
                 <p className="text-xs font-bold text-muted-foreground">
                   {ev.emoji} {ev.label}
                 </p>
-                {evRecs.map((rec) => (
-                  <div
-                    key={rec.id}
-                    className={`flex items-center gap-2 rounded-xl px-3 py-2 transition-all ${
-                      rec.is_active ? "bg-accent/20 border border-accent" : "bg-muted/60 border border-transparent opacity-60"
-                    }`}
-                  >
-                    <button
-                      onClick={() => playRecording(rec.audio_url)}
-                      className="text-accent hover:scale-110 transition-transform"
-                    >
-                      <Play className="w-4 h-4" />
-                    </button>
-                    <span className="text-xs font-bold flex-1 truncate">{rec.name}</span>
-                    <button
-                      onClick={() => toggleActive(rec)}
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
-                        rec.is_active
-                          ? `${accent} text-primary-foreground`
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                      title={rec.is_active ? "פעיל" : "כבוי"}
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => deleteRecording(rec)}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                {evRecs.map((rec) => {
+                  const recEvents = rec.event_type.split(",").filter(Boolean);
+                  const isEditing = editingRecId === rec.id;
+                  return (
+                    <div key={`${ev.id}-${rec.id}`}>
+                      <div
+                        className={`flex items-center gap-2 rounded-xl px-3 py-2 transition-all ${
+                          rec.is_active ? "bg-accent/20 border border-accent" : "bg-muted/60 border border-transparent opacity-60"
+                        }`}
+                      >
+                        <button onClick={() => playRecording(rec.audio_url)} className="text-accent hover:scale-110 transition-transform">
+                          <Play className="w-4 h-4" />
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs font-bold truncate block">{rec.name}</span>
+                          {recEvents.length > 1 && (
+                            <div className="flex gap-1 mt-0.5 flex-wrap">
+                              {recEvents.map(eId => {
+                                const evInfo = EVENT_TYPES.find(e => e.id === eId);
+                                return evInfo ? (
+                                  <span key={eId} className="text-[9px] bg-muted rounded-md px-1.5 py-0.5">{evInfo.emoji}</span>
+                                ) : null;
+                              })}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => isEditing ? saveEditEvents() : startEditEvents(rec)}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                            isEditing ? "bg-green-500 text-white" : "bg-muted text-muted-foreground hover:text-foreground"
+                          }`}
+                          title="שייך לאירועים"
+                        >
+                          {isEditing ? <Check className="w-3.5 h-3.5" /> : <Tags className="w-3.5 h-3.5" />}
+                        </button>
+                        <button
+                          onClick={() => toggleActive(rec)}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                            rec.is_active ? `${accent} text-primary-foreground` : "bg-muted text-muted-foreground"
+                          }`}
+                          title={rec.is_active ? "פעיל" : "כבוי"}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => deleteRecording(rec)} className="text-destructive hover:text-destructive/80 transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {isEditing && (
+                        <div className="grid grid-cols-2 gap-1.5 mt-1.5 px-2">
+                          {EVENT_TYPES.map(evOpt => {
+                            const active = editingEvents.includes(evOpt.id);
+                            return (
+                              <button
+                                key={evOpt.id}
+                                onClick={() => {
+                                  setEditingEvents(prev => {
+                                    if (active) {
+                                      const next = prev.filter(e => e !== evOpt.id);
+                                      return next.length > 0 ? next : prev;
+                                    }
+                                    return [...prev, evOpt.id];
+                                  });
+                                }}
+                                className={`h-8 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
+                                  active ? `${accent} text-primary-foreground` : "bg-muted text-muted-foreground"
+                                }`}
+                              >
+                                {evOpt.emoji} {evOpt.label}
+                                {active && <Check className="w-2.5 h-2.5" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             );
           })}
