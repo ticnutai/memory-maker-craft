@@ -144,7 +144,7 @@ function NetworkMonitor({ entries }: { entries: NetworkEntry[] }) {
               <Download className="w-3 h-3" />
             </button>
           </div>
-          <div className="h-32 overflow-y-auto p-1.5 space-y-0.5 font-mono text-[10px]">
+          <div className="min-h-[8rem] max-h-[50vh] overflow-y-auto overflow-x-auto p-1.5 space-y-0.5 font-mono text-[10px]">
             {entries.length === 0 && (
               <p className="text-white/30 text-center py-4 text-xs">אין בקשות...</p>
             )}
