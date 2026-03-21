@@ -39,6 +39,7 @@ export interface StoredSettings {
   layoutMode?: "grid" | "free";
   snapToGrid?: boolean;
   gridSize?: number;
+  animationsEnabled?: boolean;
 }
 
 export function useCloudSettings(initialTheme: string) {
@@ -168,6 +169,7 @@ export function useCloudSettings(initialTheme: string) {
     layoutMode: settings.layoutMode || "grid",
     snapToGrid: settings.snapToGrid !== false,
     gridSize: settings.gridSize || 20,
+    animationsEnabled: settings.animationsEnabled !== false,
   }), [settings]);
 
   return { settings, loaded, updateSetting, updateCardStyle, updateMultiple, toGameSettings };

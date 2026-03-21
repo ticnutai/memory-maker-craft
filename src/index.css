@@ -227,3 +227,25 @@
   70% { transform: scale(1.1) translateY(-50px); opacity: 0.9; }
   100% { transform: scale(0.8) translateY(-80px); opacity: 0; }
 }
+
+/* ══ No-animations mode ══ */
+.no-animations *,
+.no-animations *::before,
+.no-animations *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+}
+.no-animations .card-flip-inner {
+  transition: transform 0.3s ease !important; /* keep card flip functional but fast */
+}
+.no-animations .card-hover-effect:hover {
+  transform: none !important;
+  filter: none !important;
+}
+.no-animations .back-icon-pulse {
+  animation: none !important;
+}
+.no-animations .matched-glow {
+  box-shadow: none !important;
+}

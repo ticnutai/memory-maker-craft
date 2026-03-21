@@ -197,7 +197,7 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
 
   return (
     <div
-      className="flex flex-col items-center min-h-screen gap-6 px-5 py-8 pb-28 overflow-y-auto relative"
+      className={`flex flex-col items-center min-h-screen gap-6 px-5 py-8 pb-28 overflow-y-auto relative ${cloud.animationsEnabled === false ? "no-animations" : ""}`}
       dir="rtl"
       style={{ background: homeBg }}
     >
@@ -466,6 +466,24 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                         <p className="text-[10px] text-muted-foreground">💡 במשחק לחצו על 🔓 כדי להפעיל מצב עריכה וגררו את הקלפים</p>
                       </div>
                     )}
+                   </div>
+
+                  {/* Animations toggle */}
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
+                    <div>
+                      <p className="font-bold text-sm">✨ אנימציות ואפקטים</p>
+                      <p className="text-[10px] text-muted-foreground">הפעלה/כיבוי של כל האנימציות, אפקטים חזותיים וקונפטי</p>
+                    </div>
+                    <button
+                      onClick={() => updateSetting("animationsEnabled" as any, cloud.animationsEnabled === false ? true : false)}
+                      className={`w-12 h-7 rounded-full transition-all ${
+                        cloud.animationsEnabled !== false ? "bg-accent" : "bg-muted-foreground/30"
+                      } relative`}
+                    >
+                      <div className={`w-5 h-5 rounded-full bg-white shadow transition-all absolute top-1 ${
+                        cloud.animationsEnabled !== false ? "right-1" : "left-1"
+                      }`} />
+                    </button>
                   </div>
                 </div>
               )}
