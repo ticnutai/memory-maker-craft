@@ -95,6 +95,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
   const [showCloudAudio, setShowCloudAudio] = useState(false);
   const [customSets, setCustomSets] = useState<CustomSetPreview[]>([]);
   const [loadingSets, setLoadingSets] = useState(true);
+  const [customBgThemes, setCustomBgThemes] = useState<any[]>([]);
   const audioRef = useRef<HTMLInputElement>(null);
 
   const { settings: cloud, loaded, updateSetting, updateCardStyle, toGameSettings } = useCloudSettings(theme);
