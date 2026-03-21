@@ -118,6 +118,7 @@ export function useCloudSettings(initialTheme: string) {
         custom_music_name: newSettings.customMusicName || null,
         theme: newSettings.theme || initialTheme,
         bg_theme: newSettings.bgTheme || "default",
+        animations_enabled: newSettings.animationsEnabled !== false,
         card_border_radius: newSettings.cardStyle.borderRadius,
         card_border_width: newSettings.cardStyle.borderWidth,
         card_border_color: newSettings.cardStyle.borderColor,
