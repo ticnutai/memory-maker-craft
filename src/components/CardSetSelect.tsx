@@ -13,6 +13,14 @@ import CustomCardSets from "@/components/CustomCardSets";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { getBgThemes } from "@/components/ThemeBackground";
 import { supabase } from "@/integrations/supabase/client";
+import FloatingPanel from "@/components/FloatingPanel";
+import VoiceRecorder from "@/components/VoiceRecorder";
+import BirthdayManager from "@/components/BirthdayManager";
+import CloudGallery from "@/components/CloudGallery";
+import CustomCardSets from "@/components/CustomCardSets";
+import { useCloudSettings } from "@/hooks/useCloudSettings";
+import { getBgThemes } from "@/components/ThemeBackground";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CardSetSelectProps {
   onSelectSet: (set: CardSetType, settings: GameSettings, customCards?: CardData[]) => void;
