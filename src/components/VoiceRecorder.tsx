@@ -204,6 +204,7 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
   const chunksRef = useRef<Blob[]>([]);
   const playingRef = useRef<HTMLAudioElement | null>(null);
   const rawBlobRef = useRef<Blob | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const accent = theme === "girl" ? "bg-game-pink" : "bg-game-blue";
 
