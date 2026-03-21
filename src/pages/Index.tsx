@@ -10,6 +10,7 @@ type AppTab = "memory" | "treasure";
 type Screen = "home" | "game";
 
 const Index = () => {
+  const { settings: cloudSettings } = useCloudSettings("girl");
   const [tab, setTab] = useState<AppTab>("memory");
   const [screen, setScreen] = useState<Screen>("home");
   const [cardSetType, setCardSetType] = useState<CardSetType>("animals");
