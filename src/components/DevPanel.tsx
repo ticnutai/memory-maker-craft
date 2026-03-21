@@ -594,23 +594,8 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
       {/* Game Stats */}
       <GameStats />
 
-      {/* GitHub Section */}
-      <div className="bg-muted/50 rounded-xl p-3 space-y-2">
-        <h4 className="font-bold text-xs flex items-center gap-2">
-          <Github className="w-3.5 h-3.5" /> GitHub
-        </h4>
-        <p className="text-[10px] text-muted-foreground leading-relaxed">
-          חיבור וסנכרון מתבצעים אוטומטית דרך הפלטפורמה.
-        </p>
-        <a
-          href="https://lovable.dev"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full h-9 rounded-lg bg-[#24292f] text-white font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#24292f]/90 transition-all active:scale-95"
-        >
-          <Github className="w-3.5 h-3.5" /> הגדרות GitHub
-        </a>
-      </div>
+      {/* GitHub Section — connected to network & console */}
+      <GitHubStatus networkEntries={networkEntries} addLog={(type, msg) => setLogs(prev => [...prev.slice(-199), { time: new Date().toLocaleTimeString("he-IL"), type, message: msg }])} />
 
       {/* Network Monitor */}
       <NetworkMonitor entries={networkEntries} />
