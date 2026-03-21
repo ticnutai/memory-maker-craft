@@ -159,7 +159,7 @@ function NetworkMonitor({ entries }: { entries: NetworkEntry[] }) {
                   {e.status || "..."}
                 </span>
                 <span className="text-blue-400/60 shrink-0">{e.method}</span>
-                <span className="text-white/60 truncate">{e.url.replace(/https?:\/\/[^/]+/, "")}</span>
+                <span className="text-white/60 whitespace-nowrap">{e.url.replace(/https?:\/\/[^/]+/, "")}</span>
                 {e.duration !== null && (
                   <span className="text-white/30 shrink-0">{e.duration}ms</span>
                 )}
