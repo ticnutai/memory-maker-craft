@@ -475,6 +475,14 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                 </div>
               )}
 
+              {/* ═══ THEMES ═══ */}
+              {settingsTab === "themes" && (
+                <ThemeBuilder
+                  selectedThemeId={cloud.bgTheme || "default"}
+                  onSelectTheme={(id) => updateSetting("bgTheme" as any, id)}
+                />
+              )}
+
               {/* ═══ CARDS ═══ */}
               {settingsTab === "cards" && (
                 <div className="space-y-5">
