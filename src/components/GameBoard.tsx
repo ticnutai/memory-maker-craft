@@ -25,17 +25,17 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const [speechOn, setSpeechOn] = useState(settings.speechEnabled);
   const setInfo = getCardSets(theme).find((s) => s.type === cardSetType);
   const cardData = customCards || setInfo?.cards || getCardSets(theme)[0].cards;
-  const pairCount = Math.min(settings.pairCount, cardData.length);
-  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, settings.soundEnabled, speechOn, settings.flipDuration, settings.speechRate);
-  const activeMelody = settings.musicType === "builtin"
-    ? BUILT_IN_MELODIES.find((m) => m.id === settings.builtinMelodyId)
+  const pairCount = Math.min(liveSettings.pairCount, cardData.length);
+  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, liveSettings.soundEnabled, speechOn, liveSettings.flipDuration, liveSettings.speechRate);
+  const activeMelody = liveSettings.musicType === "builtin"
+    ? BUILT_IN_MELODIES.find((m) => m.id === liveSettings.builtinMelodyId)
     : undefined;
-  const customUrl = (settings.musicType === "custom" || settings.musicType === "cloud") ? settings.customMusic : undefined;
+  const customUrl = (liveSettings.musicType === "custom" || liveSettings.musicType === "cloud") ? liveSettings.customMusic : undefined;
   const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(activeMelody, customUrl);
 
-  const isFreeLayout = settings.layoutMode === "free";
-  const snapEnabled = settings.snapToGrid !== false;
-  const gridSize = settings.gridSize || 20;
+  const isFreeLayout = liveSettings.layoutMode === "free";
+  const snapEnabled = liveSettings.snapToGrid !== false;
+  const gridSize = liveSettings.gridSize || 20;
 
   // Card positions for free layout
   const [positions, setPositions] = useState<Record<string, CardPosition>>({});
