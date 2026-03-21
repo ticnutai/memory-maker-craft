@@ -9,7 +9,7 @@ import ThemeBackground from "@/components/ThemeBackground";
 import { BgThemeId } from "@/components/ThemeBackground";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { RotateCcw, Home, Music, VolumeX, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy } from "lucide-react";
+import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface GameBoardProps {
@@ -24,15 +24,21 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const { settings: liveCloud, toGameSettings, updateSetting } = useCloudSettings("girl");
   const liveSettings = { ...settings, ...toGameSettings() };
   const [speechOn, setSpeechOn] = useState(settings.speechEnabled);
+  const [globalMute, setGlobalMute] = useState(false);
   const setInfo = getCardSets(theme).find((s) => s.type === cardSetType);
   const cardData = customCards || setInfo?.cards || getCardSets(theme)[0].cards;
   const pairCount = Math.min(liveSettings.pairCount, cardData.length);
-  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, liveSettings.soundEnabled, speechOn, liveSettings.flipDuration, liveSettings.speechRate);
+  const effectiveSoundOn = liveSettings.soundEnabled && !globalMute;
+  const effectiveSpeechOn = speechOn && !globalMute;
+  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, effectiveSoundOn, effectiveSpeechOn, liveSettings.flipDuration, liveSettings.speechRate);
   const activeMelody = liveSettings.musicType === "builtin"
     ? BUILT_IN_MELODIES.find((m) => m.id === liveSettings.builtinMelodyId)
     : undefined;
   const customUrl = (liveSettings.musicType === "custom" || liveSettings.musicType === "cloud") ? liveSettings.customMusic : undefined;
-  const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(activeMelody, customUrl);
+  const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(
+    globalMute ? undefined : activeMelody,
+    globalMute ? undefined : customUrl
+  );
 
   const isFreeLayout = liveSettings.layoutMode === "free";
   const snapEnabled = liveSettings.snapToGrid !== false;
@@ -200,13 +206,17 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             <Button variant="ghost" size="sm" onClick={() => { stopMusic(); onHome(); }}>
               <Home className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={toggleMusic}
-              className={musicPlaying ? "text-accent" : "text-muted-foreground"} title="מוזיקת רקע">
-              {musicPlaying ? <Music className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+            <Button variant="ghost" size="sm" onClick={() => { setGlobalMute(!globalMute); if (!globalMute) stopMusic(); }}
+              className={globalMute ? "text-destructive" : "text-green-500"} title={globalMute ? "הפעל הכל" : "השתק הכל"}>
+              {globalMute ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setSpeechOn(!speechOn)}
-              className={speechOn ? "text-accent" : "text-muted-foreground"} title="הכרזה קולית">
-              {speechOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+            <Button variant="ghost" size="sm" onClick={toggleMusic} disabled={globalMute}
+              className={musicPlaying && !globalMute ? "text-accent" : "text-muted-foreground"} title="מוזיקת רקע">
+              {musicPlaying && !globalMute ? <Music className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setSpeechOn(!speechOn)} disabled={globalMute}
+              className={speechOn && !globalMute ? "text-accent" : "text-muted-foreground"} title="הכרזה קולית">
+              {speechOn && !globalMute ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
             </Button>
             {isFreeLayout && (
               <>
