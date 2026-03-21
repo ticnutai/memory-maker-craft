@@ -63,12 +63,12 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
       if (Object.keys(savedPos).length > 0) {
         setPositions(savedPos);
       } else {
-        // Auto-arrange in grid initially
+        // Auto-arrange in grid initially with dynamic card size
         const cols = Math.ceil(Math.sqrt(cards.length));
-        const cardW = 110;
-        const cardH = 130;
+        const cardW = freeCardSize;
+        const cardH = Math.round(freeCardSize * 1.2);
         const gap = 16;
-        const startX = 40;
+        const startX = 20;
         const startY = 20;
         const init: Record<string, CardPosition> = {};
         cards.forEach((c, i) => {
@@ -137,6 +137,9 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   };
 
   const cardMaxW = liveSettings.cardMaxW;
+
+  // גודל קלף בודד במצב חופשי — בין 60px ל-200px לפי cardMaxW
+  const freeCardSize = Math.max(60, Math.min(200, Math.round(cardMaxW / 4)));
 
   // Grid columns based on total cards
   const totalCards = pairCount * 2;
@@ -244,7 +247,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
 
               {/* Cards */}
               {cards.map((card, i) => {
-                const pos = positions[card.uniqueId] || { x: (i % 4) * 120 + 20, y: Math.floor(i / 4) * 140 + 20 };
+                const pos = positions[card.uniqueId] || { x: (i % 4) * (freeCardSize + 16) + 20, y: Math.floor(i / 4) * (freeCardSize * 1.2 + 16) + 20 };
                 return (
                   <div
                     key={card.uniqueId}
@@ -252,7 +255,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                     style={{
                       left: pos.x,
                       top: pos.y,
-                      width: 100,
+                      width: freeCardSize,
                       animationDelay: `${i * 0.04}s`,
                       transition: dragging === card.uniqueId ? "none" : "left 0.2s, top 0.2s",
                     }}
