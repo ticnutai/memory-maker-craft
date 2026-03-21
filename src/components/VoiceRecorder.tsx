@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Play, Trash2, Check, Wand2 } from "lucide-react";
+import { Mic, Square, Play, Trash2, Check, Upload } from "lucide-react";
 
 const EVENT_TYPES = [
   { id: "match", label: "התאמה מוצלחת", emoji: "✅" },
@@ -204,6 +204,7 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
   const chunksRef = useRef<Blob[]>([]);
   const playingRef = useRef<HTMLAudioElement | null>(null);
   const rawBlobRef = useRef<Blob | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const accent = theme === "girl" ? "bg-game-pink" : "bg-game-blue";
 
@@ -340,6 +341,61 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
     setProcessingEffect(false);
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLoading(true);
+
+    // Read file as blob
+    const rawBlob = new Blob([await file.arrayBuffer()], { type: file.type });
+    rawBlobRef.current = rawBlob;
+
+    // Apply effect
+    setProcessingEffect(true);
+    let finalBlob: Blob;
+    try {
+      finalBlob = await applyEffect(rawBlob, selectedEffect);
+    } catch {
+      finalBlob = rawBlob;
+    }
+    setProcessingEffect(false);
+
+    const ext = selectedEffect === "none" ? (file.name.split(".").pop() || "mp3") : "wav";
+    const contentType = selectedEffect === "none" ? file.type : "audio/wav";
+    const fileName = `voice_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("game-audio")
+      .upload(fileName, finalBlob, { contentType });
+
+    if (uploadError) {
+      alert("שגיאה בהעלאה");
+      setLoading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("game-audio").getPublicUrl(fileName);
+
+    const effectLabel = VOICE_EFFECTS.find((ef) => ef.id === selectedEffect);
+    const baseName = recordingName || file.name.replace(/\.[^.]+$/, "");
+    const nameWithEffect = selectedEffect !== "none"
+      ? `${baseName} (${effectLabel?.label})`
+      : baseName;
+
+    await supabase.from("voice_recordings").insert({
+      device_id: getDeviceId(),
+      name: nameWithEffect,
+      event_type: selectedEvent,
+      audio_url: urlData.publicUrl,
+      is_active: true,
+    } as any);
+
+    setRecordingName("");
+    setLoading(false);
+    e.target.value = "";
+    loadRecordings();
+  };
+
   return (
     <div className="bg-card rounded-2xl p-5 shadow-lg border-2 border-muted space-y-4">
       <p className="font-bold text-lg text-center">🎙️ הקלטות קוליות</p>
@@ -405,28 +461,48 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
         dir="auto"
       />
 
-      {/* Record button */}
-      <div className="flex justify-center">
-        {isRecording ? (
+      {/* Record / Upload buttons */}
+      <div className="flex justify-center gap-4 items-end">
+        <div className="flex flex-col items-center gap-1">
+          {isRecording ? (
+            <button
+              onClick={stopRecording}
+              disabled={loading}
+              className="w-20 h-20 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg animate-pulse transition-all active:scale-95"
+            >
+              <Square className="w-8 h-8" />
+            </button>
+          ) : (
+            <button
+              onClick={startRecording}
+              disabled={loading || processingEffect}
+              className={`w-20 h-20 rounded-full ${accent} text-primary-foreground flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95`}
+            >
+              <Mic className="w-8 h-8" />
+            </button>
+          )}
+          <span className="text-[10px] text-muted-foreground font-bold">הקלטה</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
           <button
-            onClick={stopRecording}
-            disabled={loading}
-            className="w-20 h-20 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg animate-pulse transition-all active:scale-95"
-          >
-            <Square className="w-8 h-8" />
-          </button>
-        ) : (
-          <button
-            onClick={startRecording}
+            onClick={() => fileInputRef.current?.click()}
             disabled={loading || processingEffect}
-            className={`w-20 h-20 rounded-full ${accent} text-primary-foreground flex items-center justify-center shadow-lg hover:shadow-xl transition-all active:scale-95`}
+            className="w-16 h-16 rounded-full bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center shadow-md hover:shadow-lg transition-all active:scale-95 border-2 border-dashed border-muted-foreground/30"
           >
-            <Mic className="w-8 h-8" />
+            <Upload className="w-7 h-7" />
           </button>
-        )}
+          <span className="text-[10px] text-muted-foreground font-bold">העלאת קובץ</span>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="audio/*,.mp3,.wav,.m4a,.ogg,.aac,.webm"
+          className="hidden"
+          onChange={handleFileUpload}
+        />
       </div>
       <p className="text-[10px] text-muted-foreground text-center">
-        {isRecording ? "🔴 מקליט... לחצו לעצירה" : loading ? "⏳ שומר..." : processingEffect ? "✨ מעבד אפקט..." : "לחצו להקלטה"}
+        {isRecording ? "🔴 מקליט... לחצו לעצירה" : loading ? "⏳ שומר..." : processingEffect ? "✨ מעבד אפקט..." : "הקליטו או העלו קובץ MP3/WAV"}
       </p>
 
       {/* Recordings list grouped by event */}
