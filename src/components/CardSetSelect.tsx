@@ -359,15 +359,15 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
         defaultHeight={540}
       >
             {/* Tabs */}
-            <div className="flex gap-1 bg-muted px-3 py-2 overflow-x-auto shrink-0">
+            <div className="flex gap-1 bg-muted px-2 sm:px-3 py-1.5 sm:py-2 overflow-x-auto shrink-0 scrollbar-none">
               {SETTINGS_TABS.map((tab) => (
                 <button key={tab.id} onClick={() => setSettingsTab(tab.id)}
-                  className={`shrink-0 py-2 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 ${
+                  className={`shrink-0 py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all active:scale-95 flex items-center gap-1 sm:gap-1.5 ${
                     settingsTab === tab.id ? `${accent} text-primary-foreground shadow-md` : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {tab.icon}
-                  {tab.label}
+                  <span className="hidden xs:inline sm:inline">{tab.label}</span>
                 </button>
               ))}
             </div>
