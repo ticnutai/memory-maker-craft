@@ -144,7 +144,7 @@ function NetworkMonitor({ entries }: { entries: NetworkEntry[] }) {
               <Download className="w-3 h-3" />
             </button>
           </div>
-          <div className="min-h-[8rem] max-h-[50vh] overflow-y-auto overflow-x-auto p-1.5 space-y-0.5 font-mono text-[10px]">
+          <div className="min-h-[8rem] overflow-y-auto overflow-x-auto p-1.5 space-y-0.5 font-mono text-[10px]">
             {entries.length === 0 && (
               <p className="text-white/30 text-center py-4 text-xs">אין בקשות...</p>
             )}
@@ -679,7 +679,7 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
           </div>
         </div>
         <LogFilter filter={logFilter} setFilter={setLogFilter} search={logSearch} setSearch={setLogSearch} />
-        <div className="min-h-[10rem] max-h-[50vh] overflow-y-auto overflow-x-auto p-2 space-y-1 font-mono text-xs">
+        <div className="min-h-[10rem] overflow-y-auto overflow-x-auto p-2 space-y-1 font-mono text-xs">
           {filteredLogs.length === 0 && (
             <p className="text-white/40 text-center py-8 text-sm">
               {logs.length === 0 ? "אין הודעות עדיין..." : "אין תוצאות לסינון"}
