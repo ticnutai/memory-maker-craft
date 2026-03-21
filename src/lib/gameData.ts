@@ -11,6 +11,11 @@ export interface CardStyle {
   shape: string;
 }
 
+export interface CardPosition {
+  x: number;
+  y: number;
+}
+
 export interface GameSettings {
   pairCount: number;
   cardMaxW: number;
@@ -24,6 +29,10 @@ export interface GameSettings {
   customMusic?: string;
   cardStyle: CardStyle;
   bgTheme?: string;
+  layoutMode?: "grid" | "free";
+  snapToGrid?: boolean;
+  gridSize?: number;
+  cardPositions?: Record<string, CardPosition>;
 }
 
 export interface CardData {

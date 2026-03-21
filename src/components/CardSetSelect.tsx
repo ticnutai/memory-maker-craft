@@ -4,7 +4,7 @@ import { CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import {
   Upload, Volume2, VolumeX, Music, Trash2, Cloud, Loader2,
-  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers
+  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move
 } from "lucide-react";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import BirthdayManager from "@/components/BirthdayManager";
@@ -404,6 +404,64 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
                         </button>
                       ))}
                     </div>
+                  </div>
+
+                  {/* Layout mode */}
+                  <div>
+                    <p className="font-bold text-sm mb-2">📐 מיקום קלפים</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => updateSetting("layoutMode" as any, "grid")}
+                        className={`flex-1 h-12 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                          (cloud.layoutMode || "grid") === "grid"
+                            ? "bg-game-pink text-primary-foreground shadow-md"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        <LayoutGrid className="w-4 h-4" />
+                        גריד אוטומטי
+                      </button>
+                      <button
+                        onClick={() => updateSetting("layoutMode" as any, "free")}
+                        className={`flex-1 h-12 rounded-xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                          cloud.layoutMode === "free"
+                            ? "bg-game-orange text-primary-foreground shadow-md"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        <Move className="w-4 h-4" />
+                        חופשי (גרירה)
+                      </button>
+                    </div>
+                    {cloud.layoutMode === "free" && (
+                      <div className="mt-3 space-y-3 p-3 bg-muted/50 rounded-xl">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold">🧲 הצמד לגריד</span>
+                          <button
+                            onClick={() => updateSetting("snapToGrid" as any, cloud.snapToGrid === false ? true : false)}
+                            className={`w-12 h-7 rounded-full transition-all ${
+                              cloud.snapToGrid !== false ? "bg-accent" : "bg-muted-foreground/30"
+                            } relative`}
+                          >
+                            <div className={`w-5 h-5 rounded-full bg-white shadow transition-all absolute top-1 ${
+                              cloud.snapToGrid !== false ? "right-1" : "left-1"
+                            }`} />
+                          </button>
+                        </div>
+                        {cloud.snapToGrid !== false && (
+                          <div>
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs text-muted-foreground">גודל גריד</span>
+                              <span className="text-xs text-muted-foreground">{cloud.gridSize || 20}px</span>
+                            </div>
+                            <input type="range" min={10} max={50} step={5} value={cloud.gridSize || 20}
+                              onChange={(e) => updateSetting("gridSize" as any, Number(e.target.value))}
+                              className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`} />
+                          </div>
+                        )}
+                        <p className="text-[10px] text-muted-foreground">💡 במשחק לחצו על 🔓 כדי להפעיל מצב עריכה וגררו את הקלפים</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
