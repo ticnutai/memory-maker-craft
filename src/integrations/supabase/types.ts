@@ -99,6 +99,7 @@ export type Database = {
           emoji: string | null
           id: string
           name: string
+          settings_json: Json | null
           updated_at: string
         }
         Insert: {
@@ -108,6 +109,7 @@ export type Database = {
           emoji?: string | null
           id?: string
           name: string
+          settings_json?: Json | null
           updated_at?: string
         }
         Update: {
@@ -117,6 +119,7 @@ export type Database = {
           emoji?: string | null
           id?: string
           name?: string
+          settings_json?: Json | null
           updated_at?: string
         }
         Relationships: []
