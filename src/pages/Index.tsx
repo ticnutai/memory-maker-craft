@@ -68,9 +68,9 @@ const Index = () => {
       {/* Global Settings FAB — always visible */}
       <button
         onClick={() => setShowSettings(true)}
-        className="fixed bottom-6 right-4 z-40 w-12 h-12 rounded-full bg-game-pink text-primary-foreground shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+        className="fixed bottom-4 sm:bottom-6 right-3 sm:right-4 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-game-pink text-primary-foreground shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
       >
-        <Settings className="w-6 h-6" />
+        <Settings className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>
 
       {/* Bottom tab icons — floating, no bar */}
