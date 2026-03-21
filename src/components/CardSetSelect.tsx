@@ -369,7 +369,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                       <p className="font-bold text-sm">📐 גודל קלפים</p>
                       <span className="text-xs text-muted-foreground">{cardMaxW}px</span>
                     </div>
-                    <input type="range" min={280} max={700} step={20} value={cardMaxW}
+                    <input type="range" min={120} max={1200} step={20} value={cardMaxW}
                       onChange={(e) => updateSetting("cardMaxW", Number(e.target.value))}
                       className={`w-full h-2 rounded-full cursor-pointer ${sliderTrack}`} />
                     <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>קטן</span><span>גדול</span></div>
