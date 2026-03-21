@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-export type BgThemeId = "default" | "clouds" | "stars" | "princess" | "ocean" | "candy" | "forest" | "bubbles" 
-  | "rainbow" | "dolls" | "safari" | "space" | "flowers" | "dinosaurs" | "ice-cream" | "balloons" | "farm" | "circus" | "butterflies" | "trains"
-  | "hearts" | "unicorn-land" | "mermaid" | "fairy-garden" | "baby-pink" | "lollipop" | "teddy-bears" | "magical-night" | "cupcakes" | "sparkle-party";
+export type BgThemeId = string; // Now supports "custom:uuid" as well as built-in IDs
 
 export interface BgThemeDef {
   id: BgThemeId;
