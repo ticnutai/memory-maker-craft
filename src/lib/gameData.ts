@@ -33,6 +33,7 @@ export interface GameSettings {
   snapToGrid?: boolean;
   gridSize?: number;
   cardPositions?: Record<string, CardPosition>;
+  animationsEnabled?: boolean;
 }
 
 export interface CardData {
