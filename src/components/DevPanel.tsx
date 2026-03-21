@@ -679,7 +679,7 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
           </div>
         </div>
         <LogFilter filter={logFilter} setFilter={setLogFilter} search={logSearch} setSearch={setLogSearch} />
-        <div className="h-48 overflow-y-auto p-2 space-y-1 font-mono text-xs">
+        <div className="min-h-[10rem] max-h-[50vh] overflow-y-auto overflow-x-auto p-2 space-y-1 font-mono text-xs">
           {filteredLogs.length === 0 && (
             <p className="text-white/40 text-center py-8 text-sm">
               {logs.length === 0 ? "אין הודעות עדיין..." : "אין תוצאות לסינון"}
