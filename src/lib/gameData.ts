@@ -1,5 +1,5 @@
 export type ThemeType = "girl" | "boy";
-export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "custom";
+export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "custom" | "sea" | "space" | "food" | "sports" | "music" | "flags" | "nature";
 
 export interface CardStyle {
   borderRadius: number;
@@ -124,6 +124,90 @@ export interface CardSetInfo {
   cards: CardData[];
 }
 
+// ── Sea Creatures ──
+export const SEA_CREATURES: CardData[] = [
+  { id: "tropical-fish", emoji: "🐠" }, { id: "blowfish", emoji: "🐡" },
+  { id: "jellyfish", emoji: "🪼" }, { id: "seal", emoji: "🦭" },
+  { id: "whale2", emoji: "🐳" }, { id: "shrimp", emoji: "🦐" },
+  { id: "crab", emoji: "🦀" }, { id: "lobster", emoji: "🦞" },
+  { id: "squid", emoji: "🦑" }, { id: "shell", emoji: "🐚" },
+  { id: "turtle", emoji: "🐢" }, { id: "starfish", emoji: "⭐" },
+  { id: "coral", emoji: "🪸" }, { id: "seahorse", emoji: "🐴" },
+  { id: "otter", emoji: "🦦" }, { id: "oyster", emoji: "🦪" },
+];
+
+// ── Space ──
+export const SPACE: CardData[] = [
+  { id: "earth", emoji: "🌍" }, { id: "moon", emoji: "🌙" },
+  { id: "sun", emoji: "☀️" }, { id: "star2", emoji: "🌟" },
+  { id: "rocket2", emoji: "🚀" }, { id: "satellite", emoji: "🛸" },
+  { id: "meteor", emoji: "☄️" }, { id: "telescope", emoji: "🔭" },
+  { id: "astronaut", emoji: "👨‍🚀" }, { id: "saturn", emoji: "🪐" },
+  { id: "milkyway", emoji: "🌌" }, { id: "orbit", emoji: "🛰️" },
+  { id: "alien", emoji: "👽" }, { id: "constellation", emoji: "✨" },
+  { id: "eclipse", emoji: "🌑" }, { id: "aurora", emoji: "🌈" },
+];
+
+// ── Food & Sweets ──
+export const FOOD: CardData[] = [
+  { id: "pizza", emoji: "🍕" }, { id: "burger", emoji: "🍔" },
+  { id: "fries", emoji: "🍟" }, { id: "hotdog", emoji: "🌭" },
+  { id: "icecream", emoji: "🍦" }, { id: "cake", emoji: "🎂" },
+  { id: "donut", emoji: "🍩" }, { id: "cookie", emoji: "🍪" },
+  { id: "candy", emoji: "🍬" }, { id: "chocolate", emoji: "🍫" },
+  { id: "lollipop", emoji: "🍭" }, { id: "cupcake", emoji: "🧁" },
+  { id: "popcorn", emoji: "🍿" }, { id: "waffle", emoji: "🧇" },
+  { id: "pancakes", emoji: "🥞" }, { id: "pie", emoji: "🥧" },
+];
+
+// ── Sports ──
+export const SPORTS: CardData[] = [
+  { id: "soccer", emoji: "⚽" }, { id: "basketball", emoji: "🏀" },
+  { id: "football", emoji: "🏈" }, { id: "baseball", emoji: "⚾" },
+  { id: "tennis", emoji: "🎾" }, { id: "volleyball", emoji: "🏐" },
+  { id: "rugby", emoji: "🏉" }, { id: "pingpong", emoji: "🏓" },
+  { id: "badminton", emoji: "🏸" }, { id: "hockey", emoji: "🏒" },
+  { id: "skiing", emoji: "⛷️" }, { id: "surfing", emoji: "🏄" },
+  { id: "swimming", emoji: "🏊" }, { id: "cycling", emoji: "🚴" },
+  { id: "skateboard", emoji: "🛹" }, { id: "bowling", emoji: "🎳" },
+];
+
+// ── Musical Instruments ──
+export const MUSIC_INSTRUMENTS: CardData[] = [
+  { id: "guitar", emoji: "🎸" }, { id: "piano", emoji: "🎹" },
+  { id: "violin", emoji: "🎻" }, { id: "drum", emoji: "🥁" },
+  { id: "trumpet", emoji: "🎺" }, { id: "saxophone", emoji: "🎷" },
+  { id: "microphone", emoji: "🎤" }, { id: "headphones", emoji: "🎧" },
+  { id: "banjo", emoji: "🪕" }, { id: "accordion", emoji: "🪗" },
+  { id: "flute", emoji: "🪈" }, { id: "maracas", emoji: "🪇" },
+  { id: "notes", emoji: "🎵" }, { id: "dj", emoji: "🎶" },
+  { id: "radio", emoji: "📻" }, { id: "speaker", emoji: "🔊" },
+];
+
+// ── Flags ──
+export const FLAGS: CardData[] = [
+  { id: "israel", emoji: "🇮🇱", label: "ישראל" }, { id: "usa", emoji: "🇺🇸", label: "ארה\"ב" },
+  { id: "uk", emoji: "🇬🇧", label: "בריטניה" }, { id: "france", emoji: "🇫🇷", label: "צרפת" },
+  { id: "germany", emoji: "🇩🇪", label: "גרמניה" }, { id: "italy", emoji: "🇮🇹", label: "איטליה" },
+  { id: "spain", emoji: "🇪🇸", label: "ספרד" }, { id: "japan", emoji: "🇯🇵", label: "יפן" },
+  { id: "brazil", emoji: "🇧🇷", label: "ברזיל" }, { id: "canada", emoji: "🇨🇦", label: "קנדה" },
+  { id: "australia", emoji: "🇦🇺", label: "אוסטרליה" }, { id: "india", emoji: "🇮🇳", label: "הודו" },
+  { id: "china", emoji: "🇨🇳", label: "סין" }, { id: "mexico", emoji: "🇲🇽", label: "מקסיקו" },
+  { id: "southkorea", emoji: "🇰🇷", label: "דרום קוריאה" }, { id: "turkey", emoji: "🇹🇷", label: "טורקיה" },
+];
+
+// ── Nature ──
+export const NATURE: CardData[] = [
+  { id: "sunflower", emoji: "🌻" }, { id: "rose", emoji: "🌹" },
+  { id: "tulip", emoji: "🌷" }, { id: "cherry-blossom", emoji: "🌸" },
+  { id: "cactus", emoji: "🌵" }, { id: "tree", emoji: "🌳" },
+  { id: "palm", emoji: "🌴" }, { id: "mushroom", emoji: "🍄" },
+  { id: "leaf", emoji: "🍃" }, { id: "clover", emoji: "🍀" },
+  { id: "rainbow2", emoji: "🌈" }, { id: "volcano", emoji: "🌋" },
+  { id: "wave", emoji: "🌊" }, { id: "snowflake", emoji: "❄️" },
+  { id: "fire", emoji: "🔥" }, { id: "mountain", emoji: "🏔️" },
+];
+
 export function getCardSets(theme: ThemeType): CardSetInfo[] {
   return [
     {
@@ -145,6 +229,41 @@ export function getCardSets(theme: ThemeType): CardSetInfo[] {
       type: "hebrew", emoji: "א", label: "אותיות",
       color: "from-accent to-emerald-500",
       cards: HEBREW_LETTERS,
+    },
+    {
+      type: "sea", emoji: "🐠", label: "עולם הים",
+      color: "from-cyan-400 to-blue-500",
+      cards: SEA_CREATURES,
+    },
+    {
+      type: "space", emoji: "🚀", label: "חלל",
+      color: "from-indigo-500 to-purple-700",
+      cards: SPACE,
+    },
+    {
+      type: "food", emoji: "🍕", label: "אוכל ומתוקים",
+      color: "from-amber-400 to-orange-500",
+      cards: FOOD,
+    },
+    {
+      type: "sports", emoji: "⚽", label: "ספורט",
+      color: "from-green-400 to-emerald-600",
+      cards: SPORTS,
+    },
+    {
+      type: "music", emoji: "🎸", label: "מוזיקה",
+      color: "from-violet-400 to-fuchsia-500",
+      cards: MUSIC_INSTRUMENTS,
+    },
+    {
+      type: "flags", emoji: "🇮🇱", label: "דגלים",
+      color: "from-sky-400 to-blue-600",
+      cards: FLAGS,
+    },
+    {
+      type: "nature", emoji: "🌿", label: "טבע",
+      color: "from-lime-400 to-green-500",
+      cards: NATURE,
     },
   ];
 }

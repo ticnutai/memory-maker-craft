@@ -295,16 +295,16 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
       </div>
 
       {/* Card set grid — built-in + custom + add button */}
-      <div className="w-full max-w-lg relative z-10 grid grid-cols-2 gap-4 bounce-in" style={{ animationDelay: "0.1s" }}>
+      <div className="w-full max-w-lg relative z-10 grid grid-cols-3 gap-3 bounce-in" style={{ animationDelay: "0.1s" }}>
         {/* Built-in sets */}
         {allCardSets.map((set, i) => (
           <button key={set.type}
             onClick={() => onSelectSet(set.type, settings)}
-            className={`bg-gradient-to-br ${set.color} rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground min-h-[120px]`}
-            style={{ animationDelay: `${0.15 + i * 0.08}s` }}
+            className={`bg-gradient-to-br ${set.color} rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground min-h-[100px]`}
+            style={{ animationDelay: `${0.15 + i * 0.05}s` }}
           >
-            <span className="text-5xl drop-shadow-sm">{set.emoji}</span>
-            <span className="font-bold text-sm">{set.label}</span>
+            <span className="text-4xl drop-shadow-sm">{set.emoji}</span>
+            <span className="font-bold text-xs">{set.label}</span>
           </button>
         ))}
 
@@ -314,11 +314,11 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
           return (
             <button key={cs.id}
               onClick={() => playCustomSet(cs)}
-              className={`bg-gradient-to-br ${CUSTOM_GRADIENTS[gradientIdx]} rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground relative min-h-[120px]`}
-              style={{ animationDelay: `${0.15 + (allCardSets.length + i) * 0.08}s` }}
+              className={`bg-gradient-to-br ${CUSTOM_GRADIENTS[gradientIdx]} rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground relative min-h-[100px]`}
+              style={{ animationDelay: `${0.15 + (allCardSets.length + i) * 0.05}s` }}
             >
-              <span className="text-5xl drop-shadow-sm">{cs.emoji}</span>
-              <span className="font-bold text-sm">{cs.name}</span>
+              <span className="text-4xl drop-shadow-sm">{cs.emoji}</span>
+              <span className="font-bold text-xs">{cs.name}</span>
               {cs.cardCount > 0 && (
                 <span className="absolute top-2 left-2 text-[10px] bg-white/30 backdrop-blur-sm rounded-full px-2 py-0.5 font-bold">
                   {cs.cardCount} קלפים
@@ -336,8 +336,8 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
         {/* Add new set button — smaller */}
         <button
           onClick={() => { setShowSettings(true); setSettingsTab("custom-sets"); }}
-          className="rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-md hover:shadow-lg hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in border-2 border-dashed border-game-pink/30 bg-white/50 backdrop-blur-sm min-h-[120px]"
-          style={{ animationDelay: `${0.15 + (allCardSets.length + customSets.length) * 0.08}s` }}
+          className="rounded-2xl p-3 flex flex-col items-center justify-center gap-2 shadow-md hover:shadow-lg hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in border-2 border-dashed border-game-pink/30 bg-white/50 backdrop-blur-sm min-h-[100px]"
+          style={{ animationDelay: `${0.15 + (allCardSets.length + customSets.length) * 0.05}s` }}
         >
           <div className="w-9 h-9 rounded-full bg-game-pink/15 flex items-center justify-center">
             <Plus className="w-5 h-5 text-game-pink" />
