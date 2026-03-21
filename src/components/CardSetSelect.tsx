@@ -4,8 +4,9 @@ import { ThemeType, CardData, CardSetType, GameSettings, getCardSets, CardStyle 
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import {
   Upload, Volume2, VolumeX, Music, Trash2, Cloud, Loader2,
-  Image, Layers, Palette, LayoutGrid, Cake
+  Image, Layers, Palette, LayoutGrid, Cake, Mic
 } from "lucide-react";
+import VoiceRecorder from "@/components/VoiceRecorder";
 import BirthdayManager from "@/components/BirthdayManager";
 import CloudGallery from "@/components/CloudGallery";
 import CustomCardSets from "@/components/CustomCardSets";
@@ -18,7 +19,7 @@ interface CardSetSelectProps {
   onBack: () => void;
 }
 
-type TabId = "sets" | "gallery" | "music" | "cards" | "birthdays";
+type TabId = "sets" | "gallery" | "music" | "cards" | "birthdays" | "recordings";
 
 const BACK_ICONS = ["⭐", "❓", "🎴", "🃏", "💫", "🌟", "🎯", "🔮", "🎪", "🎨"];
 const BACK_COLORS = [
@@ -117,6 +118,7 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
     { id: "music", label: "מוזיקה", icon: <Music className="w-4 h-4" /> },
     { id: "cards", label: "קלפים", icon: <Palette className="w-4 h-4" /> },
     { id: "birthdays", label: "ימי הולדת", icon: <Cake className="w-4 h-4" /> },
+    { id: "recordings", label: "הקלטות", icon: <Mic className="w-4 h-4" /> },
   ];
 
   // Card preview for the cards tab
@@ -700,6 +702,11 @@ export default function CardSetSelect({ theme, onSelectSet, onBack }: CardSetSel
         {/* ═══ BIRTHDAYS TAB ═══ */}
         {activeTab === "birthdays" && (
           <BirthdayManager theme={theme} />
+        )}
+
+        {/* ═══ RECORDINGS TAB ═══ */}
+        {activeTab === "recordings" && (
+          <VoiceRecorder theme={theme} />
         )}
 
       {/* Modals */}

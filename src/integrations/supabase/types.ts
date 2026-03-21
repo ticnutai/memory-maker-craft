@@ -136,6 +136,7 @@ export type Database = {
           created_at: string
           custom_music: string | null
           custom_music_name: string | null
+          custom_voice_enabled: boolean | null
           device_id: string
           emoji_scale: number
           flip_duration: number
@@ -162,6 +163,7 @@ export type Database = {
           created_at?: string
           custom_music?: string | null
           custom_music_name?: string | null
+          custom_voice_enabled?: boolean | null
           device_id: string
           emoji_scale?: number
           flip_duration?: number
@@ -188,6 +190,7 @@ export type Database = {
           created_at?: string
           custom_music?: string | null
           custom_music_name?: string | null
+          custom_voice_enabled?: boolean | null
           device_id?: string
           emoji_scale?: number
           flip_duration?: number
@@ -199,6 +202,36 @@ export type Database = {
           speech_rate?: number | null
           theme?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      voice_recordings: {
+        Row: {
+          audio_url: string
+          created_at: string
+          device_id: string
+          event_type: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string
+          device_id: string
+          event_type?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string
+          device_id?: string
+          event_type?: string
+          id?: string
+          is_active?: boolean
+          name?: string
         }
         Relationships: []
       }

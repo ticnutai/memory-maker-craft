@@ -1,8 +1,19 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { GameCard, CardData, createGameCards } from "@/lib/gameData";
 import { playFlipSound, playMatchSound, playMismatchSound, playWinSound, playStarSound } from "@/lib/sounds";
 import { playCardSound } from "@/lib/cardSounds";
 import { speakCardName } from "@/lib/cardSpeech";
+import { supabase } from "@/integrations/supabase/client";
+
+interface VoiceRec {
+  event_type: string;
+  audio_url: string;
+  is_active: boolean;
+}
+
+function getDeviceId(): string {
+  return localStorage.getItem("memory-game-device-id") || "unknown";
+}
 
 export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = true, speechEnabled: boolean = true, flipDuration: number = 1, speechRate: number = 0.9) {
   const [cards, setCards] = useState<GameCard[]>([]);
@@ -12,6 +23,28 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
   const [isChecking, setIsChecking] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const voiceRecsRef = useRef<VoiceRec[]>([]);
+
+  // Load custom voice recordings
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from("voice_recordings")
+        .select("event_type, audio_url, is_active")
+        .eq("device_id", getDeviceId())
+        .eq("is_active", true);
+      voiceRecsRef.current = (data as VoiceRec[]) || [];
+    };
+    load();
+  }, []);
+
+  const playCustomVoice = useCallback((eventType: string) => {
+    const recs = voiceRecsRef.current.filter((r) => r.event_type === eventType);
+    if (recs.length === 0) return false;
+    const rec = recs[Math.floor(Math.random() * recs.length)];
+    try { new Audio(rec.audio_url).play(); } catch {}
+    return true;
+  }, []);
 
   const startGame = useCallback((cardData: CardData[]) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -37,6 +70,8 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
     if (speechEnabled) {
       setTimeout(() => speakCardName(card.id, speechRate), 150);
     }
+    // Custom flip voice
+    if (soundEnabled) playCustomVoice("flip");
 
     const newFlipped = [...flippedIds, uniqueId];
     setFlippedIds(newFlipped);
@@ -54,7 +89,9 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
 
       if (first.id === second.id) {
         timeoutRef.current = setTimeout(() => {
-          if (soundEnabled) playMatchSound();
+          if (soundEnabled) {
+            if (!playCustomVoice("match")) playMatchSound();
+          }
           setCards((prev) =>
             prev.map((c) =>
               c.id === first.id ? { ...c, isMatched: true, isFlipped: true } : c
@@ -68,13 +105,17 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
           if (newMatched === pairCount) {
             setTimeout(() => {
               setIsGameOver(true);
-              if (soundEnabled) playWinSound();
+              if (soundEnabled) {
+                if (!playCustomVoice("win")) playWinSound();
+              }
             }, 500);
           }
         }, 600);
       } else {
         timeoutRef.current = setTimeout(() => {
-          if (soundEnabled) playMismatchSound();
+          if (soundEnabled) {
+            if (!playCustomVoice("mismatch")) playMismatchSound();
+          }
           setCards((prev) =>
             prev.map((c) =>
               newFlipped.includes(c.uniqueId) ? { ...c, isFlipped: false } : c
@@ -85,7 +126,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
         }, flipDuration * 1000);
       }
     }
-  }, [cards, flippedIds, isChecking, matchedCount, pairCount, soundEnabled]);
+  }, [cards, flippedIds, isChecking, matchedCount, pairCount, soundEnabled, speechEnabled, speechRate, flipDuration, playCustomVoice]);
 
   return { cards, moves, matchedCount, isGameOver, flipCard, startGame };
 }
