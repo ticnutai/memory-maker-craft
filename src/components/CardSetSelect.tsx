@@ -13,9 +13,15 @@ import CustomCardSets from "@/components/CustomCardSets";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { getBgThemes } from "@/components/ThemeBackground";
 import { supabase } from "@/integrations/supabase/client";
+import FloatingPanel from "@/components/FloatingPanel";
+
+
 
 interface CardSetSelectProps {
   onSelectSet: (set: CardSetType, settings: GameSettings, customCards?: CardData[]) => void;
+  settingsOpen?: boolean;
+  onSettingsToggle?: (open: boolean) => void;
+  settingsOnly?: boolean;
 }
 
 type SettingsTabId = "general" | "music" | "cards" | "gallery" | "custom-sets" | "birthdays" | "recordings";
@@ -78,9 +84,11 @@ function getDeviceId(): string {
   return id;
 }
 
-export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
+export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsToggle, settingsOnly }: CardSetSelectProps) {
   const theme = "girl";
-  const [showSettings, setShowSettings] = useState(false);
+  const [_showSettings, _setShowSettings] = useState(false);
+  const showSettings = settingsOpen !== undefined ? settingsOpen : _showSettings;
+  const setShowSettings = onSettingsToggle || _setShowSettings;
   const [settingsTab, setSettingsTab] = useState<SettingsTabId>("general");
   const [showCloudGallery, setShowCloudGallery] = useState(false);
   const [showCloudAudio, setShowCloudAudio] = useState(false);
@@ -162,7 +170,7 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
     onSelectSet("custom", { ...settings, pairCount: customPairCount }, gameCards);
   };
 
-  if (!loaded) {
+  if (!loaded && !settingsOnly) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -195,7 +203,11 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
     ? selectedBgTheme.bg
     : "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 30%, #f3e5f5 60%, #fff9c4 100%)";
 
+
+
   return (
+    <>
+    {!settingsOnly && (
     <div
       className={`flex flex-col items-center min-h-screen gap-6 px-5 py-8 pb-28 overflow-y-auto relative ${cloud.animationsEnabled === false ? "no-animations" : ""}`}
       dir="rtl"
@@ -280,32 +292,20 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
           <span className="font-bold text-xs text-game-pink">ערכה חדשה</span>
         </button>
       </div>
+    </div>
+    )}
 
-      {/* Settings FAB */}
-      <button
-        onClick={() => setShowSettings(true)}
-        className="fixed bottom-6 right-4 z-40 w-12 h-12 rounded-full bg-game-pink text-primary-foreground shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all bounce-in"
-        style={{ animationDelay: "0.6s" }}
+      {/* ══════════════════ Settings Panel (Floating) ══════════════════ */}
+      <FloatingPanel
+        open={showSettings}
+        onClose={() => { setShowSettings(false); loadCustomSets(); }}
+        title="⚙️ הגדרות"
+        titleIcon={<Settings className="w-5 h-5" />}
+        defaultWidth={580}
+        defaultHeight={540}
       >
-        <Settings className="w-6 h-6" />
-      </button>
-
-      {/* ══════════════════ Settings Panel ══════════════════ */}
-      {showSettings && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" dir="rtl">
-          <div className="bg-card w-full max-w-2xl max-h-[90vh] rounded-2xl shadow-2xl border-2 border-muted flex flex-col overflow-hidden bounce-in">
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-muted">
-              <h3 className="text-xl font-black flex items-center gap-2">
-                <Settings className="w-5 h-5" /> ⚙️ הגדרות
-              </h3>
-              <button onClick={() => { setShowSettings(false); loadCustomSets(); }} className="text-muted-foreground hover:text-foreground transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
             {/* Tabs */}
-            <div className="flex gap-1 bg-muted px-3 py-2 overflow-x-auto">
+            <div className="flex gap-1 bg-muted px-3 py-2 overflow-x-auto shrink-0">
               {SETTINGS_TABS.map((tab) => (
                 <button key={tab.id} onClick={() => setSettingsTab(tab.id)}
                   className={`shrink-0 py-2 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 ${
@@ -726,9 +726,7 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
               {/* ═══ RECORDINGS ═══ */}
               {settingsTab === "recordings" && <VoiceRecorder theme={theme} />}
             </div>
-          </div>
-        </div>
-      )}
+      </FloatingPanel>
 
       {/* Modals */}
       {showCloudGallery && (
@@ -754,6 +752,6 @@ export default function CardSetSelect({ onSelectSet }: CardSetSelectProps) {
           }}
         />
       )}
-    </div>
+    </>
   );
 }

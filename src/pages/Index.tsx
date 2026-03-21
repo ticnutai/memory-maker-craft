@@ -3,7 +3,7 @@ import CardSetSelect from "@/components/CardSetSelect";
 import GameBoard from "@/components/GameBoard";
 import TreasureHuntGame from "@/components/TreasureHuntGame";
 import { CardSetType, CardData, GameSettings } from "@/lib/gameData";
-import { Gamepad2, Map } from "lucide-react";
+import { Gamepad2, Map, Settings } from "lucide-react";
 
 type AppTab = "memory" | "treasure";
 type Screen = "home" | "game";
@@ -13,6 +13,7 @@ const Index = () => {
   const [screen, setScreen] = useState<Screen>("home");
   const [cardSetType, setCardSetType] = useState<CardSetType>("animals");
   const [customCards, setCustomCards] = useState<CardData[] | undefined>();
+  const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<GameSettings>({
     pairCount: 4,
     cardMaxW: 480,
@@ -45,18 +46,30 @@ const Index = () => {
     setCustomCards(undefined);
   };
 
-  // If playing a memory game, show GameBoard fullscreen (no tabs)
-  if (tab === "memory" && screen === "game") {
-    return <GameBoard theme="girl" settings={settings} cardSetType={cardSetType} customCards={customCards} onHome={goHome} />;
-  }
-
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'inherit' }}>
       {/* Main content */}
       <div className="flex-1">
-        {tab === "memory" && <CardSetSelect onSelectSet={handleCardSet} />}
-        {tab === "treasure" && <TreasureHuntGame onHome={() => setTab("memory")} />}
+        {tab === "memory" && screen === "game" ? (
+          <GameBoard theme="girl" settings={settings} cardSetType={cardSetType} customCards={customCards} onHome={goHome} />
+        ) : tab === "memory" ? (
+          <CardSetSelect
+            onSelectSet={handleCardSet}
+            settingsOpen={showSettings}
+            onSettingsToggle={setShowSettings}
+          />
+        ) : (
+          <TreasureHuntGame onHome={() => setTab("memory")} />
+        )}
       </div>
+
+      {/* Global Settings FAB — always visible */}
+      <button
+        onClick={() => setShowSettings(true)}
+        className="fixed bottom-6 right-4 z-40 w-12 h-12 rounded-full bg-game-pink text-primary-foreground shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+      >
+        <Settings className="w-6 h-6" />
+      </button>
 
       {/* Bottom tab icons — floating, no bar */}
       <div className="fixed bottom-6 left-4 z-50 flex items-center gap-3" dir="rtl">
@@ -81,6 +94,16 @@ const Index = () => {
           <Map className="w-5 h-5" />
         </button>
       </div>
+
+      {/* Settings panel for non-home pages */}
+      {(tab !== "memory" || screen !== "home") && (
+        <CardSetSelect
+          onSelectSet={handleCardSet}
+          settingsOpen={showSettings}
+          onSettingsToggle={setShowSettings}
+          settingsOnly
+        />
+      )}
     </div>
   );
 };
