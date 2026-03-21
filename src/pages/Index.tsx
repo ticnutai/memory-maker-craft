@@ -49,7 +49,7 @@ const Index = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: 'inherit' }}>
+    <div className={`flex flex-col min-h-screen ${cloudSettings.animationsEnabled === false ? "no-animations" : ""}`} style={{ background: 'inherit' }}>
       {/* Main content */}
       <div className="flex-1">
         {tab === "memory" && screen === "game" ? (
