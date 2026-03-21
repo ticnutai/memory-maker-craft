@@ -101,6 +101,25 @@ function PerformanceMonitor({ stats }: { stats: PerfStats }) {
 
 function NetworkMonitor({ entries }: { entries: NetworkEntry[] }) {
   const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const exportNetwork = useCallback(() => {
+    const text = entries.map(e => `[${e.time}] ${e.method} ${e.url} → ${e.status || "FAILED"} (${e.duration ?? "?"}ms)`).join("\n");
+    const blob = new Blob([text], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `network-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, [entries]);
+
+  const copyNetwork = useCallback(() => {
+    const text = entries.map(e => `[${e.time}] ${e.method} ${e.url} → ${e.status || "FAILED"} (${e.duration ?? "?"}ms)`).join("\n");
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [entries]);
+
   return (
     <div className="bg-[#1a1a2e] rounded-xl overflow-hidden">
       <button
@@ -116,28 +135,38 @@ function NetworkMonitor({ entries }: { entries: NetworkEntry[] }) {
         </div>
       </button>
       {expanded && (
-        <div className="h-32 overflow-y-auto p-1.5 space-y-0.5 font-mono text-[10px]">
-          {entries.length === 0 && (
-            <p className="text-white/30 text-center py-4 text-xs">אין בקשות...</p>
-          )}
-          {entries.map((e, i) => (
-            <div key={i} className="flex gap-1.5 leading-tight items-center px-1">
-              <span className="text-white/30 shrink-0">{e.time}</span>
-              <span className={`shrink-0 px-1 rounded text-[9px] font-bold ${
-                e.status && e.status < 300 ? "bg-green-500/20 text-green-400" :
-                e.status && e.status < 400 ? "bg-yellow-500/20 text-yellow-400" :
-                "bg-red-500/20 text-red-400"
-              }`}>
-                {e.status || "..."}
-              </span>
-              <span className="text-blue-400/60 shrink-0">{e.method}</span>
-              <span className="text-white/60 truncate">{e.url.replace(/https?:\/\/[^/]+/, "")}</span>
-              {e.duration !== null && (
-                <span className="text-white/30 shrink-0">{e.duration}ms</span>
-              )}
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="flex items-center justify-end gap-1.5 px-2 py-1 border-b border-white/10">
+            <button onClick={copyNetwork} className="w-6 h-6 rounded flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors" title="העתק">
+              {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+            </button>
+            <button onClick={exportNetwork} className="w-6 h-6 rounded flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors" title="הורד">
+              <Download className="w-3 h-3" />
+            </button>
+          </div>
+          <div className="h-32 overflow-y-auto p-1.5 space-y-0.5 font-mono text-[10px]">
+            {entries.length === 0 && (
+              <p className="text-white/30 text-center py-4 text-xs">אין בקשות...</p>
+            )}
+            {entries.map((e, i) => (
+              <div key={i} className="flex gap-1.5 leading-tight items-center px-1">
+                <span className="text-white/30 shrink-0">{e.time}</span>
+                <span className={`shrink-0 px-1 rounded text-[9px] font-bold ${
+                  e.status && e.status < 300 ? "bg-green-500/20 text-green-400" :
+                  e.status && e.status < 400 ? "bg-yellow-500/20 text-yellow-400" :
+                  "bg-red-500/20 text-red-400"
+                }`}>
+                  {e.status || "..."}
+                </span>
+                <span className="text-blue-400/60 shrink-0">{e.method}</span>
+                <span className="text-white/60 truncate">{e.url.replace(/https?:\/\/[^/]+/, "")}</span>
+                {e.duration !== null && (
+                  <span className="text-white/30 shrink-0">{e.duration}ms</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
