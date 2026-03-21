@@ -4,7 +4,7 @@ import { CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import {
   Upload, Volume2, VolumeX, Music, Trash2, Cloud, Loader2,
-  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move
+  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move, Paintbrush
 } from "lucide-react";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import BirthdayManager from "@/components/BirthdayManager";
@@ -14,6 +14,7 @@ import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { getBgThemes } from "@/components/ThemeBackground";
 import { supabase } from "@/integrations/supabase/client";
 import FloatingPanel from "@/components/FloatingPanel";
+import ThemeBuilder from "@/components/ThemeBuilder";
 
 
 
@@ -24,7 +25,7 @@ interface CardSetSelectProps {
   settingsOnly?: boolean;
 }
 
-type SettingsTabId = "general" | "music" | "cards" | "gallery" | "custom-sets" | "birthdays" | "recordings";
+type SettingsTabId = "general" | "music" | "cards" | "themes" | "gallery" | "custom-sets" | "birthdays" | "recordings";
 
 const BACK_ICONS = ["⭐", "❓", "🎴", "🃏", "💫", "🌟", "🎯", "🔮", "🎪", "🎨"];
 const BACK_COLORS = [
@@ -94,6 +95,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
   const [showCloudAudio, setShowCloudAudio] = useState(false);
   const [customSets, setCustomSets] = useState<CustomSetPreview[]>([]);
   const [loadingSets, setLoadingSets] = useState(true);
+  const [customBgThemes, setCustomBgThemes] = useState<any[]>([]);
   const audioRef = useRef<HTMLInputElement>(null);
 
   const { settings: cloud, loaded, updateSetting, updateCardStyle, toGameSettings } = useCloudSettings(theme);
@@ -145,6 +147,19 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
 
   useEffect(() => { loadCustomSets(); }, [loadCustomSets]);
 
+  // Load custom bg themes
+  useEffect(() => {
+    const loadBgThemes = async () => {
+      const { data } = await supabase
+        .from("custom_bg_themes")
+        .select("*")
+        .eq("device_id", deviceId)
+        .order("created_at", { ascending: false });
+      setCustomBgThemes(data || []);
+    };
+    loadBgThemes();
+  }, [deviceId]);
+
   // Play a custom set
   const playCustomSet = async (setPreview: CustomSetPreview) => {
     if (setPreview.cardCount < 2) {
@@ -181,6 +196,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
   const SETTINGS_TABS: { id: SettingsTabId; label: string; icon: React.ReactNode }[] = [
     { id: "general", label: "כללי", icon: <LayoutGrid className="w-4 h-4" /> },
     { id: "cards", label: "קלפים", icon: <Palette className="w-4 h-4" /> },
+    { id: "themes", label: "ערכות נושא", icon: <Paintbrush className="w-4 h-4" /> },
     { id: "music", label: "מוזיקה", icon: <Music className="w-4 h-4" /> },
     { id: "custom-sets", label: "ערכות", icon: <Layers className="w-4 h-4" /> },
     { id: "gallery", label: "גלריה", icon: <Image className="w-4 h-4" /> },
@@ -197,11 +213,22 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
 
   const allCardSets = getCardSets("girl");
 
-  // Get home page background from selected theme
-  const selectedBgTheme = getBgThemes().find(t => t.id === (cloud.bgTheme || "default"));
-  const homeBg = selectedBgTheme?.bg && selectedBgTheme.bg !== "transparent"
-    ? selectedBgTheme.bg
-    : "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 30%, #f3e5f5 60%, #fff9c4 100%)";
+  // Get home page background from selected theme (builtin or custom)
+  const bgThemeId = cloud.bgTheme || "default";
+  let homeBg = "linear-gradient(135deg, #fce4ec 0%, #f8bbd0 30%, #f3e5f5 60%, #fff9c4 100%)";
+  if (bgThemeId.startsWith("custom:")) {
+    const cid = bgThemeId.replace("custom:", "");
+    const ct = customBgThemes.find((t: any) => t.id === cid);
+    if (ct && ct.config) {
+      const cfg = ct.config;
+      homeBg = cfg.bgType === "solid" ? cfg.bgColor1 : `linear-gradient(${cfg.gradientAngle || 135}deg, ${cfg.bgColor1} 0%, ${cfg.bgColor2} 50%, ${cfg.bgColor3} 100%)`;
+    }
+  } else {
+    const selectedBgTheme = getBgThemes().find(t => t.id === bgThemeId);
+    if (selectedBgTheme?.bg && selectedBgTheme.bg !== "transparent") {
+      homeBg = selectedBgTheme.bg;
+    }
+  }
 
 
 
@@ -394,21 +421,6 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                       <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>איטי</span><span>רגיל</span><span>מהיר</span></div>
                     </div>
                   )}
-                  <div>
-                    <p className="font-bold text-sm mb-2">🎨 סגנון רקע</p>
-                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-60 overflow-y-auto pr-1">
-                      {getBgThemes().map((bg) => (
-                        <button key={bg.id} onClick={() => updateSetting("bgTheme" as any, bg.id)}
-                          className={`relative h-16 rounded-xl text-xs font-bold transition-all active:scale-95 flex flex-col items-center justify-center gap-0.5 ${
-                            (cloud.bgTheme || "default") === bg.id ? "bg-game-pink text-primary-foreground shadow-md ring-2 ring-game-pink ring-offset-1" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                          }`}>
-                          <span className="text-lg">{bg.emoji}</span>
-                          <span className="text-[10px]">{bg.label}</span>
-                          {bg.animated && <span className="absolute top-0.5 left-0.5 text-[8px] bg-game-orange text-primary-foreground rounded px-1 font-black">✨</span>}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
 
                   {/* Layout mode */}
                   <div>
@@ -486,6 +498,14 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                     </button>
                   </div>
                 </div>
+              )}
+
+              {/* ═══ THEMES ═══ */}
+              {settingsTab === "themes" && (
+                <ThemeBuilder
+                  selectedThemeId={cloud.bgTheme || "default"}
+                  onSelectTheme={(id) => updateSetting("bgTheme" as any, id)}
+                />
               )}
 
               {/* ═══ CARDS ═══ */}

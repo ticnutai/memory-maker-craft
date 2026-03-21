@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-export type BgThemeId = "default" | "clouds" | "stars" | "princess" | "ocean" | "candy" | "forest" | "bubbles" 
-  | "rainbow" | "dolls" | "safari" | "space" | "flowers" | "dinosaurs" | "ice-cream" | "balloons" | "farm" | "circus" | "butterflies" | "trains"
-  | "hearts" | "unicorn-land" | "mermaid" | "fairy-garden" | "baby-pink" | "lollipop" | "teddy-bears" | "magical-night" | "cupcakes" | "sparkle-party";
+export type BgThemeId = string; // Now supports "custom:uuid" as well as built-in IDs
 
 export interface BgThemeDef {
   id: BgThemeId;
@@ -179,7 +178,84 @@ interface ThemeBackgroundProps {
   animationsEnabled?: boolean;
 }
 
+interface CustomBgConfig {
+  bgType: "gradient" | "solid";
+  bgColor1: string;
+  bgColor2: string;
+  bgColor3: string;
+  gradientAngle: number;
+  floatingEmojis: string[];
+  emojiCount: number;
+  emojiMinSize: number;
+  emojiMaxSize: number;
+  emojiOpacity: number;
+  animationStyle: string;
+  animationSpeed: number;
+  animated: boolean;
+  shimmer: boolean;
+  shimmerOpacity: number;
+}
+
 export default function ThemeBackground({ themeId, children, className = "", girlTheme, animationsEnabled = true }: ThemeBackgroundProps) {
+  const [customConfig, setCustomConfig] = useState<CustomBgConfig | null>(null);
+
+  // Load custom theme if needed
+  useEffect(() => {
+    if (themeId.startsWith("custom:")) {
+      const cid = themeId.replace("custom:", "");
+      supabase.from("custom_bg_themes").select("config").eq("id", cid).maybeSingle()
+        .then(({ data }) => {
+          if (data?.config) setCustomConfig(data.config as unknown as CustomBgConfig);
+        });
+    } else {
+      setCustomConfig(null);
+    }
+  }, [themeId]);
+
+  // ── Custom theme rendering ──
+  if (themeId.startsWith("custom:") && customConfig) {
+    const cfg = customConfig;
+    const bg = cfg.bgType === "solid" ? cfg.bgColor1 : `linear-gradient(${cfg.gradientAngle}deg, ${cfg.bgColor1} 0%, ${cfg.bgColor2} 50%, ${cfg.bgColor3} 100%)`;
+    const isAnimated = cfg.animated && animationsEnabled;
+    const speedMult = cfg.animationSpeed || 1;
+    const animKey = cfg.animationStyle || "float";
+    
+    return (
+      <div className={`min-h-screen relative overflow-hidden ${className}`} style={{ background: bg }}>
+        {cfg.floatingEmojis.length > 0 && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+            {Array.from({ length: cfg.emojiCount }).map((_, i) => {
+              const item = cfg.floatingEmojis[i % cfg.floatingEmojis.length];
+              const size = cfg.emojiMinSize + ((i * 7) % Math.max(1, cfg.emojiMaxSize - cfg.emojiMinSize));
+              const left = (i * 13.7) % 95;
+              const top = animKey === "rise" && isAnimated ? 105 : (i * 17.3 + 5) % 95;
+              const delay = i * 0.8;
+              const duration = (6 + (i % 5) * 2) / speedMult;
+              const anim = isAnimated ? getAnimationCSS(animKey as AnimationType, duration, delay) : `floatBg ${duration}s ease-in-out ${delay}s infinite alternate`;
+              return (
+                <span key={i} className="absolute select-none" style={{
+                  fontSize: `${size}px`, left: `${left}%`, top: `${top}%`,
+                  opacity: cfg.emojiOpacity, animation: anim,
+                }}>
+                  {item}
+                </span>
+              );
+            })}
+          </div>
+        )}
+        {cfg.shimmer && isAnimated && (
+          <div className="absolute inset-0 pointer-events-none" style={{
+            background: `linear-gradient(45deg, transparent 40%, rgba(255,255,255,${cfg.shimmerOpacity}) 50%, transparent 60%)`,
+            backgroundSize: "200% 200%",
+            animation: "shimmerOverlay 6s ease-in-out infinite",
+          }} aria-hidden="true" />
+        )}
+        <div className="relative z-10">{children}</div>
+      </div>
+    );
+  }
+
+  // ── Built-in theme rendering ──
   const theme = getBgTheme(themeId);
 
   if (themeId === "default") {
@@ -198,16 +274,10 @@ export default function ThemeBackground({ themeId, children, className = "", gir
   const floatItems = theme.overlay ? FLOAT_ITEMS[theme.overlay] || [] : [];
   const isAnimatedTheme = theme.animated && animationsEnabled;
   const animTypes: AnimationType[] = theme.overlay ? getAnimationForTheme(theme.overlay) : ["float" as AnimationType];
-
-  // More items for animated themes
   const itemCount = isAnimatedTheme ? Math.min(floatItems.length * 2, 24) : floatItems.length;
 
   return (
-    <div
-      className={`min-h-screen relative overflow-hidden ${className}`}
-      style={{ background: theme.bg }}
-    >
-      {/* Floating decorations */}
+    <div className={`min-h-screen relative overflow-hidden ${className}`} style={{ background: theme.bg }}>
       {floatItems.length > 0 && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
           {Array.from({ length: itemCount }).map((_, i) => {
@@ -223,42 +293,27 @@ export default function ThemeBackground({ themeId, children, className = "", gir
               : `floatBg ${duration}s ease-in-out ${delay}s infinite alternate`;
 
             return (
-              <span
-                key={i}
-                className="absolute select-none"
-                style={{
-                  fontSize: `${size}px`,
-                  left: `${left}%`,
-                  top: animType === "rise" && isAnimatedTheme ? "105%" : `${top}%`,
-                  opacity: isAnimatedTheme ? (0.25 + (i % 4) * 0.1) : (0.2 + (i % 3) * 0.1),
-                  animation: anim,
-                  filter: isAnimatedTheme && i % 3 === 0 ? "drop-shadow(0 0 4px rgba(255,182,193,0.5))" : undefined,
-                }}
-              >
+              <span key={i} className="absolute select-none" style={{
+                fontSize: `${size}px`, left: `${left}%`,
+                top: animType === "rise" && isAnimatedTheme ? "105%" : `${top}%`,
+                opacity: isAnimatedTheme ? (0.25 + (i % 4) * 0.1) : (0.2 + (i % 3) * 0.1),
+                animation: anim,
+                filter: isAnimatedTheme && i % 3 === 0 ? "drop-shadow(0 0 4px rgba(255,182,193,0.5))" : undefined,
+              }}>
                 {item}
               </span>
             );
           })}
         </div>
       )}
-
-      {/* Gradient shimmer overlay for animated themes */}
       {isAnimatedTheme && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%)",
-            backgroundSize: "200% 200%",
-            animation: "shimmerOverlay 6s ease-in-out infinite",
-          }}
-          aria-hidden="true"
-        />
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: "linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%)",
+          backgroundSize: "200% 200%",
+          animation: "shimmerOverlay 6s ease-in-out infinite",
+        }} aria-hidden="true" />
       )}
-
-      {/* Content */}
-      <div className="relative z-10">
-        {children}
-      </div>
+      <div className="relative z-10">{children}</div>
     </div>
   );
 }
