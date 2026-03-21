@@ -47,6 +47,16 @@ export default function FloatingPanel({
     }
   }, [open, pos.x, defaultWidth, defaultHeight]);
 
+  // ESC to close
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, onClose]);
+
   // Drag
   const onDragStart = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
