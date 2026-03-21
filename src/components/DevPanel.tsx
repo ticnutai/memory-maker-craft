@@ -541,9 +541,9 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
   }, [logs, logFilter, logSearch]);
 
   const logColors: Record<string, string> = {
-    log: "text-foreground",
-    info: "text-blue-400",
-    warn: "text-yellow-400",
+    log: "text-white",
+    info: "text-sky-300",
+    warn: "text-yellow-300",
     error: "text-red-400",
   };
 
