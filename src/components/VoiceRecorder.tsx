@@ -341,6 +341,61 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
     setProcessingEffect(false);
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLoading(true);
+
+    // Read file as blob
+    const rawBlob = new Blob([await file.arrayBuffer()], { type: file.type });
+    rawBlobRef.current = rawBlob;
+
+    // Apply effect
+    setProcessingEffect(true);
+    let finalBlob: Blob;
+    try {
+      finalBlob = await applyEffect(rawBlob, selectedEffect);
+    } catch {
+      finalBlob = rawBlob;
+    }
+    setProcessingEffect(false);
+
+    const ext = selectedEffect === "none" ? (file.name.split(".").pop() || "mp3") : "wav";
+    const contentType = selectedEffect === "none" ? file.type : "audio/wav";
+    const fileName = `voice_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("game-audio")
+      .upload(fileName, finalBlob, { contentType });
+
+    if (uploadError) {
+      alert("שגיאה בהעלאה");
+      setLoading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("game-audio").getPublicUrl(fileName);
+
+    const effectLabel = VOICE_EFFECTS.find((ef) => ef.id === selectedEffect);
+    const baseName = recordingName || file.name.replace(/\.[^.]+$/, "");
+    const nameWithEffect = selectedEffect !== "none"
+      ? `${baseName} (${effectLabel?.label})`
+      : baseName;
+
+    await supabase.from("voice_recordings").insert({
+      device_id: getDeviceId(),
+      name: nameWithEffect,
+      event_type: selectedEvent,
+      audio_url: urlData.publicUrl,
+      is_active: true,
+    } as any);
+
+    setRecordingName("");
+    setLoading(false);
+    e.target.value = "";
+    loadRecordings();
+  };
+
   return (
     <div className="bg-card rounded-2xl p-5 shadow-lg border-2 border-muted space-y-4">
       <p className="font-bold text-lg text-center">🎙️ הקלטות קוליות</p>
