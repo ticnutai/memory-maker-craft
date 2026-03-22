@@ -10,7 +10,7 @@ import { BgThemeId } from "@/components/ThemeBackground";
 import LayoutPicker, { LayoutPreset } from "@/components/LayoutPicker";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { RotateCcw, Home, Music, VolumeX, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy } from "lucide-react";
+import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, AudioLines } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface GameBoardProps {
