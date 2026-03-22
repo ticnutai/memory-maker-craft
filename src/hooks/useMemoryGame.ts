@@ -126,7 +126,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
         }, flipDuration * 1000);
       }
     }
-  }, [cards, flippedIds, isChecking, matchedCount, pairCount, soundEnabled, speechEnabled, speechRate, flipDuration, playCustomVoice]);
+  }, [cards, flippedIds, isChecking, matchedCount, pairCount, soundEnabled, speechEnabled, speechRate, flipDuration, customVoiceEnabled, playCustomVoice]);
 
   return { cards, moves, matchedCount, isGameOver, flipCard, startGame };
 }
