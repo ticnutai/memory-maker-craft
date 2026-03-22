@@ -10,7 +10,7 @@ import { BgThemeId } from "@/components/ThemeBackground";
 import LayoutPicker, { LayoutPreset } from "@/components/LayoutPicker";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { RotateCcw, Home, Music, VolumeX, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy } from "lucide-react";
+import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, AudioLines } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface GameBoardProps {
@@ -24,11 +24,12 @@ interface GameBoardProps {
 export default function GameBoard({ theme, settings, cardSetType, customCards, onHome }: GameBoardProps) {
   const { settings: liveCloud, toGameSettings, updateSetting } = useCloudSettings("girl");
   const liveSettings = { ...settings, ...toGameSettings() };
-  const [speechOn, setSpeechOn] = useState(settings.speechEnabled);
+  const soundOn = liveSettings.soundEnabled;
+  const speechOn = liveSettings.speechEnabled;
   const setInfo = getCardSets(theme).find((s) => s.type === cardSetType);
   const cardData = customCards || setInfo?.cards || getCardSets(theme)[0].cards;
   const pairCount = Math.min(liveSettings.pairCount, cardData.length);
-  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, liveSettings.soundEnabled, speechOn, liveSettings.flipDuration, liveSettings.speechRate);
+  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, soundOn, speechOn, liveSettings.flipDuration, liveSettings.speechRate, liveSettings.customVoiceEnabled !== false);
   const activeMelody = liveSettings.musicType === "builtin"
     ? BUILT_IN_MELODIES.find((m) => m.id === liveSettings.builtinMelodyId)
     : undefined;
@@ -320,11 +321,21 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             <Button variant="ghost" size="sm" className="w-8 h-8 sm:w-9 sm:h-9 p-0" onClick={() => { stopMusic(); onHome(); }}>
               <Home className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
-            <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${musicPlaying ? "text-accent" : "text-muted-foreground"}`} onClick={toggleMusic} title="מוזיקת רקע">
-              {musicPlaying ? <Music className="w-4 h-4 sm:w-5 sm:h-5" /> : <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />}
+            {/* Sound effects toggle */}
+            <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${soundOn ? "text-accent" : "text-muted-foreground"}`} onClick={() => updateSetting("soundEnabled", !soundOn)} title="אפקטי צליל">
+              {soundOn ? <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />}
             </Button>
-            <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${speechOn ? "text-accent" : "text-muted-foreground"}`} onClick={() => setSpeechOn(!speechOn)} title="הכרזה קולית">
+            {/* Background music toggle */}
+            <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${musicPlaying ? "text-accent" : "text-muted-foreground"}`} onClick={toggleMusic} title="מוזיקת רקע">
+              <Music className="w-4 h-4 sm:w-5 sm:h-5" />
+            </Button>
+            {/* Speech toggle */}
+            <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${speechOn ? "text-accent" : "text-muted-foreground"}`} onClick={() => updateSetting("speechEnabled", !speechOn)} title="הכרזה קולית">
               {speechOn ? <Mic className="w-4 h-4 sm:w-5 sm:h-5" /> : <MicOff className="w-4 h-4 sm:w-5 sm:h-5" />}
+            </Button>
+            {/* Custom voice toggle */}
+            <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${liveSettings.customVoiceEnabled !== false ? "text-accent" : "text-muted-foreground"}`} onClick={() => updateSetting("customVoiceEnabled" as any, !(liveSettings.customVoiceEnabled !== false))} title="הקלטות אישיות">
+              <AudioLines className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
             {isFreeLayout && (
               <>

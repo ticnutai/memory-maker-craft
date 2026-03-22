@@ -44,6 +44,7 @@ export interface StoredSettings {
   animationsEnabled?: boolean;
   cardPositions?: { x: number; y: number }[];
   layoutPreset?: string;
+  customVoiceEnabled?: boolean;
 }
 
 export function useCloudSettings(initialTheme: string) {
@@ -85,6 +86,7 @@ export function useCloudSettings(initialTheme: string) {
       gridSize: Number((data as any).grid_size) || 20,
       cardPositions: (data as any).card_positions || [],
       layoutPreset: (data as any).layout_preset || "grid-3",
+      customVoiceEnabled: (data as any).custom_voice_enabled !== false,
       cardStyle: {
         borderRadius: data.card_border_radius ?? 16,
         borderWidth: data.card_border_width ?? 4,
@@ -171,6 +173,7 @@ export function useCloudSettings(initialTheme: string) {
         grid_size: newSettings.gridSize || 20,
         card_positions: newSettings.cardPositions || [],
         layout_preset: newSettings.layoutPreset || "grid-3",
+        custom_voice_enabled: newSettings.customVoiceEnabled !== false,
         updated_at: new Date().toISOString(),
       }, { onConflict: "device_id" });
     }, 500);
@@ -226,6 +229,7 @@ export function useCloudSettings(initialTheme: string) {
     animationsEnabled: settings.animationsEnabled !== false,
     cardPositions: settings.cardPositions || [],
     layoutPreset: settings.layoutPreset || "grid-3",
+    customVoiceEnabled: settings.customVoiceEnabled !== false,
   }), [settings]);
 
   return { settings, loaded, updateSetting, updateCardStyle, updateMultiple, toGameSettings };
