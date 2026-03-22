@@ -336,8 +336,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
 
         {/* Win overlay */}
         {isGameOver && (
-          <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-card rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl bounce-in space-y-4">
+          <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
+            <div className="bg-card rounded-2xl sm:rounded-3xl p-5 sm:p-8 max-w-sm w-full text-center shadow-2xl bounce-in space-y-3 sm:space-y-4">
               <div className="text-7xl bounce-in">🏆</div>
               <div className="flex justify-center gap-1 text-3xl">
                 {"⭐".repeat(Math.min(pairCount, 6)).split("").map((s, i) => (
