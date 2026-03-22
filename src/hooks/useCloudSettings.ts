@@ -43,6 +43,7 @@ export interface StoredSettings {
   gridSize?: number;
   animationsEnabled?: boolean;
   cardPositions?: { x: number; y: number }[];
+  layoutPreset?: string;
 }
 
 export function useCloudSettings(initialTheme: string) {
