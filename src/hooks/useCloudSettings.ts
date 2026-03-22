@@ -170,6 +170,7 @@ export function useCloudSettings(initialTheme: string) {
         snap_to_grid: newSettings.snapToGrid !== false,
         grid_size: newSettings.gridSize || 20,
         card_positions: newSettings.cardPositions || [],
+        layout_preset: newSettings.layoutPreset || "grid-3",
         updated_at: new Date().toISOString(),
       }, { onConflict: "device_id" });
     }, 500);
