@@ -249,10 +249,14 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
     let i = 0;
     for (const url of cloudSelected) {
       const img = cloudImages.find(c => c.url === url);
-      const { data: insertData } = await supabase.from("custom_card_items").insert({
+      const { data: insertData, error } = await supabase.from("custom_card_items").insert({
         set_id: setId, label: img?.name.replace(/\.[^.]+$/, "") || `קלף ${existingCount + i + 1}`,
         emoji: "📷", image_url: url, sort_order: existingCount + i,
       }).select().single();
+      if (error) {
+        console.error("Import card error:", error);
+        toast.error("שגיאה בייבוא קלף: " + error.message);
+      }
       if (insertData) newCards.push(insertData as CustomCard);
       i++;
     }
