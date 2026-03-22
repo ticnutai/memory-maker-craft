@@ -86,6 +86,7 @@ export function useCloudSettings(initialTheme: string) {
       gridSize: Number((data as any).grid_size) || 20,
       cardPositions: (data as any).card_positions || [],
       layoutPreset: (data as any).layout_preset || "grid-3",
+      customVoiceEnabled: (data as any).custom_voice_enabled !== false,
       cardStyle: {
         borderRadius: data.card_border_radius ?? 16,
         borderWidth: data.card_border_width ?? 4,
