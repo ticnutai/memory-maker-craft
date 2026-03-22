@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { X, Minimize2, Maximize2, GripVertical, Check } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FloatingPanelProps {
   open: boolean;
@@ -26,6 +27,7 @@ export default function FloatingPanel({
   minWidth = 320,
   minHeight = 300,
 }: FloatingPanelProps) {
+  const isMobile = useIsMobile();
   const [pos, setPos] = useState({ x: -1, y: -1 });
   const [size, setSize] = useState({ w: defaultWidth, h: defaultHeight });
   const [minimized, setMinimized] = useState(false);
@@ -35,17 +37,33 @@ export default function FloatingPanel({
   const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0, px: 0, py: 0 });
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Center on first open
+  // Center on first open (desktop) or full-screen (mobile)
   useEffect(() => {
     if (open && pos.x === -1) {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const w = Math.min(defaultWidth, vw - 32);
-      const h = Math.min(defaultHeight, vh - 32);
-      setSize({ w, h });
-      setPos({ x: Math.max(16, (vw - w) / 2), y: Math.max(16, (vh - h) / 2) });
+      if (isMobile) {
+        setPos({ x: 0, y: 0 });
+        setSize({ w: window.innerWidth, h: window.innerHeight });
+      } else {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const w = Math.min(defaultWidth, vw - 32);
+        const h = Math.min(defaultHeight, vh - 32);
+        setSize({ w, h });
+        setPos({ x: Math.max(16, (vw - w) / 2), y: Math.max(16, (vh - h) / 2) });
+      }
     }
-  }, [open, pos.x, defaultWidth, defaultHeight]);
+  }, [open, pos.x, defaultWidth, defaultHeight, isMobile]);
+
+  // Update size on mobile resize
+  useEffect(() => {
+    if (!open || !isMobile) return;
+    const onResize = () => {
+      setPos({ x: 0, y: 0 });
+      setSize({ w: window.innerWidth, h: window.innerHeight });
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [open, isMobile]);
 
   // ESC to close
   useEffect(() => {
@@ -57,17 +75,19 @@ export default function FloatingPanel({
     return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  // Drag
+  // Drag (desktop only)
   const onDragStart = useCallback((e: React.PointerEvent) => {
+    if (isMobile) return;
     e.preventDefault();
     const rect = panelRef.current?.getBoundingClientRect();
     if (!rect) return;
     dragOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     setDragging(true);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-  }, []);
+  }, [isMobile]);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (isMobile) return;
     if (dragging) {
       const x = Math.max(0, Math.min(e.clientX - dragOffset.current.x, window.innerWidth - 80));
       const y = Math.max(0, Math.min(e.clientY - dragOffset.current.y, window.innerHeight - 40));
@@ -95,7 +115,7 @@ export default function FloatingPanel({
       setSize({ w: newW, h: newH });
       setPos({ x: newX, y: newY });
     }
-  }, [dragging, resizing, pos, minWidth, minHeight]);
+  }, [dragging, resizing, pos, minWidth, minHeight, isMobile]);
 
   const onPointerUp = useCallback(() => {
     setDragging(false);
@@ -103,12 +123,13 @@ export default function FloatingPanel({
   }, []);
 
   const onResizeStart = useCallback((handle: string, e: React.PointerEvent) => {
+    if (isMobile) return;
     e.preventDefault();
     e.stopPropagation();
     resizeStart.current = { x: pos.x, y: pos.y, w: size.w, h: size.h, px: e.clientX, py: e.clientY };
     setResizing(handle);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-  }, [pos, size]);
+  }, [pos, size, isMobile]);
 
   if (!open) return null;
 
@@ -132,8 +153,12 @@ export default function FloatingPanel({
       <div
         ref={panelRef}
         dir="rtl"
-        className="absolute pointer-events-auto bg-card rounded-2xl shadow-2xl border-2 border-muted flex flex-col overflow-hidden"
-        style={{
+        className={`absolute pointer-events-auto bg-card flex flex-col overflow-hidden ${
+          isMobile
+            ? "inset-0 rounded-none"
+            : "rounded-2xl shadow-2xl border-2 border-muted"
+        }`}
+        style={isMobile ? {} : {
           left: pos.x,
           top: pos.y,
           width: size.w,
@@ -141,14 +166,16 @@ export default function FloatingPanel({
           transition: dragging || resizing ? "none" : "height 0.2s ease",
         }}
       >
-        {/* Drag header */}
+        {/* Header */}
         <div
-          className="flex items-center justify-between px-4 py-3 border-b border-muted bg-muted/50 cursor-grab active:cursor-grabbing select-none shrink-0"
+          className={`flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-muted bg-muted/50 shrink-0 ${
+            isMobile ? "" : "cursor-grab active:cursor-grabbing"
+          } select-none`}
           onPointerDown={onDragStart}
         >
           <div className="flex items-center gap-2">
-            <GripVertical className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-base font-black flex items-center gap-2">
+            {!isMobile && <GripVertical className="w-4 h-4 text-muted-foreground" />}
+            <h3 className="text-sm sm:text-base font-black flex items-center gap-2">
               {titleIcon} {title}
             </h3>
           </div>
@@ -156,39 +183,41 @@ export default function FloatingPanel({
             {onConfirm && (
               <button
                 onClick={onConfirm}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-green-500 hover:text-green-600 hover:bg-green-100 transition-colors"
+                className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center text-green-500 hover:text-green-600 hover:bg-green-100 transition-colors"
                 onPointerDown={e => e.stopPropagation()}
                 title="אישור ושמירה"
               >
-                <Check className="w-4 h-4" />
+                <Check className="w-5 h-5 sm:w-4 sm:h-4" />
+              </button>
+            )}
+            {!isMobile && (
+              <button
+                onClick={() => setMinimized(!minimized)}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                onPointerDown={e => e.stopPropagation()}
+              >
+                {minimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
               </button>
             )}
             <button
-              onClick={() => setMinimized(!minimized)}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              onPointerDown={e => e.stopPropagation()}
-            >
-              {minimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
-            </button>
-            <button
               onClick={onClose}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               onPointerDown={e => e.stopPropagation()}
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5 sm:w-4 sm:h-4" />
             </button>
           </div>
         </div>
 
         {/* Content */}
         {!minimized && (
-          <div className="flex-1 min-h-0 overflow-x-hidden flex flex-col">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col">
             {children}
           </div>
         )}
 
-        {/* Resize handles */}
-        {!minimized && resizeHandles.map(h => (
+        {/* Resize handles (desktop only) */}
+        {!minimized && !isMobile && resizeHandles.map(h => (
           <div
             key={h.id}
             className={`absolute ${h.className} z-10`}
@@ -197,8 +226,8 @@ export default function FloatingPanel({
           />
         ))}
 
-        {/* Corner grip indicator */}
-        {!minimized && (
+        {/* Corner grip indicator (desktop only) */}
+        {!minimized && !isMobile && (
           <div className="absolute bottom-1 right-1 pointer-events-none opacity-30">
             <svg width="12" height="12" viewBox="0 0 12 12">
               <circle cx="10" cy="10" r="1.5" fill="currentColor" />

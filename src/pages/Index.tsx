@@ -68,32 +68,32 @@ const Index = () => {
       {/* Global Settings FAB — always visible */}
       <button
         onClick={() => setShowSettings(true)}
-        className="fixed bottom-6 right-4 z-40 w-12 h-12 rounded-full bg-game-pink text-primary-foreground shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+        className="fixed bottom-4 sm:bottom-6 right-3 sm:right-4 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-game-pink text-primary-foreground shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
       >
-        <Settings className="w-6 h-6" />
+        <Settings className="w-5 h-5 sm:w-6 sm:h-6" />
       </button>
 
       {/* Bottom tab icons — floating, no bar */}
-      <div className="fixed bottom-6 left-4 z-50 flex items-center gap-3" dir="rtl">
+      <div className="fixed bottom-4 sm:bottom-6 left-3 sm:left-4 z-50 flex items-center gap-2 sm:gap-3" dir="rtl">
         <button
           onClick={() => { setTab("memory"); setScreen("home"); }}
-          className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
             tab === "memory"
               ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
               : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
           }`}
         >
-          <Gamepad2 className="w-5 h-5" />
+          <Gamepad2 className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={() => { setTab("treasure"); setScreen("home"); }}
-          className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
             tab === "treasure"
               ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
               : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
           }`}
         >
-          <Map className="w-5 h-5" />
+          <Map className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
 

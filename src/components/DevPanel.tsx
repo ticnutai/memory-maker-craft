@@ -19,10 +19,6 @@ interface NetworkEntry {
   url: string;
   status: number | null;
   duration: number | null;
-  category: string;
-  categoryEmoji: string;
-  size: string | null;
-  responsePreview: string | null;
 }
 
 interface PerfStats {
@@ -103,40 +99,12 @@ function PerformanceMonitor({ stats }: { stats: PerfStats }) {
   );
 }
 
-function NetworkMonitor({ entries, onClear }: { entries: NetworkEntry[]; onClear: () => void }) {
+function NetworkMonitor({ entries }: { entries: NetworkEntry[] }) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<"all" | "ok" | "err">("all");
-  const [expandedRow, setExpandedRow] = useState<number | null>(null);
-  const netScrollRef = useRef<HTMLDivElement>(null);
-  const [autoScroll, setAutoScroll] = useState(true);
-
-  // Auto-scroll to bottom on new entries
-  useEffect(() => {
-    if (autoScroll && expanded && netScrollRef.current) {
-      netScrollRef.current.scrollTop = netScrollRef.current.scrollHeight;
-    }
-  }, [entries.length, autoScroll, expanded]);
-
-  const handleNetScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
-    setAutoScroll(atBottom);
-  }, []);
-
-  const filtered = useMemo(() => {
-    if (statusFilter === "all") return entries;
-    if (statusFilter === "ok") return entries.filter(e => e.status !== null && e.status < 400);
-    return entries.filter(e => e.status === null || e.status >= 400);
-  }, [entries, statusFilter]);
-
-  // Stats
-  const successCount = entries.filter(e => e.status !== null && e.status < 300).length;
-  const errorCount = entries.filter(e => e.status === null || e.status >= 400).length;
-  const avgDuration = entries.length > 0 ? Math.round(entries.reduce((s, e) => s + (e.duration || 0), 0) / entries.length) : 0;
 
   const exportNetwork = useCallback(() => {
-    const text = entries.map(e => `[${e.time}] ${e.categoryEmoji} ${e.method} ${e.url} → ${e.status || "FAILED"} (${e.duration ?? "?"}ms) ${e.size || ""}`).join("\n");
+    const text = entries.map(e => `[${e.time}] ${e.method} ${e.url} → ${e.status || "FAILED"} (${e.duration ?? "?"}ms)`).join("\n");
     const blob = new Blob([text], { type: "text/plain" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -146,7 +114,7 @@ function NetworkMonitor({ entries, onClear }: { entries: NetworkEntry[]; onClear
   }, [entries]);
 
   const copyNetwork = useCallback(() => {
-    const text = entries.map(e => `[${e.time}] ${e.categoryEmoji} ${e.method} ${e.url} → ${e.status || "FAILED"} (${e.duration ?? "?"}ms)`).join("\n");
+    const text = entries.map(e => `[${e.time}] ${e.method} ${e.url} → ${e.status || "FAILED"} (${e.duration ?? "?"}ms)`).join("\n");
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
@@ -162,96 +130,42 @@ function NetworkMonitor({ entries, onClear }: { entries: NetworkEntry[]; onClear
           <Globe className="w-3.5 h-3.5" /> בקשות רשת
         </h4>
         <div className="flex items-center gap-2">
-          {entries.length > 0 && (
-            <>
-              <span className="text-[9px] text-green-400/70">{successCount}✓</span>
-              {errorCount > 0 && <span className="text-[9px] text-red-400/70">{errorCount}✗</span>}
-              <span className="text-[9px] text-white/30">~{avgDuration}ms</span>
-            </>
-          )}
           <span className="text-[10px] text-white/40">{entries.length}</span>
           <ChevronDown className={`w-3 h-3 text-white/40 transition-transform ${expanded ? "rotate-180" : ""}`} />
         </div>
       </button>
       {expanded && (
         <>
-          {/* Toolbar: filter + actions */}
-          <div className="flex items-center justify-between px-2 py-1 border-b border-white/10">
-            <div className="flex items-center gap-1">
-              <Filter className="w-3 h-3 text-white/40" />
-              {(["all", "ok", "err"] as const).map(f => (
-                <button key={f} onClick={() => setStatusFilter(f)}
-                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-colors ${statusFilter === f ? "bg-white/20 text-white" : "text-white/40 hover:text-white/60"}`}>
-                  {f === "all" ? "הכל" : f === "ok" ? "✓הצלחה" : "✗שגיאה"}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-1">
-              <button onClick={onClear} className="w-6 h-6 rounded flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors" title="נקה">
-                <Trash2 className="w-3 h-3" />
-              </button>
-              <button onClick={copyNetwork} className="w-6 h-6 rounded flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors" title="העתק">
-                {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
-              </button>
-              <button onClick={exportNetwork} className="w-6 h-6 rounded flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors" title="ייצוא">
-                <Download className="w-3 h-3" />
-              </button>
-            </div>
+          <div className="flex items-center justify-end gap-1.5 px-2 py-1 border-b border-white/10">
+            <button onClick={copyNetwork} className="w-6 h-6 rounded flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors" title="העתק">
+              {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+            </button>
+            <button onClick={exportNetwork} className="w-6 h-6 rounded flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors" title="הורד">
+              <Download className="w-3 h-3" />
+            </button>
           </div>
-          {/* Scrollable request list */}
-          <div ref={netScrollRef} onScroll={handleNetScroll}
-            className="max-h-[22rem] min-h-[8rem] overflow-y-auto overflow-x-auto p-1.5 space-y-0.5 font-mono text-[10px] scroll-smooth"
-            style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.15) transparent" }}>
-            {filtered.length === 0 && (
-              <p className="text-white/30 text-center py-4 text-xs">{entries.length === 0 ? "אין בקשות..." : "אין תוצאות לסינון"}</p>
+          <div className="min-h-[8rem] overflow-y-auto overflow-x-auto p-1.5 space-y-0.5 font-mono text-[10px]">
+            {entries.length === 0 && (
+              <p className="text-white/30 text-center py-4 text-xs">אין בקשות...</p>
             )}
-            {filtered.map((e, i) => (
-              <div key={i}>
-                <div
-                  onClick={() => setExpandedRow(expandedRow === i ? null : i)}
-                  className={`flex gap-1.5 leading-tight items-center px-1 py-0.5 rounded cursor-pointer hover:bg-white/5 transition-colors ${expandedRow === i ? "bg-white/10" : ""}`}
-                >
-                  <span className="text-white/30 shrink-0">{e.time}</span>
-                  <span className="text-[9px] shrink-0" title={e.category}>{e.categoryEmoji}</span>
-                  <span className={`shrink-0 px-1 rounded text-[9px] font-bold ${
-                    e.status && e.status < 300 ? "bg-green-500/20 text-green-400" :
-                    e.status && e.status < 400 ? "bg-yellow-500/20 text-yellow-400" :
-                    "bg-red-500/20 text-red-400"
-                  }`}>
-                    {e.status || "ERR"}
-                  </span>
-                  <span className="text-blue-400/60 shrink-0">{e.method}</span>
-                  <span className="text-white/60 truncate max-w-[200px]" title={e.url}>{e.url.replace(/https?:\/\/[^/]+/, "")}</span>
-                  <span className="flex-1" />
-                  {e.size && <span className="text-white/25 shrink-0">{e.size}</span>}
-                  {e.duration !== null && (
-                    <span className={`shrink-0 ${e.duration > 500 ? "text-yellow-400/60" : "text-white/30"}`}>{e.duration}ms</span>
-                  )}
-                </div>
-                {expandedRow === i && (
-                  <div className="mr-4 ml-1 mb-1 p-2 rounded bg-white/5 text-[9px] space-y-1">
-                    <div className="text-white/50"><span className="text-white/70 font-bold">URL:</span> {e.url}</div>
-                    <div className="text-white/50"><span className="text-white/70 font-bold">קטגוריה:</span> {e.categoryEmoji} {e.category}</div>
-                    <div className="text-white/50"><span className="text-white/70 font-bold">זמן תגובה:</span> {e.duration ?? "?"}ms</div>
-                    {e.size && <div className="text-white/50"><span className="text-white/70 font-bold">גודל:</span> {e.size}</div>}
-                    {e.responsePreview && (
-                      <div className="mt-1">
-                        <span className="text-white/70 font-bold">תצוגה מקדימה:</span>
-                        <pre className="mt-0.5 p-1.5 rounded bg-black/30 text-white/50 whitespace-pre-wrap break-all max-h-24 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>{e.responsePreview}</pre>
-                      </div>
-                    )}
-                  </div>
+            {entries.map((e, i) => (
+              <div key={i} className="flex gap-1.5 leading-tight items-center px-1">
+                <span className="text-white/30 shrink-0">{e.time}</span>
+                <span className={`shrink-0 px-1 rounded text-[9px] font-bold ${
+                  e.status && e.status < 300 ? "bg-green-500/20 text-green-400" :
+                  e.status && e.status < 400 ? "bg-yellow-500/20 text-yellow-400" :
+                  "bg-red-500/20 text-red-400"
+                }`}>
+                  {e.status || "..."}
+                </span>
+                <span className="text-blue-400/60 shrink-0">{e.method}</span>
+                <span className="text-white/60 whitespace-nowrap">{e.url.replace(/https?:\/\/[^/]+/, "")}</span>
+                {e.duration !== null && (
+                  <span className="text-white/30 shrink-0">{e.duration}ms</span>
                 )}
               </div>
             ))}
           </div>
-          {/* Scroll indicator */}
-          {!autoScroll && filtered.length > 8 && (
-            <button onClick={() => { if (netScrollRef.current) { netScrollRef.current.scrollTop = netScrollRef.current.scrollHeight; setAutoScroll(true); } }}
-              className="w-full py-1 text-[10px] text-white/40 hover:text-white/60 bg-white/5 transition-colors text-center">
-              ↓ גלול למטה
-            </button>
-          )}
         </>
       )}
     </div>
@@ -560,14 +474,6 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
   const [logSearch, setLogSearch] = useState("");
   const [perfStats, setPerfStats] = useState<PerfStats>({ fps: 0, memory: null, loadTime: null });
   const logsEndRef = useRef<HTMLDivElement>(null);
-  const consoleScrollRef = useRef<HTMLDivElement>(null);
-  const [consoleAutoScroll, setConsoleAutoScroll] = useState(true);
-
-  const handleConsoleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
-    setConsoleAutoScroll(atBottom);
-  }, []);
 
   // FPS counter
   useEffect(() => {
@@ -649,27 +555,9 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
         const duration = Date.now() - start;
         const shortUrl = url.replace(/https?:\/\/[^/]+/, "");
 
-        // Try to read response size and preview (clone first)
-        let size: string | null = null;
-        let responsePreview: string | null = null;
-        try {
-          const clone = res.clone();
-          const text = await clone.text();
-          const bytes = new Blob([text]).size;
-          size = bytes < 1024 ? `${bytes}B` : `${(bytes / 1024).toFixed(1)}KB`;
-          responsePreview = text.length > 500 ? text.slice(0, 500) + "..." : text;
-          // Try to pretty-print JSON
-          try { responsePreview = JSON.stringify(JSON.parse(text), null, 2).slice(0, 500); } catch {}
-        } catch {}
-
-        const cat = classification || { label: "Other", type: "log" as const };
-        setNetworkEntries(prev => [...prev.slice(-99), {
+        setNetworkEntries(prev => [...prev.slice(-49), {
           time: new Date().toLocaleTimeString("he-IL"),
           method, url, status: res.status, duration,
-          category: cat.label,
-          categoryEmoji: classification?.label.split(" ")[0] || "📡",
-          size,
-          responsePreview,
         }]);
 
         // Auto-log significant requests to console
@@ -688,14 +576,9 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
         const duration = Date.now() - start;
         const shortUrl = url.replace(/https?:\/\/[^/]+/, "");
 
-        const cat = classification || { label: "Other", type: "log" as const };
-        setNetworkEntries(prev => [...prev.slice(-99), {
+        setNetworkEntries(prev => [...prev.slice(-49), {
           time: new Date().toLocaleTimeString("he-IL"),
           method, url, status: null, duration,
-          category: cat.label,
-          categoryEmoji: classification?.label.split(" ")[0] || "📡",
-          size: null,
-          responsePreview: String(err),
         }]);
 
         if (classification) {
@@ -721,10 +604,8 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
   }, []);
 
   useEffect(() => {
-    if (consoleAutoScroll) {
-      logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [logs, consoleAutoScroll]);
+    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [logs]);
 
   const copyDeviceId = useCallback(() => {
     navigator.clipboard.writeText(deviceId);
@@ -779,7 +660,7 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
       <GitHubStatus networkEntries={networkEntries} addLog={(type, msg) => setLogs(prev => [...prev.slice(-199), { time: new Date().toLocaleTimeString("he-IL"), type, message: msg }])} />
 
       {/* Network Monitor */}
-      <NetworkMonitor entries={networkEntries} onClear={() => setNetworkEntries([])} />
+      <NetworkMonitor entries={networkEntries} />
 
       {/* Console */}
       <div className="bg-[#1a1a2e] rounded-xl overflow-hidden">
@@ -788,23 +669,7 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
             <Code2 className="w-3.5 h-3.5" /> קונסול
           </h4>
           <div className="flex items-center gap-1.5">
-            {/* Type badges */}
-            {["log", "info", "warn", "error"].map(t => {
-              const count = logs.filter(l => l.type === t).length;
-              if (count === 0) return null;
-              const colors: Record<string, string> = {
-                log: "bg-white/15 text-white/60",
-                info: "bg-sky-500/20 text-sky-400",
-                warn: "bg-yellow-500/20 text-yellow-400",
-                error: "bg-red-500/20 text-red-400",
-              };
-              return (
-                <span key={t} className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${colors[t]}`}>
-                  {t} {count}
-                </span>
-              );
-            })}
-            <span className="text-[10px] text-white/40 mr-1">{filteredLogs.length}/{logs.length}</span>
+            <span className="text-[10px] text-white/40">{filteredLogs.length}/{logs.length}</span>
             <button onClick={exportLogs} className="w-6 h-6 rounded flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors" title="ייצוא">
               <Download className="w-3 h-3" />
             </button>
@@ -814,44 +679,21 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
           </div>
         </div>
         <LogFilter filter={logFilter} setFilter={setLogFilter} search={logSearch} setSearch={setLogSearch} />
-        <div
-          ref={consoleScrollRef}
-          onScroll={handleConsoleScroll}
-          className="max-h-[24rem] min-h-[10rem] overflow-y-auto overflow-x-auto p-2 space-y-0.5 font-mono text-xs scroll-smooth"
-          style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.15) transparent" }}
-        >
+        <div className="min-h-[10rem] overflow-y-auto overflow-x-auto p-2 space-y-1 font-mono text-xs">
           {filteredLogs.length === 0 && (
             <p className="text-white/40 text-center py-8 text-sm">
               {logs.length === 0 ? "אין הודעות עדיין..." : "אין תוצאות לסינון"}
             </p>
           )}
           {filteredLogs.map((log, i) => (
-            <div
-              key={i}
-              onClick={() => { navigator.clipboard.writeText(`[${log.time}] [${log.type}] ${log.message}`); }}
-              className={`flex gap-2 leading-relaxed ${logColors[log.type]} cursor-pointer hover:bg-white/5 rounded px-1 py-0.5 transition-colors group`}
-              title="לחץ להעתקה"
-            >
-              <span className="text-white/20 shrink-0 w-5 text-left text-[9px] select-none">{i + 1}</span>
+            <div key={i} className={`flex gap-2 leading-relaxed ${logColors[log.type]}`}>
               <span className="text-white/50 shrink-0">{log.time}</span>
-              <span className={`shrink-0 font-bold text-[10px] px-1 rounded ${
-                log.type === "error" ? "bg-red-500/15" :
-                log.type === "warn" ? "bg-yellow-500/15" :
-                log.type === "info" ? "bg-sky-500/15" : "bg-white/5"
-              }`}>[{log.type}]</span>
-              <span className="whitespace-pre-wrap break-all">{log.message}</span>
-              <Copy className="w-3 h-3 text-white/0 group-hover:text-white/30 shrink-0 ml-auto transition-colors" />
+              <span className="text-white/60 shrink-0 font-bold">[{log.type}]</span>
+              <span className="whitespace-nowrap">{log.message}</span>
             </div>
           ))}
           <div ref={logsEndRef} />
         </div>
-        {/* Scroll-to-bottom */}
-        {!consoleAutoScroll && filteredLogs.length > 10 && (
-          <button onClick={() => { if (consoleScrollRef.current) { consoleScrollRef.current.scrollTop = consoleScrollRef.current.scrollHeight; setConsoleAutoScroll(true); } }}
-            className="w-full py-1 text-[10px] text-white/40 hover:text-white/60 bg-white/5 transition-colors text-center">
-            ↓ גלול למטה
-          </button>
-        )}
       </div>
     </div>
   );

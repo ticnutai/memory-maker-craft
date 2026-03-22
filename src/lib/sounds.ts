@@ -6,20 +6,14 @@ const audioCtx = () => {
   return (window as any).__gameAudioCtx as AudioContext;
 };
 
-// Global sound volume multiplier (0-1)
-let _soundVolumeMultiplier = 0.5;
-export function setSoundVolumeMultiplier(v: number) { _soundVolumeMultiplier = Math.max(0, Math.min(1, v)); }
-export function getSoundVolumeMultiplier() { return _soundVolumeMultiplier; }
-
 function playTone(frequency: number, duration: number, type: OscillatorType = "sine", volume = 0.3, delay = 0) {
   const ctx = audioCtx();
-  const effectiveVolume = volume * _soundVolumeMultiplier;
   const startTime = ctx.currentTime + delay;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(frequency, startTime);
-  gain.gain.setValueAtTime(effectiveVolume, startTime);
+  gain.gain.setValueAtTime(volume, startTime);
   gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
   osc.connect(gain);
   gain.connect(ctx.destination);
@@ -29,18 +23,17 @@ function playTone(frequency: number, duration: number, type: OscillatorType = "s
 
 function playNoise(duration: number, volume: number = 0.05, delay: number = 0) {
   const ctx = audioCtx();
-  const effectiveVolume = volume * _soundVolumeMultiplier;
   const startTime = ctx.currentTime + delay;
   const bufferSize = ctx.sampleRate * duration;
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) {
-    data[i] = (Math.random() * 2 - 1) * effectiveVolume;
+    data[i] = (Math.random() * 2 - 1) * volume;
   }
   const source = ctx.createBufferSource();
   source.buffer = buffer;
   const gain = ctx.createGain();
-  gain.gain.setValueAtTime(effectiveVolume, startTime);
+  gain.gain.setValueAtTime(volume, startTime);
   gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
   
   // High-pass filter for a "swoosh" sound

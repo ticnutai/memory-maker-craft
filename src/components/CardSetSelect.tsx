@@ -164,7 +164,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
 
   // Load layout presets
   const loadLayoutPresets = useCallback(async () => {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("layout_presets")
       .select("*")
       .eq("device_id", deviceId)
@@ -181,7 +181,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
   };
 
   const deletePreset = async (id: string) => {
-    await supabase.from("layout_presets").delete().eq("id", id);
+    await (supabase as any).from("layout_presets").delete().eq("id", id);
     loadLayoutPresets();
   };
 
@@ -262,7 +262,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     <>
     {!settingsOnly && (
     <div
-      className={`flex flex-col items-center min-h-screen gap-6 px-5 py-8 pb-28 overflow-y-auto relative ${cloud.animationsEnabled === false ? "no-animations" : ""}`}
+      className={`flex flex-col items-center min-h-screen gap-4 sm:gap-6 px-3 sm:px-5 py-6 sm:py-8 pb-24 sm:pb-28 overflow-y-auto relative ${cloud.animationsEnabled === false ? "no-animations" : ""}`}
       dir="rtl"
       style={{ background: homeBg }}
     >
@@ -288,23 +288,23 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
 
       {/* Title */}
       <div className="relative z-10 text-center bounce-in mt-2">
-        <h1 className="text-3xl sm:text-4xl font-black text-foreground leading-tight">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground leading-tight">
           🎮 משחקי זיכרון 🎮
         </h1>
-        <p className="text-sm text-muted-foreground mt-2">בחרו ערכה להתחיל לשחק!</p>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">בחרו ערכה להתחיל לשחק!</p>
       </div>
 
       {/* Card set grid — built-in + custom + add button */}
-      <div className="w-full max-w-lg relative z-10 grid grid-cols-3 gap-3 bounce-in" style={{ animationDelay: "0.1s" }}>
+      <div className="w-full max-w-lg relative z-10 grid grid-cols-2 gap-3 sm:gap-4 bounce-in" style={{ animationDelay: "0.1s" }}>
         {/* Built-in sets */}
         {allCardSets.map((set, i) => (
           <button key={set.type}
             onClick={() => onSelectSet(set.type, settings)}
-            className={`bg-gradient-to-br ${set.color} rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground min-h-[100px]`}
-            style={{ animationDelay: `${0.15 + i * 0.05}s` }}
+            className={`bg-gradient-to-br ${set.color} rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground min-h-[100px] sm:min-h-[120px]`}
+            style={{ animationDelay: `${0.15 + i * 0.08}s` }}
           >
-            <span className="text-4xl drop-shadow-sm">{set.emoji}</span>
-            <span className="font-bold text-xs">{set.label}</span>
+            <span className="text-4xl sm:text-5xl drop-shadow-sm">{set.emoji}</span>
+            <span className="font-bold text-xs sm:text-sm">{set.label}</span>
           </button>
         ))}
 
@@ -314,11 +314,11 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
           return (
             <button key={cs.id}
               onClick={() => playCustomSet(cs)}
-              className={`bg-gradient-to-br ${CUSTOM_GRADIENTS[gradientIdx]} rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground relative min-h-[100px]`}
-              style={{ animationDelay: `${0.15 + (allCardSets.length + i) * 0.05}s` }}
+              className={`bg-gradient-to-br ${CUSTOM_GRADIENTS[gradientIdx]} rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground relative min-h-[100px] sm:min-h-[120px]`}
+              style={{ animationDelay: `${0.15 + (allCardSets.length + i) * 0.08}s` }}
             >
-              <span className="text-4xl drop-shadow-sm">{cs.emoji}</span>
-              <span className="font-bold text-xs">{cs.name}</span>
+              <span className="text-4xl sm:text-5xl drop-shadow-sm">{cs.emoji}</span>
+              <span className="font-bold text-xs sm:text-sm">{cs.name}</span>
               {cs.cardCount > 0 && (
                 <span className="absolute top-2 left-2 text-[10px] bg-white/30 backdrop-blur-sm rounded-full px-2 py-0.5 font-bold">
                   {cs.cardCount} קלפים
@@ -336,8 +336,8 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
         {/* Add new set button — smaller */}
         <button
           onClick={() => { setShowSettings(true); setSettingsTab("custom-sets"); }}
-          className="rounded-2xl p-3 flex flex-col items-center justify-center gap-2 shadow-md hover:shadow-lg hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in border-2 border-dashed border-game-pink/30 bg-white/50 backdrop-blur-sm min-h-[100px]"
-          style={{ animationDelay: `${0.15 + (allCardSets.length + customSets.length) * 0.05}s` }}
+          className="rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center gap-2 shadow-md hover:shadow-lg hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in border-2 border-dashed border-game-pink/30 bg-white/50 backdrop-blur-sm min-h-[100px] sm:min-h-[120px]"
+          style={{ animationDelay: `${0.15 + (allCardSets.length + customSets.length) * 0.08}s` }}
         >
           <div className="w-9 h-9 rounded-full bg-game-pink/15 flex items-center justify-center">
             <Plus className="w-5 h-5 text-game-pink" />
@@ -359,21 +359,21 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
         defaultHeight={540}
       >
             {/* Tabs */}
-            <div className="flex gap-1 bg-muted px-3 py-2 overflow-x-auto shrink-0">
+            <div className="flex gap-1 bg-muted px-2 sm:px-3 py-1.5 sm:py-2 overflow-x-auto shrink-0 scrollbar-none">
               {SETTINGS_TABS.map((tab) => (
                 <button key={tab.id} onClick={() => setSettingsTab(tab.id)}
-                  className={`shrink-0 py-2 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 ${
+                  className={`shrink-0 py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold transition-all active:scale-95 flex items-center gap-1 sm:gap-1.5 ${
                     settingsTab === tab.id ? `${accent} text-primary-foreground shadow-md` : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {tab.icon}
-                  {tab.label}
+                  <span className="hidden xs:inline sm:inline">{tab.label}</span>
                 </button>
               ))}
             </div>
 
             {/* Settings content */}
-            <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4">
+            <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-3 sm:py-4">
 
               {/* ═══ GENERAL ═══ */}
               {settingsTab === "general" && (

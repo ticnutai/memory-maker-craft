@@ -43,9 +43,6 @@ export interface StoredSettings {
   gridSize?: number;
   animationsEnabled?: boolean;
   cardPositions?: { x: number; y: number }[];
-  musicVolume?: number;
-  soundVolume?: number;
-  speechVolume?: number;
 }
 
 export function useCloudSettings(initialTheme: string) {
@@ -86,9 +83,6 @@ export function useCloudSettings(initialTheme: string) {
       snapToGrid: (data as any).snap_to_grid !== false,
       gridSize: Number((data as any).grid_size) || 20,
       cardPositions: (data as any).card_positions || [],
-      musicVolume: (data as any).music_volume ?? 50,
-      soundVolume: (data as any).sound_volume ?? 50,
-      speechVolume: (data as any).speech_volume ?? 50,
       cardStyle: {
         borderRadius: data.card_border_radius ?? 16,
         borderWidth: data.card_border_width ?? 4,
@@ -174,9 +168,6 @@ export function useCloudSettings(initialTheme: string) {
         snap_to_grid: newSettings.snapToGrid !== false,
         grid_size: newSettings.gridSize || 20,
         card_positions: newSettings.cardPositions || [],
-        music_volume: newSettings.musicVolume ?? 50,
-        sound_volume: newSettings.soundVolume ?? 50,
-        speech_volume: newSettings.speechVolume ?? 50,
         updated_at: new Date().toISOString(),
       }, { onConflict: "device_id" });
     }, 500);
@@ -231,9 +222,6 @@ export function useCloudSettings(initialTheme: string) {
     gridSize: settings.gridSize || 20,
     animationsEnabled: settings.animationsEnabled !== false,
     cardPositions: settings.cardPositions || [],
-    musicVolume: settings.musicVolume ?? 50,
-    soundVolume: settings.soundVolume ?? 50,
-    speechVolume: settings.speechVolume ?? 50,
   }), [settings]);
 
   return { settings, loaded, updateSetting, updateCardStyle, updateMultiple, toGameSettings };

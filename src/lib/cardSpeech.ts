@@ -30,10 +30,6 @@ const CARD_NAMES_HE: Record<string, string> = {
 
 let lastSpoke = 0;
 
-// Global speech volume multiplier (0-1)
-let _speechVolumeMultiplier = 0.5;
-export function setSpeechVolumeMultiplier(v: number) { _speechVolumeMultiplier = Math.max(0, Math.min(1, v)); }
-
 export function speakCardName(cardId: string, rate: number = 0.9) {
   const name = CARD_NAMES_HE[cardId];
   if (!name) return;
@@ -48,7 +44,7 @@ export function speakCardName(cardId: string, rate: number = 0.9) {
   utterance.lang = "he-IL";
   utterance.rate = rate;
   utterance.pitch = 1.2;
-  utterance.volume = 0.8 * _speechVolumeMultiplier;
+  utterance.volume = 0.8;
 
   const voices = window.speechSynthesis.getVoices();
   const heVoice = voices.find(v => v.lang.startsWith("he")) || voices.find(v => v.lang.startsWith("iw"));
