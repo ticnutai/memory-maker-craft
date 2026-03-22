@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   Code2, Github, RefreshCw, Trash2, Database, Wifi, WifiOff, Copy, Check,
   Search, Download, Filter, Activity, Globe, Smartphone, Battery, HardDrive,
-  Cloud, BarChart3, QrCode, X, ChevronDown
+  Cloud, BarChart3, QrCode, X, ChevronDown, RotateCcw, ArrowLeftRight
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
