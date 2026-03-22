@@ -114,7 +114,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
       } else {
         timeoutRef.current = setTimeout(() => {
           if (soundEnabled) {
-            if (!playCustomVoice("mismatch")) playMismatchSound();
+            if (!(customVoiceEnabled && playCustomVoice("mismatch"))) playMismatchSound();
           }
           setCards((prev) =>
             prev.map((c) =>
