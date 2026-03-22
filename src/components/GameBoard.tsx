@@ -314,7 +314,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             </div>
           ) : (
             /* ──── GRID LAYOUT ──── */
-            <div className={`grid ${gridCols} gap-3 sm:gap-4 w-full`} style={{ maxWidth: `${cardMaxW}px` }}>
+            <div className={`grid ${gridCols} gap-2 sm:gap-3 md:gap-4 w-full`} style={{ maxWidth: `${cardMaxW}px` }}>
               {cards.map((card, i) => (
                 <div key={card.uniqueId} className="bounce-in" style={{ animationDelay: `${i * 0.04}s` }}>
                   <MemoryCard
