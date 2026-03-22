@@ -322,8 +322,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
               <Home className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
             {/* Sound effects toggle */}
-            <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${soundOn ? "text-accent" : "text-muted-foreground"}`} onClick={() => updateSetting("soundEnabled", !soundOn)} title="אפקטי צליל">
-              {soundOn ? <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />}
+            <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${soundOn ? "text-yellow-500" : "text-muted-foreground"}`} onClick={() => updateSetting("soundEnabled", !soundOn)} title="אפקטי צליל">
+              {soundOn ? <Bell className="w-4 h-4 sm:w-5 sm:h-5" /> : <BellOff className="w-4 h-4 sm:w-5 sm:h-5" />}
             </Button>
             {/* Background music toggle */}
             <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${musicPlaying ? "text-accent" : "text-muted-foreground"}`} onClick={toggleMusic} title="מוזיקת רקע">
