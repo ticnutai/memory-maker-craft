@@ -281,7 +281,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   })();
 
   const handlePresetSelect = (preset: LayoutPreset) => {
-    setActivePreset(preset.id);
+    updateSetting("layoutPreset" as any, preset.id);
   };
 
   const gridCols = getGridColsFromPreset(activePreset);

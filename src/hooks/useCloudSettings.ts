@@ -225,6 +225,7 @@ export function useCloudSettings(initialTheme: string) {
     gridSize: settings.gridSize || 20,
     animationsEnabled: settings.animationsEnabled !== false,
     cardPositions: settings.cardPositions || [],
+    layoutPreset: settings.layoutPreset || "grid-3",
   }), [settings]);
 
   return { settings, loaded, updateSetting, updateCardStyle, updateMultiple, toGameSettings };
