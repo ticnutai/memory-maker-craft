@@ -71,7 +71,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
       setTimeout(() => speakCardName(card.id, speechRate), 150);
     }
     // Custom flip voice
-    if (soundEnabled) playCustomVoice("flip");
+    if (soundEnabled && customVoiceEnabled) playCustomVoice("flip");
 
     const newFlipped = [...flippedIds, uniqueId];
     setFlippedIds(newFlipped);
