@@ -44,6 +44,7 @@ export interface StoredSettings {
   animationsEnabled?: boolean;
   cardPositions?: { x: number; y: number }[];
   layoutPreset?: string;
+  customVoiceEnabled?: boolean;
 }
 
 export function useCloudSettings(initialTheme: string) {

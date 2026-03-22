@@ -35,6 +35,7 @@ export interface GameSettings {
   cardPositions?: CardPosition[];
   animationsEnabled?: boolean;
   layoutPreset?: string;
+  customVoiceEnabled?: boolean;
 }
 
 export interface CardData {
