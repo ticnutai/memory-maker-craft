@@ -250,7 +250,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
         )}
 
         {/* Game area */}
-        <div className="flex-1 flex items-center justify-center p-4 relative">
+        <div className="flex-1 flex items-center justify-center p-2 sm:p-4 relative">
           {isFreeLayout ? (
             /* ──── FREE LAYOUT ──── */
             <div
