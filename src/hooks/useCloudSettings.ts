@@ -229,6 +229,7 @@ export function useCloudSettings(initialTheme: string) {
     animationsEnabled: settings.animationsEnabled !== false,
     cardPositions: settings.cardPositions || [],
     layoutPreset: settings.layoutPreset || "grid-3",
+    customVoiceEnabled: settings.customVoiceEnabled !== false,
   }), [settings]);
 
   return { settings, loaded, updateSetting, updateCardStyle, updateMultiple, toGameSettings };
