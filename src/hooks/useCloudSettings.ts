@@ -173,6 +173,7 @@ export function useCloudSettings(initialTheme: string) {
         grid_size: newSettings.gridSize || 20,
         card_positions: newSettings.cardPositions || [],
         layout_preset: newSettings.layoutPreset || "grid-3",
+        custom_voice_enabled: newSettings.customVoiceEnabled !== false,
         updated_at: new Date().toISOString(),
       }, { onConflict: "device_id" });
     }, 500);
