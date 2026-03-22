@@ -728,6 +728,9 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
       {/* Device Info Extended */}
       <DeviceInfoExtended deviceId={deviceId} isOnline={isOnline} copied={copied} copyDeviceId={copyDeviceId} />
 
+      {/* Device Recovery */}
+      <DeviceRecovery currentDeviceId={deviceId} />
+
       {/* Cloud Status */}
       <CloudStatus deviceId={deviceId} />
 
