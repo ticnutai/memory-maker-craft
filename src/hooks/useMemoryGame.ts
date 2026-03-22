@@ -90,7 +90,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
       if (first.id === second.id) {
         timeoutRef.current = setTimeout(() => {
           if (soundEnabled) {
-            if (!playCustomVoice("match")) playMatchSound();
+            if (!(customVoiceEnabled && playCustomVoice("match"))) playMatchSound();
           }
           setCards((prev) =>
             prev.map((c) =>
