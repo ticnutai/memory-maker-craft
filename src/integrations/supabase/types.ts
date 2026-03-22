@@ -175,6 +175,7 @@ export type Database = {
           emoji_scale: number
           flip_duration: number
           id: string
+          layout_preset: string | null
           music_type: string
           pair_count: number
           sound_enabled: boolean
@@ -203,6 +204,7 @@ export type Database = {
           emoji_scale?: number
           flip_duration?: number
           id?: string
+          layout_preset?: string | null
           music_type?: string
           pair_count?: number
           sound_enabled?: boolean
@@ -231,6 +233,7 @@ export type Database = {
           emoji_scale?: number
           flip_duration?: number
           id?: string
+          layout_preset?: string | null
           music_type?: string
           pair_count?: number
           sound_enabled?: boolean

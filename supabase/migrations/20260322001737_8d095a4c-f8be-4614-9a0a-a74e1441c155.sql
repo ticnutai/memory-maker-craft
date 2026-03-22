@@ -1,0 +1,1 @@
+ALTER TABLE public.game_settings ADD COLUMN IF NOT EXISTS layout_preset text DEFAULT 'grid-3';

@@ -40,7 +40,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const gridSize = liveSettings.gridSize || 20;
 
   // Layout preset
-  const [activePreset, setActivePreset] = useState<string>("grid-3");
+  const activePreset = liveSettings.layoutPreset || "grid-3";
 
   // Card positions for free layout
   const [positions, setPositions] = useState<Record<string, CardPosition>>({});
@@ -281,7 +281,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   })();
 
   const handlePresetSelect = (preset: LayoutPreset) => {
-    setActivePreset(preset.id);
+    updateSetting("layoutPreset" as any, preset.id);
   };
 
   const gridCols = getGridColsFromPreset(activePreset);
