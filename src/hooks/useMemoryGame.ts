@@ -106,7 +106,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
             setTimeout(() => {
               setIsGameOver(true);
               if (soundEnabled) {
-                if (!playCustomVoice("win")) playWinSound();
+                if (!(customVoiceEnabled && playCustomVoice("win"))) playWinSound();
               }
             }, 500);
           }
