@@ -24,7 +24,8 @@ interface GameBoardProps {
 export default function GameBoard({ theme, settings, cardSetType, customCards, onHome }: GameBoardProps) {
   const { settings: liveCloud, toGameSettings, updateSetting } = useCloudSettings("girl");
   const liveSettings = { ...settings, ...toGameSettings() };
-  const [speechOn, setSpeechOn] = useState(settings.speechEnabled);
+  const soundOn = liveSettings.soundEnabled;
+  const speechOn = liveSettings.speechEnabled;
   const setInfo = getCardSets(theme).find((s) => s.type === cardSetType);
   const cardData = customCards || setInfo?.cards || getCardSets(theme)[0].cards;
   const pairCount = Math.min(liveSettings.pairCount, cardData.length);
