@@ -84,6 +84,7 @@ export function useCloudSettings(initialTheme: string) {
       snapToGrid: (data as any).snap_to_grid !== false,
       gridSize: Number((data as any).grid_size) || 20,
       cardPositions: (data as any).card_positions || [],
+      layoutPreset: (data as any).layout_preset || "grid-3",
       cardStyle: {
         borderRadius: data.card_border_radius ?? 16,
         borderWidth: data.card_border_width ?? 4,
