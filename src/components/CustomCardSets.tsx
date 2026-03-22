@@ -132,24 +132,35 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
     if (!formName.trim()) return;
     const settingsPayload = Object.keys(formSettings).length > 0 ? formSettings : {};
     if (editSetId && !saveAsNew) {
-      await supabase.from("custom_card_sets").update({
+      const { error } = await supabase.from("custom_card_sets").update({
         name: formName, emoji: formEmoji, color: formColor,
         settings_json: settingsPayload as any,
         updated_at: new Date().toISOString(),
       }).eq("id", editSetId);
+      if (error) {
+        console.error("Update set error:", error);
+        toast.error("שגיאה בעדכון הערכה: " + error.message);
+        return;
+      }
       toast.success("הערכה עודכנה! ✏️");
     } else {
-      const { data: newSet } = await supabase.from("custom_card_sets").insert({
+      const { data: newSet, error } = await supabase.from("custom_card_sets").insert({
         device_id: deviceId, name: formName, emoji: formEmoji, color: formColor,
         settings_json: settingsPayload as any,
       }).select().single();
+      if (error) {
+        console.error("Insert set error:", error);
+        toast.error("שגיאה ביצירת ערכה: " + error.message);
+        return;
+      }
       if (saveAsNew && editSetId && newSet) {
         const sourceCards = cards[editSetId] || [];
         for (const c of sourceCards) {
-          await supabase.from("custom_card_items").insert({
+          const { error: cardError } = await supabase.from("custom_card_items").insert({
             set_id: (newSet as any).id, label: c.label, emoji: c.emoji,
             image_url: c.image_url, sort_order: c.sort_order,
           });
+          if (cardError) console.error("Copy card error:", cardError);
         }
       }
       toast.success(saveAsNew ? "ערכה חדשה נשמרה! 🎉" : "ערכה נוצרה! ✨");
@@ -238,10 +249,14 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
     let i = 0;
     for (const url of cloudSelected) {
       const img = cloudImages.find(c => c.url === url);
-      const { data: insertData } = await supabase.from("custom_card_items").insert({
+      const { data: insertData, error } = await supabase.from("custom_card_items").insert({
         set_id: setId, label: img?.name.replace(/\.[^.]+$/, "") || `קלף ${existingCount + i + 1}`,
         emoji: "📷", image_url: url, sort_order: existingCount + i,
       }).select().single();
+      if (error) {
+        console.error("Import card error:", error);
+        toast.error("שגיאה בייבוא קלף: " + error.message);
+      }
       if (insertData) newCards.push(insertData as CustomCard);
       i++;
     }
