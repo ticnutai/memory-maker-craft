@@ -15,7 +15,7 @@ function getDeviceId(): string {
   return localStorage.getItem("memory-game-device-id") || "unknown";
 }
 
-export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = true, speechEnabled: boolean = true, flipDuration: number = 1, speechRate: number = 0.9) {
+export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = true, speechEnabled: boolean = true, flipDuration: number = 1, speechRate: number = 0.9, customVoiceEnabled: boolean = true) {
   const [cards, setCards] = useState<GameCard[]>([]);
   const [flippedIds, setFlippedIds] = useState<string[]>([]);
   const [moves, setMoves] = useState(0);
