@@ -464,6 +464,84 @@ function GitHubStatus({ networkEntries, addLog }: { networkEntries: NetworkEntry
   );
 }
 
+function DeviceRecovery({ currentDeviceId }: { currentDeviceId: string }) {
+  const [devices, setDevices] = useState<{ device_id: string; updated_at: string; pair_count: number }[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [switching, setSwitching] = useState(false);
+
+  const loadDevices = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("game_settings")
+      .select("device_id, updated_at, pair_count")
+      .neq("device_id", currentDeviceId)
+      .order("updated_at", { ascending: false })
+      .limit(20);
+    setDevices(data || []);
+    setLoading(false);
+  }, [currentDeviceId]);
+
+  useEffect(() => {
+    if (expanded) loadDevices();
+  }, [expanded, loadDevices]);
+
+  const switchDevice = useCallback(async (targetId: string) => {
+    if (!confirm(`לעבור למזהה מכשיר ${targetId.slice(0, 20)}...?\nכל ההגדרות והנתונים של המכשיר הזה ישוחזרו.`)) return;
+    setSwitching(true);
+    localStorage.setItem("memory-game-device-id", targetId);
+    window.location.reload();
+  }, []);
+
+  const otherDevices = devices.filter(d => d.device_id !== currentDeviceId);
+
+  return (
+    <div className="bg-muted/50 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-muted/80 transition-colors"
+      >
+        <h4 className="font-bold text-xs flex items-center gap-2">
+          <RotateCcw className="w-3.5 h-3.5" /> שחזור מכשיר קודם
+        </h4>
+        <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
+      </button>
+      {expanded && (
+        <div className="px-3 pb-3 space-y-2">
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            אם הנתונים שלך נעלמו, כנראה ש-device ID השתנה. בחר מכשיר קודם כדי לשחזר את ההגדרות:
+          </p>
+          {loading ? (
+            <p className="text-xs text-muted-foreground text-center py-3">טוען מכשירים...</p>
+          ) : otherDevices.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-3">לא נמצאו מכשירים קודמים</p>
+          ) : (
+            <div className="space-y-1.5 max-h-48 overflow-y-auto">
+              {otherDevices.map(d => (
+                <button
+                  key={d.device_id}
+                  onClick={() => switchDevice(d.device_id)}
+                  disabled={switching}
+                  className="w-full flex items-center justify-between bg-background/60 rounded-lg px-3 py-2 hover:bg-background/90 transition-colors text-right"
+                >
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className="font-mono text-[10px] text-foreground/80">{d.device_id.slice(0, 24)}...</span>
+                    <span className="text-[9px] text-muted-foreground">
+                      עודכן: {new Date(d.updated_at).toLocaleDateString("he-IL")} {new Date(d.updated_at).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                      {" • "}{d.pair_count} זוגות
+                    </span>
+                  </div>
+                  <ArrowLeftRight className="w-3.5 h-3.5 text-primary shrink-0" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main DevPanel ───
 export default function DevPanel({ deviceId }: { deviceId: string }) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
