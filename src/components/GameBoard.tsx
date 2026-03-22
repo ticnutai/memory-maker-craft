@@ -7,6 +7,7 @@ import MemoryCard from "@/components/MemoryCard";
 import Confetti from "@/components/Confetti";
 import ThemeBackground from "@/components/ThemeBackground";
 import { BgThemeId } from "@/components/ThemeBackground";
+import LayoutPicker, { LayoutPreset } from "@/components/LayoutPicker";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { RotateCcw, Home, Music, VolumeX, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy } from "lucide-react";
@@ -38,6 +39,9 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const snapEnabled = liveSettings.snapToGrid !== false;
   const gridSize = liveSettings.gridSize || 20;
 
+  // Layout preset
+  const [activePreset, setActivePreset] = useState<string>("grid-3");
+
   // Card positions for free layout
   const [positions, setPositions] = useState<Record<string, CardPosition>>({});
   const [editMode, setEditMode] = useState(false);
@@ -48,7 +52,6 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const [saveFlash, setSaveFlash] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
 
-  // הפעל מצב עריכה אוטומטית כשעוברים למצב חופשי
   useEffect(() => {
     if (isFreeLayout) setEditMode(true);
     else setEditMode(false);
@@ -58,7 +61,6 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     startGame(cardData);
   }, []);
 
-  // Initialize positions when cards change in free mode
   useEffect(() => {
     if (isFreeLayout && cards.length > 0 && Object.keys(positions).length === 0) {
       const savedPosArr = liveSettings.cardPositions || [];
@@ -72,7 +74,6 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
           return;
         }
       }
-      // Auto-arrange in grid initially with dynamic card size
       const cols = Math.ceil(Math.sqrt(cards.length));
       const cardW = freeCardSize;
       const cardH = Math.round(freeCardSize * 1.2);
@@ -94,7 +95,6 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     return Math.round(val / gridSize) * gridSize;
   };
 
-  // Find alignment guides
   const getAlignGuides = useCallback((id: string, x: number, y: number) => {
     const guides: { x?: number; y?: number } = {};
     const threshold = 8;
@@ -168,19 +168,123 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   };
 
   const cardMaxW = liveSettings.cardMaxW;
-
-  // גודל קלף בודד במצב חופשי — בין 60px ל-200px לפי cardMaxW
   const freeCardSize = Math.max(60, Math.min(200, Math.round(cardMaxW / 4)));
 
-  // Grid columns based on total cards
+  // ──── Layout preset logic ────
   const totalCards = pairCount * 2;
-  let gridCols = "grid-cols-3";
-  if (totalCards <= 4) gridCols = "grid-cols-2";
-  else if (totalCards <= 6) gridCols = "grid-cols-3";
-  else if (totalCards <= 8) gridCols = "grid-cols-4";
-  else if (totalCards <= 12) gridCols = "grid-cols-3 sm:grid-cols-4";
-  else gridCols = "grid-cols-4";
 
+  const getGridColsFromPreset = (presetId: string): string => {
+    const preset = presetId;
+    if (preset === "grid-2") return "grid-cols-2";
+    if (preset === "grid-4") return "grid-cols-4";
+    return "grid-cols-3 sm:grid-cols-4";
+  };
+
+  const getSpecialPositions = (pattern: string, count: number, containerW: number, containerH: number, cardW: number): { x: number; y: number }[] => {
+    const positions: { x: number; y: number }[] = [];
+    const cardH = cardW * 1.25;
+    const cx = containerW / 2;
+    const cy = containerH / 2;
+
+    switch (pattern) {
+      case "circle": {
+        const r = Math.min(containerW, containerH) * 0.35;
+        for (let i = 0; i < count; i++) {
+          const angle = (2 * Math.PI * i) / count - Math.PI / 2;
+          positions.push({ x: cx + r * Math.cos(angle) - cardW / 2, y: cy + r * Math.sin(angle) - cardH / 2 });
+        }
+        break;
+      }
+      case "wave": {
+        const cols = 4;
+        const rows = Math.ceil(count / cols);
+        const gapX = (containerW - cols * cardW) / (cols + 1);
+        const gapY = (containerH - rows * cardH) / (rows + 1);
+        for (let i = 0; i < count; i++) {
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+          const waveY = Math.sin((col / (cols - 1)) * Math.PI) * 30;
+          positions.push({
+            x: gapX + col * (cardW + gapX),
+            y: gapY + row * (cardH + gapY) + waveY,
+          });
+        }
+        break;
+      }
+      case "diamond": {
+        const maxPerRow = Math.ceil(Math.sqrt(count));
+        let idx = 0;
+        const rowCounts: number[] = [];
+        let left = count;
+        for (let r = 1; r <= maxPerRow && left > 0; r++) {
+          const c = Math.min(r, left);
+          rowCounts.push(c);
+          left -= c;
+        }
+        for (let r = maxPerRow - 1; r >= 1 && left > 0; r--) {
+          const c = Math.min(r, left);
+          rowCounts.push(c);
+          left -= c;
+        }
+        const totalRows = rowCounts.length;
+        const rowH = (containerH - 20) / totalRows;
+        for (let r = 0; r < totalRows; r++) {
+          const cols = rowCounts[r];
+          const rowW = cols * (cardW + 8);
+          const startX = (containerW - rowW) / 2;
+          for (let c = 0; c < cols && idx < count; c++) {
+            positions.push({ x: startX + c * (cardW + 8), y: 10 + r * rowH });
+            idx++;
+          }
+        }
+        break;
+      }
+      case "spiral": {
+        for (let i = 0; i < count; i++) {
+          const angle = i * 0.8;
+          const r = 20 + i * Math.min(containerW, containerH) * 0.03;
+          positions.push({
+            x: cx + r * Math.cos(angle) - cardW / 2,
+            y: cy + r * Math.sin(angle) - cardH / 2,
+          });
+        }
+        break;
+      }
+      case "random": {
+        const margin = 10;
+        const usedAreas: { x: number; y: number }[] = [];
+        for (let i = 0; i < count; i++) {
+          let best = { x: margin, y: margin };
+          for (let attempt = 0; attempt < 20; attempt++) {
+            const tx = margin + Math.random() * (containerW - cardW - margin * 2);
+            const ty = margin + Math.random() * (containerH - cardH - margin * 2);
+            const tooClose = usedAreas.some(a => Math.abs(a.x - tx) < cardW * 0.7 && Math.abs(a.y - ty) < cardH * 0.7);
+            if (!tooClose) { best = { x: tx, y: ty }; break; }
+            best = { x: tx, y: ty };
+          }
+          positions.push(best);
+          usedAreas.push(best);
+        }
+        break;
+      }
+    }
+    return positions;
+  };
+
+  const isSpecialLayout = ["circle", "wave", "diamond", "spiral", "random"].includes(activePreset.replace("grid-", ""));
+  const activePresetObj = (() => {
+    const map: Record<string, string> = {
+      "grid-2": "grid", "grid-3": "grid", "grid-4": "grid",
+      circle: "circle", wave: "wave", diamond: "diamond", spiral: "spiral", random: "random",
+    };
+    return map[activePreset] || "grid";
+  })();
+
+  const handlePresetSelect = (preset: LayoutPreset) => {
+    setActivePreset(preset.id);
+  };
+
+  const gridCols = getGridColsFromPreset(activePreset);
   const bgThemeId = (liveSettings.bgTheme || "default") as BgThemeId;
 
   const stars = Array.from({ length: matchedCount }, (_, i) => (
@@ -188,6 +292,22 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   ));
 
   const animationsOff = liveSettings.animationsEnabled === false;
+
+  // Special layout positions
+  const specialContainerRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState({ w: 400, h: 500 });
+
+  useEffect(() => {
+    if (specialContainerRef.current) {
+      const rect = specialContainerRef.current.getBoundingClientRect();
+      setContainerSize({ w: rect.width, h: rect.height });
+    }
+  }, [activePreset, cards.length]);
+
+  const specialCardW = Math.max(50, Math.min(120, Math.round(containerSize.w / (Math.ceil(Math.sqrt(totalCards)) + 1))));
+  const specialPositions = isSpecialLayout && !isFreeLayout
+    ? getSpecialPositions(activePresetObj, totalCards, containerSize.w, containerSize.h, specialCardW)
+    : [];
 
   return (
     <div dir="rtl" className={animationsOff ? "no-animations" : ""}>
@@ -259,9 +379,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
               onPointerLeave={handlePointerUp}
-              style={{ touchAction: isFreeLayout ? "none" : "auto", minHeight: "calc(100vh - 160px)" }}
+              style={{ touchAction: "none", minHeight: "calc(100vh - 160px)" }}
             >
-              {/* Grid overlay — מוצג תמיד במצב חופשי */}
               {showGrid && (
                 <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" style={{ opacity: 0.12 }}>
                   <defs>
@@ -273,7 +392,6 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                 </svg>
               )}
 
-              {/* Alignment guide lines */}
               {editMode && alignLines.x !== undefined && (
                 <div className="absolute top-0 bottom-0 w-px bg-game-blue/50 z-30 pointer-events-none" style={{ left: alignLines.x + 50 }} />
               )}
@@ -281,7 +399,6 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                 <div className="absolute left-0 right-0 h-px bg-game-blue/50 z-30 pointer-events-none" style={{ top: alignLines.y + 55 }} />
               )}
 
-              {/* Cards */}
               {cards.map((card, i) => {
                 const pos = positions[card.uniqueId] || { x: (i % 4) * (freeCardSize + 16) + 20, y: Math.floor(i / 4) * (freeCardSize * 1.2 + 16) + 20 };
                 return (
@@ -312,6 +429,42 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                 );
               })}
             </div>
+          ) : isSpecialLayout ? (
+            /* ──── SPECIAL LAYOUT (circle, wave, diamond, spiral, random) ──── */
+            <div
+              ref={specialContainerRef}
+              className="relative w-full"
+              style={{ maxWidth: `${cardMaxW}px`, minHeight: "calc(100vh - 200px)" }}
+            >
+              {cards.map((card, i) => {
+                const pos = specialPositions[i] || { x: 0, y: 0 };
+                return (
+                  <div
+                    key={card.uniqueId}
+                    className="absolute bounce-in"
+                    style={{
+                      left: pos.x,
+                      top: pos.y,
+                      width: specialCardW,
+                      animationDelay: `${i * 0.06}s`,
+                      transition: "left 0.4s ease, top 0.4s ease",
+                    }}
+                  >
+                    <MemoryCard
+                      emoji={card.emoji}
+                      label={card.label}
+                      image={card.image}
+                      isFlipped={card.isFlipped}
+                      isMatched={card.isMatched}
+                      theme={theme}
+                      emojiScale={liveSettings.emojiScale}
+                      cardStyle={liveSettings.cardStyle}
+                      onClick={() => flipCard(card.uniqueId)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           ) : (
             /* ──── GRID LAYOUT ──── */
             <div className={`grid ${gridCols} gap-2 sm:gap-3 md:gap-4 w-full`} style={{ maxWidth: `${cardMaxW}px` }}>
@@ -333,6 +486,13 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             </div>
           )}
         </div>
+
+        {/* Layout Picker FAB */}
+        {!isFreeLayout && (
+          <div className="fixed bottom-16 sm:bottom-20 right-3 sm:right-4 z-40">
+            <LayoutPicker current={activePreset} onSelect={handlePresetSelect} />
+          </div>
+        )}
 
         {/* Win overlay */}
         {isGameOver && (
