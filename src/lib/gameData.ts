@@ -247,6 +247,11 @@ export function getCardSets(theme: ThemeType): CardSetInfo[] {
       color: "from-green-500 to-emerald-600",
       cards: DINOS,
     },
+    {
+      type: "farm", emoji: "🐴", label: "חיות חווה",
+      color: "from-yellow-500 to-amber-600",
+      cards: FARM_ANIMALS,
+    },
   ];
 }
 

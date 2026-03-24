@@ -405,6 +405,124 @@ const animalSounds: Record<string, SoundFn> = {
     noise.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
     noise.start(t); noise.stop(t + 0.5);
   },
+
+  // Horse - neigh
+  horse: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(300, t);
+    osc.frequency.linearRampToValueAtTime(600, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(500, t + 0.3);
+    osc.frequency.linearRampToValueAtTime(350, t + 0.5);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.15, t + 0.05);
+    gain.gain.setValueAtTime(0.12, t + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.55);
+  },
+
+  // Elephant - trumpet
+  elephant: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth"; osc2.type = "square";
+    osc.frequency.setValueAtTime(250, t);
+    osc.frequency.linearRampToValueAtTime(500, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(400, t + 0.5);
+    osc2.frequency.setValueAtTime(253, t);
+    osc2.frequency.linearRampToValueAtTime(503, t + 0.15);
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    osc.connect(gain); osc2.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.55); osc2.start(t); osc2.stop(t + 0.55);
+  },
+
+  // Monkey - ooh ooh aah
+  monkey: (ctx, t) => {
+    [0, 0.12, 0.24].forEach((d, i) => {
+      const freq = i < 2 ? 600 : 800;
+      makeOsc(ctx, freq, "sawtooth", t + d, 0.1, 0.12, ctx.destination);
+    });
+  },
+
+  // Cow - moo
+  cow: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(150, t);
+    osc.frequency.linearRampToValueAtTime(180, t + 0.2);
+    osc.frequency.linearRampToValueAtTime(140, t + 0.6);
+    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.65);
+  },
+
+  // Sheep - baa
+  sheep: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(350, t);
+    osc.frequency.linearRampToValueAtTime(300, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(380, t + 0.3);
+    osc.frequency.linearRampToValueAtTime(280, t + 0.45);
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.5);
+  },
+
+  // Goat - meh
+  goat: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(400, t);
+    osc.frequency.linearRampToValueAtTime(350, t + 0.1);
+    osc.frequency.linearRampToValueAtTime(420, t + 0.25);
+    osc.frequency.linearRampToValueAtTime(320, t + 0.4);
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.45);
+  },
+
+  // Donkey - hee-haw
+  donkey: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(250, t);
+    osc.frequency.linearRampToValueAtTime(500, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(200, t + 0.35);
+    osc.frequency.linearRampToValueAtTime(450, t + 0.5);
+    osc.frequency.linearRampToValueAtTime(180, t + 0.7);
+    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.7);
+  },
+
+  // Rooster - cock-a-doodle-doo
+  rooster: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(500, t);
+    osc.frequency.linearRampToValueAtTime(800, t + 0.08);
+    osc.frequency.setValueAtTime(600, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(1000, t + 0.25);
+    osc.frequency.linearRampToValueAtTime(700, t + 0.45);
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.5);
+  },
 };
 
 // ── Vehicle sounds ──
