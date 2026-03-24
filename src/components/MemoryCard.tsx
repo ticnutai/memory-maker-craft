@@ -108,8 +108,9 @@ export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, 
           style={borderStyle}
         >
           {image ? (
-            <div className={`w-full h-full relative overflow-hidden ${isFlipped && !isMatched ? "image-reveal" : ""}`} style={{ borderRadius: `${Math.max(0, cardStyle.borderRadius - cardStyle.borderWidth)}px` }}>
+            <div className={`w-full h-full relative overflow-hidden ${isFlipped && !isMatched ? "image-reveal" : ""} ${isMatched ? "image-matched" : ""}`} style={{ borderRadius: `${Math.max(0, cardStyle.borderRadius - cardStyle.borderWidth)}px` }}>
               <img src={image} alt={label || ""} className="w-full h-full object-cover" loading="lazy" />
+              {isMatched && <div className="gold-frame-overlay" style={{ borderRadius: `${Math.max(0, cardStyle.borderRadius - cardStyle.borderWidth)}px` }} />}
             </div>
           ) : isLetter ? (
             <div className="flex flex-col items-center gap-0.5">
