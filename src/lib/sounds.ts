@@ -9,6 +9,7 @@ const audioCtx = () => {
 };
 
 function playTone(frequency: number, duration: number, type: OscillatorType = "sine", volume = 0.3, delay = 0) {
+  volume = Math.min(volume * 2.5, 1); // Boost all SFX volumes
   const ctx = audioCtx();
   const startTime = ctx.currentTime + delay;
   const osc = ctx.createOscillator();

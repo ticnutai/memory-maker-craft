@@ -10,6 +10,18 @@ const audioCtx = () => {
   return ctx;
 };
 
+// Master gain for all card sounds - boost volume
+const getMasterGain = () => {
+  const ctx = audioCtx();
+  if (!(window as any).__cardMasterGain) {
+    const master = ctx.createGain();
+    master.gain.value = 2.5;
+    master.connect(ctx.destination);
+    (window as any).__cardMasterGain = master;
+  }
+  return (window as any).__cardMasterGain as GainNode;
+};
+
 // Create white noise buffer for animal/vehicle sounds
 function createNoiseBuffer(ctx: AudioContext, duration: number): AudioBuffer {
   const sampleRate = ctx.sampleRate;
@@ -23,12 +35,15 @@ function createNoiseBuffer(ctx: AudioContext, duration: number): AudioBuffer {
 
 type SoundFn = (ctx: AudioContext, time: number) => void;
 
+// Volume multiplier for all card sounds
+const VOL = 2.5;
+
 function makeOsc(ctx: AudioContext, freq: number, type: OscillatorType, start: number, dur: number, vol: number, dest: AudioNode) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(freq, start);
-  gain.gain.setValueAtTime(vol, start);
+  gain.gain.setValueAtTime(Math.min(vol * VOL, 1), start);
   gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
   osc.connect(gain);
   gain.connect(dest);
@@ -896,10 +911,20 @@ export function playCardSound(cardId: string) {
   const ctx = audioCtx();
   if (ctx.state === "suspended") ctx.resume();
 
+  // Route all sound through a boost gain node
+  const boostGain = ctx.createGain();
+  boostGain.gain.value = 3.0;
+  boostGain.connect(ctx.destination);
+
+  // Temporarily swap destination for the sound function
+  const origDest = ctx.destination;
+  const proxyCtx = Object.create(ctx, {
+    destination: { get: () => boostGain }
+  });
+
   try {
-    fn(ctx, ctx.currentTime);
+    fn(proxyCtx as AudioContext, ctx.currentTime);
   } catch {
-    // Fallback: simple beep
     makeOsc(ctx, 440, "sine", ctx.currentTime, 0.15, 0.1, ctx.destination);
   }
 }
