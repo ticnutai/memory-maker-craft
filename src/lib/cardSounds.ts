@@ -911,10 +911,20 @@ export function playCardSound(cardId: string) {
   const ctx = audioCtx();
   if (ctx.state === "suspended") ctx.resume();
 
+  // Route all sound through a boost gain node
+  const boostGain = ctx.createGain();
+  boostGain.gain.value = 3.0;
+  boostGain.connect(ctx.destination);
+
+  // Temporarily swap destination for the sound function
+  const origDest = ctx.destination;
+  const proxyCtx = Object.create(ctx, {
+    destination: { get: () => boostGain }
+  });
+
   try {
-    fn(ctx, ctx.currentTime);
+    fn(proxyCtx as AudioContext, ctx.currentTime);
   } catch {
-    // Fallback: simple beep
     makeOsc(ctx, 440, "sine", ctx.currentTime, 0.15, 0.1, ctx.destination);
   }
 }
