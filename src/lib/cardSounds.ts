@@ -891,6 +891,7 @@ Object.keys(BASE_SOUNDS).forEach((key) => {
 
 export function playCardSound(cardId: string) {
   const fn = ALL_SOUNDS[cardId];
+  console.log("[SFX] playCardSound called for:", cardId, "found:", !!fn);
   if (!fn) return;
 
   const ctx = audioCtx();

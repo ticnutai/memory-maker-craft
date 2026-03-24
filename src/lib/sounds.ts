@@ -56,7 +56,8 @@ let flipCounter = 0;
 export function playFlipSound() {
   flipCounter++;
   const variant = flipCounter % 5;
-  
+  const ctx = audioCtx();
+  console.log("[SFX] playFlipSound called, ctx.state:", ctx.state, "variant:", variant);
   switch (variant) {
     case 0:
       // Classic soft pop
