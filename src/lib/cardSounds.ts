@@ -23,12 +23,15 @@ function createNoiseBuffer(ctx: AudioContext, duration: number): AudioBuffer {
 
 type SoundFn = (ctx: AudioContext, time: number) => void;
 
+// Volume multiplier for all card sounds
+const VOL = 2.5;
+
 function makeOsc(ctx: AudioContext, freq: number, type: OscillatorType, start: number, dur: number, vol: number, dest: AudioNode) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(freq, start);
-  gain.gain.setValueAtTime(vol, start);
+  gain.gain.setValueAtTime(Math.min(vol * VOL, 1), start);
   gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
   osc.connect(gain);
   gain.connect(dest);
