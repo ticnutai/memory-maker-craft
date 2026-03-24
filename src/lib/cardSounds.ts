@@ -888,6 +888,91 @@ const dinoSounds: Record<string, SoundFn> = {
   },
 };
 
+// ── Shape sounds ──
+const shapeSounds: Record<string, SoundFn> = {
+  "shape-triangle": (ctx, t) => {
+    [440, 554, 659].forEach((f, i) => makeOsc(ctx, f, "triangle", t + i * 0.1, 0.12, 0.15, ctx.destination));
+  },
+  "shape-square": (ctx, t) => {
+    makeOsc(ctx, 330, "square", t, 0.2, 0.12, ctx.destination);
+    makeOsc(ctx, 440, "square", t + 0.1, 0.15, 0.1, ctx.destination);
+  },
+  "shape-circle": (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(400, t);
+    osc.frequency.linearRampToValueAtTime(600, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(400, t + 0.3);
+    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.35);
+  },
+  "shape-diamond": (ctx, t) => {
+    [523, 659, 784, 659].forEach((f, i) => makeOsc(ctx, f, "sine", t + i * 0.08, 0.1, 0.12, ctx.destination));
+  },
+  "shape-star": (ctx, t) => {
+    [800, 1000, 1200, 1400, 1600].forEach((f, i) => makeOsc(ctx, f, "sine", t + i * 0.06, 0.08, 0.1, ctx.destination));
+  },
+  "shape-heart": (ctx, t) => {
+    makeOsc(ctx, 440, "sine", t, 0.15, 0.15, ctx.destination);
+    makeOsc(ctx, 440, "sine", t + 0.2, 0.15, 0.15, ctx.destination);
+    makeOsc(ctx, 523, "sine", t + 0.4, 0.25, 0.12, ctx.destination);
+  },
+  "shape-hexagon": (ctx, t) => {
+    [350, 440, 523, 440, 350, 440].forEach((f, i) => makeOsc(ctx, f, "triangle", t + i * 0.07, 0.08, 0.1, ctx.destination));
+  },
+  "shape-pentagon": (ctx, t) => {
+    [300, 380, 460, 540, 460].forEach((f, i) => makeOsc(ctx, f, "sine", t + i * 0.08, 0.1, 0.11, ctx.destination));
+  },
+  "shape-oval": (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(500, t);
+    osc.frequency.linearRampToValueAtTime(700, t + 0.2);
+    osc.frequency.linearRampToValueAtTime(500, t + 0.4);
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.4);
+  },
+  "shape-crescent": (ctx, t) => {
+    makeOsc(ctx, 600, "sine", t, 0.3, 0.1, ctx.destination);
+    makeOsc(ctx, 500, "sine", t + 0.15, 0.25, 0.08, ctx.destination);
+  },
+  "shape-cross": (ctx, t) => {
+    makeOsc(ctx, 440, "square", t, 0.1, 0.12, ctx.destination);
+    makeOsc(ctx, 554, "square", t + 0.12, 0.1, 0.12, ctx.destination);
+  },
+  "shape-arrow": (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(300, t);
+    osc.frequency.linearRampToValueAtTime(800, t + 0.25);
+    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.3);
+  },
+  "shape-red-circle": (ctx, t) => {
+    makeOsc(ctx, 500, "sine", t, 0.2, 0.15, ctx.destination);
+    makeOsc(ctx, 600, "sine", t + 0.1, 0.15, 0.12, ctx.destination);
+  },
+  "shape-green-square": (ctx, t) => {
+    makeOsc(ctx, 400, "square", t, 0.15, 0.12, ctx.destination);
+    makeOsc(ctx, 500, "square", t + 0.1, 0.12, 0.1, ctx.destination);
+  },
+  "shape-purple-diamond": (ctx, t) => {
+    [523, 659, 784].forEach((f, i) => makeOsc(ctx, f, "sine", t + i * 0.1, 0.12, 0.12, ctx.destination));
+  },
+  "shape-yellow-triangle": (ctx, t) => {
+    [440, 554, 659].forEach((f, i) => makeOsc(ctx, f, "triangle", t + i * 0.1, 0.12, 0.13, ctx.destination));
+  },
+};
+
 // ── Combined lookup ──
 
 const BASE_SOUNDS: Record<string, SoundFn> = {
@@ -896,6 +981,7 @@ const BASE_SOUNDS: Record<string, SoundFn> = {
   ...fruitSounds,
   ...hebrewSounds,
   ...dinoSounds,
+  ...shapeSounds,
 };
 
 // Build aliases: "real-dog" -> "dog", "real-cat" -> "cat", etc.
