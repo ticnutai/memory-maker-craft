@@ -61,6 +61,8 @@ const Index = () => {
             settingsOpen={showSettings}
             onSettingsToggle={setShowSettings}
           />
+        ) : tab === "train" ? (
+          <TrainGame onHome={() => setTab("memory")} />
         ) : (
           <TreasureHuntGame onHome={() => setTab("memory")} />
         )}
