@@ -1,5 +1,5 @@
 export type ThemeType = "girl" | "boy";
-export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "real-animals" | "desserts" | "dinos" | "custom";
+export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "real-animals" | "desserts" | "dinos" | "farm" | "custom";
 
 export interface CardStyle {
   borderRadius: number;
@@ -161,6 +161,27 @@ export const DINOS: CardData[] = [
   { id: "ankylosaurus", emoji: "🦕", label: "אנקילוזאורוס", image: imgAnkylosaurus },
 ];
 
+// ── Farm Animals (image-based) ──
+import imgHorse from "@/assets/cards/farm/horse.jpg";
+import imgElephant from "@/assets/cards/farm/elephant.jpg";
+import imgMonkey from "@/assets/cards/farm/monkey.jpg";
+import imgCow from "@/assets/cards/farm/cow.jpg";
+import imgSheep from "@/assets/cards/farm/sheep.jpg";
+import imgGoat from "@/assets/cards/farm/goat.jpg";
+import imgDonkey from "@/assets/cards/farm/donkey.jpg";
+import imgRooster from "@/assets/cards/farm/rooster.jpg";
+
+export const FARM_ANIMALS: CardData[] = [
+  { id: "horse", emoji: "🐴", label: "סוס", image: imgHorse },
+  { id: "elephant", emoji: "🐘", label: "פיל", image: imgElephant },
+  { id: "monkey", emoji: "🐒", label: "קוף", image: imgMonkey },
+  { id: "cow", emoji: "🐄", label: "פרה", image: imgCow },
+  { id: "sheep", emoji: "🐑", label: "כבשה", image: imgSheep },
+  { id: "goat", emoji: "🐐", label: "עז", image: imgGoat },
+  { id: "donkey", emoji: "🫏", label: "חמור", image: imgDonkey },
+  { id: "rooster", emoji: "🐓", label: "תרנגול", image: imgRooster },
+];
+
 // ── Hebrew letters (expanded) ──
 export const HEBREW_LETTERS: CardData[] = [
   { id: "alef", emoji: "א", label: "אָלֶף" },
@@ -225,6 +246,11 @@ export function getCardSets(theme: ThemeType): CardSetInfo[] {
       type: "dinos", emoji: "🦖", label: "דינוזאורים",
       color: "from-green-500 to-emerald-600",
       cards: DINOS,
+    },
+    {
+      type: "farm", emoji: "🐴", label: "חיות חווה",
+      color: "from-yellow-500 to-amber-600",
+      cards: FARM_ANIMALS,
     },
   ];
 }

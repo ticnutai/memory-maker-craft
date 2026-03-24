@@ -21,6 +21,9 @@ const CARD_NAMES_HE: Record<string, string> = {
   airplane: "מטוס", rocket: "טיל", helicopter: "מסוק", ship: "ספינה",
   motorcycle: "אופנוע", bicycle: "אופניים", tractor: "טרקטור", ambulance: "אמבולנס",
   firetruck: "כבאית", police: "ניידת", taxi: "מונית", sailboat: "מפרשית",
+  // Farm animals
+  horse: "סוס", elephant: "פיל", monkey: "קוף", cow: "פרה",
+  sheep: "כבשה", goat: "עז", donkey: "חמור", rooster: "תרנגול",
   // Hebrew letters
   alef: "אָלֶף", bet: "בֵּית", gimel: "גִּימֶל", dalet: "דָּלֶת",
   he: "הֵא", vav: "וָו", zayin: "זַיִן", chet: "חֵית",
