@@ -2,11 +2,12 @@ import { useState } from "react";
 import CardSetSelect from "@/components/CardSetSelect";
 import GameBoard from "@/components/GameBoard";
 import TreasureHuntGame from "@/components/TreasureHuntGame";
+import TrainGame from "@/components/TrainGame";
 import { CardSetType, CardData, GameSettings } from "@/lib/gameData";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
-import { Gamepad2, Map, Settings } from "lucide-react";
+import { Gamepad2, Map, Train, Settings } from "lucide-react";
 
-type AppTab = "memory" | "treasure";
+type AppTab = "memory" | "treasure" | "train";
 type Screen = "home" | "game";
 
 const Index = () => {
@@ -60,6 +61,8 @@ const Index = () => {
             settingsOpen={showSettings}
             onSettingsToggle={setShowSettings}
           />
+        ) : tab === "train" ? (
+          <TrainGame onHome={() => setTab("memory")} />
         ) : (
           <TreasureHuntGame onHome={() => setTab("memory")} />
         )}
@@ -94,6 +97,16 @@ const Index = () => {
           }`}
         >
           <Map className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+        <button
+          onClick={() => { setTab("train"); setScreen("home"); }}
+          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+            tab === "train"
+              ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
+              : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
+          }`}
+        >
+          <Train className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
 
