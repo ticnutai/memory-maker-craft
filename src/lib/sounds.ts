@@ -8,7 +8,7 @@ const audioCtx = () => {
   return ctx;
 };
 
-function playTone(frequency: number, duration: number, type: OscillatorType = "sine", volume = 0.3, delay = 0) {
+function playTone(frequency: number, duration: number, type: OscillatorType = "sine", volume = 0.5, delay = 0) {
   const ctx = audioCtx();
   const startTime = ctx.currentTime + delay;
   const osc = ctx.createOscillator();
