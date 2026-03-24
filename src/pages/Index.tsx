@@ -2,11 +2,12 @@ import { useState } from "react";
 import CardSetSelect from "@/components/CardSetSelect";
 import GameBoard from "@/components/GameBoard";
 import TreasureHuntGame from "@/components/TreasureHuntGame";
+import TrainGame from "@/components/TrainGame";
 import { CardSetType, CardData, GameSettings } from "@/lib/gameData";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
-import { Gamepad2, Map, Settings } from "lucide-react";
+import { Gamepad2, Map, Train, Settings } from "lucide-react";
 
-type AppTab = "memory" | "treasure";
+type AppTab = "memory" | "treasure" | "train";
 type Screen = "home" | "game";
 
 const Index = () => {
