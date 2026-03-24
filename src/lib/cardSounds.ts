@@ -989,6 +989,25 @@ const ALL_SOUNDS: Record<string, SoundFn> = { ...BASE_SOUNDS };
 Object.keys(BASE_SOUNDS).forEach((key) => {
   ALL_SOUNDS[`real-${key}`] = BASE_SOUNDS[key];
 });
+// Horse variants all use the horse neigh sound with pitch variations
+["horse-white", "horse-brown", "horse-black", "horse-pink", "horse-golden", "horse-spotted", "horse-gray", "horse-pony"].forEach((id, i) => {
+  ALL_SOUNDS[id] = (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    const baseFreq = 280 + i * 25;
+    osc.frequency.setValueAtTime(baseFreq, t);
+    osc.frequency.linearRampToValueAtTime(baseFreq + 300, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(baseFreq + 200, t + 0.3);
+    osc.frequency.linearRampToValueAtTime(baseFreq + 50, t + 0.5);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.15, t + 0.05);
+    gain.gain.setValueAtTime(0.12, t + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.55);
+  };
+});
 
 export function playCardSound(cardId: string) {
   const fn = ALL_SOUNDS[cardId];
