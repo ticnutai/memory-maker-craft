@@ -5,7 +5,9 @@ const audioCtx = () => {
   if (!(window as any).__gameAudioCtx) {
     (window as any).__gameAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
   }
-  return (window as any).__gameAudioCtx as AudioContext;
+  const ctx = (window as any).__gameAudioCtx as AudioContext;
+  if (ctx.state === "suspended") ctx.resume();
+  return ctx;
 };
 
 // Create white noise buffer for animal/vehicle sounds

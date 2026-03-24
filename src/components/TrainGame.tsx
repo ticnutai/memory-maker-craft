@@ -10,6 +10,7 @@ interface TrainGameProps {
 
 const playHornSound = () => {
   const ctx = new AudioContext();
+  if (ctx.state === "suspended") ctx.resume();
   const now = ctx.currentTime;
 
   // Main horn tone
