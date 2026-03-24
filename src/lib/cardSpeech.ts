@@ -43,6 +43,10 @@ const CARD_NAMES_HE: Record<string, string> = {
   "shape-crescent": "סהר", "shape-cross": "פלוס", "shape-arrow": "חץ",
   "shape-red-circle": "עיגול אדום", "shape-green-square": "ריבוע ירוק",
   "shape-purple-diamond": "עיגול סגול", "shape-yellow-triangle": "מעוין כתום",
+  // Horses
+  "horse-white": "סוס לבן", "horse-brown": "סוס חום", "horse-black": "סוס שחור",
+  "horse-pink": "סוס ורוד", "horse-golden": "סוס זהוב", "horse-spotted": "סוס מנומר",
+  "horse-gray": "סוס אפור", "horse-pony": "פוני",
 };
 
 // Build aliases for "real-" prefixed IDs

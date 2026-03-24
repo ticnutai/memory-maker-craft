@@ -320,6 +320,11 @@ export function getCardSets(theme: ThemeType): CardSetInfo[] {
       cards: REAL_VEHICLES,
     },
     {
+      type: "horses", emoji: "🐴", label: "סוסים",
+      color: "from-rose-400 to-pink-500",
+      cards: HORSES,
+    },
+    {
       type: "shapes", emoji: "🔷", label: "צורות וצבעים",
       color: "from-violet-500 to-fuchsia-500",
       cards: SHAPES,
