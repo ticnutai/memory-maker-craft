@@ -1,5 +1,5 @@
 export type ThemeType = "girl" | "boy";
-export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "custom";
+export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "real-animals" | "desserts" | "dinos" | "custom";
 
 export interface CardStyle {
   borderRadius: number;
@@ -98,6 +98,69 @@ export const VEHICLES: CardData[] = [
   { id: "taxi", emoji: "🚕" }, { id: "sailboat", emoji: "⛵" },
 ];
 
+// ── Realistic Animals (image-based) ──
+import imgDog from "@/assets/cards/animals/dog.jpg";
+import imgCat from "@/assets/cards/animals/cat.jpg";
+import imgBunny from "@/assets/cards/animals/bunny.jpg";
+import imgPanda from "@/assets/cards/animals/panda.jpg";
+import imgPenguin from "@/assets/cards/animals/penguin.jpg";
+import imgOwl from "@/assets/cards/animals/owl.jpg";
+import imgFox from "@/assets/cards/animals/fox.jpg";
+import imgKoala from "@/assets/cards/animals/koala.jpg";
+
+export const REAL_ANIMALS: CardData[] = [
+  { id: "real-dog", emoji: "🐕", label: "כלב", image: imgDog },
+  { id: "real-cat", emoji: "🐱", label: "חתול", image: imgCat },
+  { id: "real-bunny", emoji: "🐰", label: "ארנב", image: imgBunny },
+  { id: "real-panda", emoji: "🐼", label: "פנדה", image: imgPanda },
+  { id: "real-penguin", emoji: "🐧", label: "פינגווין", image: imgPenguin },
+  { id: "real-owl", emoji: "🦉", label: "ינשוף", image: imgOwl },
+  { id: "real-fox", emoji: "🦊", label: "שועל", image: imgFox },
+  { id: "real-koala", emoji: "🐨", label: "קואלה", image: imgKoala },
+];
+
+// ── Desserts (image-based) ──
+import imgCupcake from "@/assets/cards/desserts/cupcake.jpg";
+import imgDonut from "@/assets/cards/desserts/donut.jpg";
+import imgIcecream from "@/assets/cards/desserts/icecream.jpg";
+import imgCake from "@/assets/cards/desserts/cake.jpg";
+import imgMacarons from "@/assets/cards/desserts/macarons.jpg";
+import imgCookies from "@/assets/cards/desserts/cookies.jpg";
+import imgLollipop from "@/assets/cards/desserts/lollipop.jpg";
+import imgChocolate from "@/assets/cards/desserts/chocolate.jpg";
+
+export const DESSERTS: CardData[] = [
+  { id: "cupcake", emoji: "🧁", label: "קאפקייק", image: imgCupcake },
+  { id: "donut", emoji: "🍩", label: "דונאט", image: imgDonut },
+  { id: "icecream", emoji: "🍦", label: "גלידה", image: imgIcecream },
+  { id: "cake", emoji: "🎂", label: "עוגה", image: imgCake },
+  { id: "macarons", emoji: "🍪", label: "מקרונים", image: imgMacarons },
+  { id: "cookies", emoji: "🍪", label: "עוגיות", image: imgCookies },
+  { id: "lollipop", emoji: "🍭", label: "סוכרייה", image: imgLollipop },
+  { id: "chocolate", emoji: "🍫", label: "שוקולד", image: imgChocolate },
+];
+
+// ── Dinosaurs (image-based) ──
+import imgTrex from "@/assets/cards/dinos/trex.jpg";
+import imgTriceratops from "@/assets/cards/dinos/triceratops.jpg";
+import imgBrachiosaurus from "@/assets/cards/dinos/brachiosaurus.jpg";
+import imgStegosaurus from "@/assets/cards/dinos/stegosaurus.jpg";
+import imgVelociraptor from "@/assets/cards/dinos/velociraptor.jpg";
+import imgPterodactyl from "@/assets/cards/dinos/pterodactyl.jpg";
+import imgSpinosaurus from "@/assets/cards/dinos/spinosaurus.jpg";
+import imgAnkylosaurus from "@/assets/cards/dinos/ankylosaurus.jpg";
+
+export const DINOS: CardData[] = [
+  { id: "trex", emoji: "🦖", label: "טירנוזאורוס", image: imgTrex },
+  { id: "triceratops", emoji: "🦕", label: "טריצרטופס", image: imgTriceratops },
+  { id: "brachiosaurus", emoji: "🦕", label: "ברכיוזאורוס", image: imgBrachiosaurus },
+  { id: "stegosaurus", emoji: "🦕", label: "סטגוזאורוס", image: imgStegosaurus },
+  { id: "velociraptor", emoji: "🦖", label: "ולוצירפטור", image: imgVelociraptor },
+  { id: "pterodactyl", emoji: "🦅", label: "טרודקטיל", image: imgPterodactyl },
+  { id: "spinosaurus", emoji: "🦖", label: "ספינוזאורוס", image: imgSpinosaurus },
+  { id: "ankylosaurus", emoji: "🦕", label: "אנקילוזאורוס", image: imgAnkylosaurus },
+];
+
 // ── Hebrew letters (expanded) ──
 export const HEBREW_LETTERS: CardData[] = [
   { id: "alef", emoji: "א", label: "אָלֶף" },
@@ -147,6 +210,21 @@ export function getCardSets(theme: ThemeType): CardSetInfo[] {
       type: "hebrew", emoji: "א", label: "אותיות",
       color: "from-accent to-emerald-500",
       cards: HEBREW_LETTERS,
+    },
+    {
+      type: "real-animals", emoji: "📸", label: "חיות אמיתיות",
+      color: "from-amber-400 to-orange-500",
+      cards: REAL_ANIMALS,
+    },
+    {
+      type: "desserts", emoji: "🍰", label: "קינוחים",
+      color: "from-pink-400 to-rose-500",
+      cards: DESSERTS,
+    },
+    {
+      type: "dinos", emoji: "🦖", label: "דינוזאורים",
+      color: "from-green-500 to-emerald-600",
+      cards: DINOS,
     },
   ];
 }
