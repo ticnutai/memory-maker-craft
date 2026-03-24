@@ -211,6 +211,21 @@ export function getCardSets(theme: ThemeType): CardSetInfo[] {
       color: "from-accent to-emerald-500",
       cards: HEBREW_LETTERS,
     },
+    {
+      type: "real-animals", emoji: "📸", label: "חיות אמיתיות",
+      color: "from-amber-400 to-orange-500",
+      cards: REAL_ANIMALS,
+    },
+    {
+      type: "desserts", emoji: "🍰", label: "קינוחים",
+      color: "from-pink-400 to-rose-500",
+      cards: DESSERTS,
+    },
+    {
+      type: "dinos", emoji: "🦖", label: "דינוזאורים",
+      color: "from-green-500 to-emerald-600",
+      cards: DINOS,
+    },
   ];
 }
 
