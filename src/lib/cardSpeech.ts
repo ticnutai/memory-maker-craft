@@ -36,6 +36,13 @@ const CARD_NAMES_HE: Record<string, string> = {
   he: "הֵא", vav: "וָו", zayin: "זַיִן", chet: "חֵית",
   tet: "טֵית", yod: "יוֹד", kaf: "כַּף", lamed: "לָמֶד",
   mem: "מֵם", nun: "נוּן", samekh: "סָמֶך", ayin: "עַיִן",
+  // Shapes
+  "shape-triangle": "משולש", "shape-square": "ריבוע", "shape-circle": "עיגול",
+  "shape-diamond": "מעוין", "shape-star": "כוכב", "shape-heart": "לב",
+  "shape-hexagon": "משושה", "shape-pentagon": "מחומש", "shape-oval": "אליפסה",
+  "shape-crescent": "סהר", "shape-cross": "פלוס", "shape-arrow": "חץ",
+  "shape-red-circle": "עיגול אדום", "shape-green-square": "ריבוע ירוק",
+  "shape-purple-diamond": "עיגול סגול", "shape-yellow-triangle": "מעוין כתום",
 };
 
 // Build aliases for "real-" prefixed IDs
