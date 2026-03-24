@@ -108,6 +108,7 @@ const Index = () => {
         >
           <Train className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
+      </div>
 
       {/* Settings panel for non-home pages */}
       {(tab !== "memory" || screen !== "home") && (
