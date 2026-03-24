@@ -1,5 +1,5 @@
 export type ThemeType = "girl" | "boy";
-export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "real-animals" | "desserts" | "dinos" | "farm" | "real-vehicles" | "shapes" | "custom";
+export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "real-animals" | "desserts" | "dinos" | "farm" | "real-vehicles" | "shapes" | "horses" | "custom";
 
 export interface CardStyle {
   borderRadius: number;
@@ -203,6 +203,27 @@ export const REAL_VEHICLES: CardData[] = [
   { id: "train", emoji: "🚂", label: "רכבת", image: imgTrain },
 ];
 
+// ── Horses (image-based) ──
+import imgWhiteHorse from "@/assets/cards/horses/white-horse.png";
+import imgBrownHorse from "@/assets/cards/horses/brown-horse.png";
+import imgBlackHorse from "@/assets/cards/horses/black-horse.png";
+import imgPinkHorse from "@/assets/cards/horses/pink-horse.png";
+import imgGoldenHorse from "@/assets/cards/horses/golden-horse.png";
+import imgSpottedHorse from "@/assets/cards/horses/spotted-horse.png";
+import imgGrayHorse from "@/assets/cards/horses/gray-horse.png";
+import imgPony from "@/assets/cards/horses/pony.png";
+
+export const HORSES: CardData[] = [
+  { id: "horse-white", emoji: "🐴", label: "סוס לבן", image: imgWhiteHorse },
+  { id: "horse-brown", emoji: "🐴", label: "סוס חום", image: imgBrownHorse },
+  { id: "horse-black", emoji: "🐴", label: "סוס שחור", image: imgBlackHorse },
+  { id: "horse-pink", emoji: "🐴", label: "סוס ורוד", image: imgPinkHorse },
+  { id: "horse-golden", emoji: "🐴", label: "סוס זהוב", image: imgGoldenHorse },
+  { id: "horse-spotted", emoji: "🐴", label: "סוס מנומר", image: imgSpottedHorse },
+  { id: "horse-gray", emoji: "🐴", label: "סוס אפור", image: imgGrayHorse },
+  { id: "horse-pony", emoji: "🐴", label: "פוני", image: imgPony },
+];
+
 // ── Hebrew letters (expanded) ──
 export const HEBREW_LETTERS: CardData[] = [
   { id: "alef", emoji: "א", label: "אָלֶף" },
@@ -297,6 +318,11 @@ export function getCardSets(theme: ThemeType): CardSetInfo[] {
       type: "real-vehicles", emoji: "🚗", label: "כלי תחבורה",
       color: "from-sky-500 to-indigo-600",
       cards: REAL_VEHICLES,
+    },
+    {
+      type: "horses", emoji: "🐴", label: "סוסים",
+      color: "from-rose-400 to-pink-500",
+      cards: HORSES,
     },
     {
       type: "shapes", emoji: "🔷", label: "צורות וצבעים",
