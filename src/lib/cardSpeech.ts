@@ -24,12 +24,25 @@ const CARD_NAMES_HE: Record<string, string> = {
   // Farm animals
   horse: "סוס", elephant: "פיל", monkey: "קוף", cow: "פרה",
   sheep: "כבשה", goat: "עז", donkey: "חמור", rooster: "תרנגול",
+  // Dinos
+  triceratops: "טריצרטופס", brachiosaurus: "ברכיוזאורוס", stegosaurus: "סטגוזאורוס",
+  velociraptor: "ולוצירפטור", pterodactyl: "טרודקטיל", spinosaurus: "ספינוזאורוס",
+  ankylosaurus: "אנקילוזאורוס",
+  // Desserts
+  cupcake: "קאפקייק", donut: "דונאט", icecream: "גלידה", cake: "עוגה",
+  macarons: "מקרונים", cookies: "עוגיות", lollipop: "סוכרייה", chocolate: "שוקולד",
   // Hebrew letters
   alef: "אָלֶף", bet: "בֵּית", gimel: "גִּימֶל", dalet: "דָּלֶת",
   he: "הֵא", vav: "וָו", zayin: "זַיִן", chet: "חֵית",
   tet: "טֵית", yod: "יוֹד", kaf: "כַּף", lamed: "לָמֶד",
   mem: "מֵם", nun: "נוּן", samekh: "סָמֶך", ayin: "עַיִן",
 };
+
+// Build aliases for "real-" prefixed IDs
+const BASE_NAMES = { ...CARD_NAMES_HE };
+Object.keys(BASE_NAMES).forEach((key) => {
+  CARD_NAMES_HE[`real-${key}`] = BASE_NAMES[key];
+});
 
 let lastSpoke = 0;
 
