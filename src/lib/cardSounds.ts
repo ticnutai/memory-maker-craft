@@ -785,14 +785,107 @@ hebrewNotes.forEach(([id, freq]) => {
   };
 });
 
+// ── Dinosaur sounds (for image-based dinos) ──
+
+const dinoSounds: Record<string, SoundFn> = {
+  triceratops: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(100, t);
+    osc.frequency.linearRampToValueAtTime(160, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(70, t + 0.5);
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.55);
+  },
+  brachiosaurus: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(80, t);
+    osc.frequency.linearRampToValueAtTime(120, t + 0.3);
+    osc.frequency.linearRampToValueAtTime(60, t + 0.8);
+    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.9);
+  },
+  stegosaurus: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(90, t);
+    osc.frequency.linearRampToValueAtTime(130, t + 0.2);
+    osc.frequency.linearRampToValueAtTime(75, t + 0.5);
+    gain.gain.setValueAtTime(0.16, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.55);
+  },
+  velociraptor: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(400, t);
+    osc.frequency.linearRampToValueAtTime(800, t + 0.1);
+    osc.frequency.linearRampToValueAtTime(300, t + 0.25);
+    osc.frequency.linearRampToValueAtTime(600, t + 0.35);
+    gain.gain.setValueAtTime(0.14, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.4);
+  },
+  pterodactyl: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(600, t);
+    osc.frequency.linearRampToValueAtTime(1200, t + 0.1);
+    osc.frequency.linearRampToValueAtTime(500, t + 0.3);
+    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.35);
+  },
+  spinosaurus: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth"; osc2.type = "square";
+    osc.frequency.setValueAtTime(55, t);
+    osc.frequency.linearRampToValueAtTime(130, t + 0.25);
+    osc.frequency.linearRampToValueAtTime(45, t + 0.7);
+    osc2.frequency.setValueAtTime(58, t);
+    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+    osc.connect(gain); osc2.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.7); osc2.start(t); osc2.stop(t + 0.7);
+  },
+  ankylosaurus: (ctx, t) => {
+    // Heavy stomp + rumble
+    makeOsc(ctx, 70, "square", t, 0.15, 0.2, ctx.destination);
+    makeOsc(ctx, 60, "sawtooth", t + 0.1, 0.3, 0.15, ctx.destination);
+    makeOsc(ctx, 80, "square", t + 0.25, 0.12, 0.18, ctx.destination);
+  },
+};
+
 // ── Combined lookup ──
 
-const ALL_SOUNDS: Record<string, SoundFn> = {
+const BASE_SOUNDS: Record<string, SoundFn> = {
   ...animalSounds,
   ...vehicleSounds,
   ...fruitSounds,
   ...hebrewSounds,
+  ...dinoSounds,
 };
+
+// Build aliases: "real-dog" -> "dog", "real-cat" -> "cat", etc.
+const ALL_SOUNDS: Record<string, SoundFn> = { ...BASE_SOUNDS };
+Object.keys(BASE_SOUNDS).forEach((key) => {
+  ALL_SOUNDS[`real-${key}`] = BASE_SOUNDS[key];
+});
 
 export function playCardSound(cardId: string) {
   const fn = ALL_SOUNDS[cardId];
