@@ -11,34 +11,17 @@ type AppTab = "memory" | "treasure" | "train";
 type Screen = "home" | "game";
 
 const Index = () => {
-  const { settings: cloudSettings } = useCloudSettings("girl");
+  const { settings: cloudSettings, toGameSettings } = useCloudSettings("girl");
   const [tab, setTab] = useState<AppTab>("memory");
   const [screen, setScreen] = useState<Screen>("home");
   const [cardSetType, setCardSetType] = useState<CardSetType>("animals");
   const [customCards, setCustomCards] = useState<CardData[] | undefined>();
   const [showSettings, setShowSettings] = useState(false);
-  const [settings, setSettings] = useState<GameSettings>({
-    pairCount: 4,
-    cardMaxW: 480,
-    emojiScale: 1,
-    soundEnabled: true,
-    speechEnabled: true,
-    speechRate: 0.9,
-    flipDuration: 1,
-    musicType: "none",
-    cardStyle: {
-      borderRadius: 16,
-      borderWidth: 4,
-      borderColor: "default",
-      backColor: "default",
-      backColor2: undefined,
-      backIcon: "⭐",
-      shape: "square",
-    },
-  });
 
-  const handleCardSet = (set: CardSetType, gameSettings: GameSettings, cards?: CardData[]) => {
-    setSettings(gameSettings);
+  // Always use cloud-synced settings — no local duplication
+  const settings = toGameSettings();
+
+  const handleCardSet = (set: CardSetType, _gameSettings: GameSettings, cards?: CardData[]) => {
     setCardSetType(set);
     setCustomCards(set === "custom" ? cards : undefined);
     setScreen("game");
