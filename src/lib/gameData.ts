@@ -182,6 +182,27 @@ export const FARM_ANIMALS: CardData[] = [
   { id: "rooster", emoji: "🐓", label: "תרנגול", image: imgRooster },
 ];
 
+// ── Realistic Vehicles (image-based) ──
+import imgCar from "@/assets/cards/vehicles/car.jpg";
+import imgTractor from "@/assets/cards/vehicles/tractor.jpg";
+import imgMotorcycle from "@/assets/cards/vehicles/motorcycle.jpg";
+import imgShip from "@/assets/cards/vehicles/ship.jpg";
+import imgFiretruck from "@/assets/cards/vehicles/firetruck.jpg";
+import imgAirplane from "@/assets/cards/vehicles/airplane.jpg";
+import imgBus from "@/assets/cards/vehicles/bus.jpg";
+import imgTrain from "@/assets/cards/vehicles/train.jpg";
+
+export const REAL_VEHICLES: CardData[] = [
+  { id: "car", emoji: "🚗", label: "מכונית", image: imgCar },
+  { id: "tractor", emoji: "🚜", label: "טרקטור", image: imgTractor },
+  { id: "motorcycle", emoji: "🏍️", label: "אופנוע", image: imgMotorcycle },
+  { id: "ship", emoji: "🚢", label: "אוניה", image: imgShip },
+  { id: "firetruck", emoji: "🚒", label: "כבאית", image: imgFiretruck },
+  { id: "airplane", emoji: "✈️", label: "מטוס", image: imgAirplane },
+  { id: "bus", emoji: "🚌", label: "אוטובוס", image: imgBus },
+  { id: "train", emoji: "🚂", label: "רכבת", image: imgTrain },
+];
+
 // ── Hebrew letters (expanded) ──
 export const HEBREW_LETTERS: CardData[] = [
   { id: "alef", emoji: "א", label: "אָלֶף" },
