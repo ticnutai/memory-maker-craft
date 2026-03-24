@@ -252,6 +252,11 @@ export function getCardSets(theme: ThemeType): CardSetInfo[] {
       color: "from-yellow-500 to-amber-600",
       cards: FARM_ANIMALS,
     },
+    {
+      type: "real-vehicles", emoji: "🚗", label: "כלי תחבורה",
+      color: "from-sky-500 to-indigo-600",
+      cards: REAL_VEHICLES,
+    },
   ];
 }
 
