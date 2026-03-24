@@ -98,7 +98,16 @@ const Index = () => {
         >
           <Map className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
-      </div>
+        <button
+          onClick={() => { setTab("train"); setScreen("home"); }}
+          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+            tab === "train"
+              ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
+              : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
+          }`}
+        >
+          <Train className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
 
       {/* Settings panel for non-home pages */}
       {(tab !== "memory" || screen !== "home") && (
