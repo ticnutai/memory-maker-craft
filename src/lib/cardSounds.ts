@@ -10,6 +10,18 @@ const audioCtx = () => {
   return ctx;
 };
 
+// Master gain for all card sounds - boost volume
+const getMasterGain = () => {
+  const ctx = audioCtx();
+  if (!(window as any).__cardMasterGain) {
+    const master = ctx.createGain();
+    master.gain.value = 2.5;
+    master.connect(ctx.destination);
+    (window as any).__cardMasterGain = master;
+  }
+  return (window as any).__cardMasterGain as GainNode;
+};
+
 // Create white noise buffer for animal/vehicle sounds
 function createNoiseBuffer(ctx: AudioContext, duration: number): AudioBuffer {
   const sampleRate = ctx.sampleRate;
