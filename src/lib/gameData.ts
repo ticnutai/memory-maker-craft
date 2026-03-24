@@ -298,6 +298,11 @@ export function getCardSets(theme: ThemeType): CardSetInfo[] {
       color: "from-sky-500 to-indigo-600",
       cards: REAL_VEHICLES,
     },
+    {
+      type: "shapes", emoji: "🔷", label: "צורות וצבעים",
+      color: "from-violet-500 to-fuchsia-500",
+      cards: SHAPES,
+    },
   ];
 }
 
