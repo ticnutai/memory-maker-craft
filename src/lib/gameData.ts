@@ -223,6 +223,26 @@ export const HEBREW_LETTERS: CardData[] = [
   { id: "ayin", emoji: "ע", label: "עַיִן" },
 ];
 
+// ── Shapes ──
+export const SHAPES: CardData[] = [
+  { id: "shape-triangle", emoji: "🔺", label: "משולש" },
+  { id: "shape-square", emoji: "🟧", label: "ריבוע" },
+  { id: "shape-circle", emoji: "🔵", label: "עיגול" },
+  { id: "shape-diamond", emoji: "🔷", label: "מעוין" },
+  { id: "shape-star", emoji: "⭐", label: "כוכב" },
+  { id: "shape-heart", emoji: "❤️", label: "לב" },
+  { id: "shape-hexagon", emoji: "⬡", label: "משושה" },
+  { id: "shape-pentagon", emoji: "⬠", label: "מחומש" },
+  { id: "shape-oval", emoji: "🥚", label: "אליפסה" },
+  { id: "shape-crescent", emoji: "🌙", label: "סהר" },
+  { id: "shape-cross", emoji: "✚", label: "פלוס" },
+  { id: "shape-arrow", emoji: "➤", label: "חץ" },
+  { id: "shape-red-circle", emoji: "🔴", label: "עיגול אדום" },
+  { id: "shape-green-square", emoji: "🟩", label: "ריבוע ירוק" },
+  { id: "shape-purple-diamond", emoji: "🟣", label: "עיגול סגול" },
+  { id: "shape-yellow-triangle", emoji: "🔶", label: "מעוין כתום" },
+];
+
 export interface CardSetInfo {
   type: CardSetType;
   emoji: string;
