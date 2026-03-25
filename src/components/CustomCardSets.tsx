@@ -827,6 +827,14 @@ export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: Cust
                   className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90">
                   <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
+                <button onClick={e => { e.stopPropagation(); exportSet(s); }}
+                  className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="ייצוא JSON">
+                  <FileDown className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+                <button onClick={e => { e.stopPropagation(); shareSet(s); }}
+                  className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="העתק ללוח">
+                  <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
                 <button onClick={e => { e.stopPropagation(); duplicateSet(s); }}
                   className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90">
                   <Copy className="w-3.5 h-3.5 text-muted-foreground" />
