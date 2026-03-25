@@ -579,7 +579,24 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
                           <Play className="w-4 h-4" />
                         </button>
                         <div className="flex-1 min-w-0">
-                          <span className="text-xs font-bold truncate block">{rec.name}</span>
+                          {editingNameId === rec.id ? (
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="text"
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && saveEditName()}
+                                className="flex-1 h-6 rounded-md bg-background px-2 text-xs font-bold border border-border outline-none"
+                                dir="auto"
+                                autoFocus
+                              />
+                              <button onClick={saveEditName} className="w-6 h-6 rounded-md bg-green-500 text-white flex items-center justify-center">
+                                <Check className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs font-bold truncate block">{rec.name}</span>
+                          )}
                           {recEvents.length > 1 && (
                             <div className="flex gap-1 mt-0.5 flex-wrap">
                               {recEvents.map(eId => {
@@ -591,6 +608,15 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
                             </div>
                           )}
                         </div>
+                        <button
+                          onClick={() => editingNameId === rec.id ? saveEditName() : startEditName(rec)}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                            editingNameId === rec.id ? "bg-green-500 text-white" : "bg-muted text-muted-foreground hover:text-foreground"
+                          }`}
+                          title="ערוך שם"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           onClick={() => isEditing ? saveEditEvents() : startEditEvents(rec)}
                           className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
