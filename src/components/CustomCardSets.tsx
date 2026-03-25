@@ -70,10 +70,12 @@ function getDeviceId(): string {
 interface CustomCardSetsProps {
   theme: "girl" | "boy";
   onPlay: (cards: CardData[], setName: string) => void;
+  initialOpenSetId?: string | null;
 }
 
-export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
+export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: CustomCardSetsProps) {
   const [sets, setSets] = useState<CustomSet[]>([]);
+  const [newEmojiCard, setNewEmojiCard] = useState({ emoji: "", label: "" });
   const [cards, setCards] = useState<Record<string, CustomCard[]>>({});
   const [loading, setLoading] = useState(true);
   const [openSetId, setOpenSetId] = useState<string | null>(null);
