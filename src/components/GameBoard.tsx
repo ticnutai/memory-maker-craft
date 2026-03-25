@@ -175,16 +175,9 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     setTimeout(() => setSaveFlash(false), 1200);
   };
 
-  const duplicateLayout = async () => {
-    const name = window.prompt("שם לפריסה החדשה:");
-    if (!name?.trim()) return;
+  const duplicateLayout = () => {
     const posArr = cards.map(c => positions[c.uniqueId] || { x: 0, y: 0 });
-    await (supabase as any).from("layout_presets").insert({
-      device_id: getDeviceId(),
-      name: name.trim(),
-      positions: posArr,
-      pair_count: pairCount,
-    } as any);
+    updateSetting("cardPositions" as any, posArr);
     setSaveFlash(true);
     setTimeout(() => setSaveFlash(false), 1200);
   };
