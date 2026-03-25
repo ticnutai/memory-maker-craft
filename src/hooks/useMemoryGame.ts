@@ -15,7 +15,7 @@ function getDeviceId(): string {
   return localStorage.getItem("memory-game-device-id") || "unknown";
 }
 
-export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = true, speechEnabled: boolean = true, flipDuration: number = 1, speechRate: number = 0.9) {
+export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = true, speechEnabled: boolean = true, flipDuration: number = 1, speechRate: number = 0.9, customVoiceEnabled: boolean = true) {
   const [cards, setCards] = useState<GameCard[]>([]);
   const [flippedIds, setFlippedIds] = useState<string[]>([]);
   const [moves, setMoves] = useState(0);
@@ -42,7 +42,11 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
     const recs = voiceRecsRef.current.filter((r) => r.event_type === eventType);
     if (recs.length === 0) return false;
     const rec = recs[Math.floor(Math.random() * recs.length)];
-    try { new Audio(rec.audio_url).play(); } catch {}
+    try {
+      new Audio(rec.audio_url).play();
+    } catch {
+      return false;
+    }
     return true;
   }, []);
 
@@ -71,7 +75,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
       setTimeout(() => speakCardName(card.id, speechRate), 150);
     }
     // Custom flip voice
-    if (soundEnabled) playCustomVoice("flip");
+    if (soundEnabled && customVoiceEnabled) playCustomVoice("flip");
 
     const newFlipped = [...flippedIds, uniqueId];
     setFlippedIds(newFlipped);
@@ -90,7 +94,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
       if (first.id === second.id) {
         timeoutRef.current = setTimeout(() => {
           if (soundEnabled) {
-            if (!playCustomVoice("match")) playMatchSound();
+            if (!(customVoiceEnabled && playCustomVoice("match"))) playMatchSound();
           }
           setCards((prev) =>
             prev.map((c) =>
@@ -106,7 +110,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
             setTimeout(() => {
               setIsGameOver(true);
               if (soundEnabled) {
-                if (!playCustomVoice("win")) playWinSound();
+                if (!(customVoiceEnabled && playCustomVoice("win"))) playWinSound();
               }
             }, 500);
           }
@@ -114,7 +118,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
       } else {
         timeoutRef.current = setTimeout(() => {
           if (soundEnabled) {
-            if (!playCustomVoice("mismatch")) playMismatchSound();
+            if (!(customVoiceEnabled && playCustomVoice("mismatch"))) playMismatchSound();
           }
           setCards((prev) =>
             prev.map((c) =>
@@ -126,7 +130,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
         }, flipDuration * 1000);
       }
     }
-  }, [cards, flippedIds, isChecking, matchedCount, pairCount, soundEnabled, speechEnabled, speechRate, flipDuration, playCustomVoice]);
+  }, [cards, flippedIds, isChecking, matchedCount, pairCount, soundEnabled, speechEnabled, speechRate, flipDuration, customVoiceEnabled, playCustomVoice]);
 
   return { cards, moves, matchedCount, isGameOver, flipCard, startGame };
 }

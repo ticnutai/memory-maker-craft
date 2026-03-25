@@ -1,9 +1,16 @@
 // Rich Web Audio API sound effects — no external files needed
+interface GameAudioWindow extends Window {
+  __gameAudioCtx?: AudioContext;
+}
+
 const audioCtx = () => {
-  if (!(window as any).__gameAudioCtx) {
-    (window as any).__gameAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const w = window as GameAudioWindow;
+  if (!w.__gameAudioCtx) {
+    w.__gameAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
-  return (window as any).__gameAudioCtx as AudioContext;
+  const ctx = w.__gameAudioCtx;
+  if (ctx.state === "suspended") ctx.resume();
+  return ctx;
 };
 
 // Global sound volume multiplier (0-1)
@@ -12,6 +19,7 @@ export function setSoundVolumeMultiplier(v: number) { _soundVolumeMultiplier = M
 export function getSoundVolumeMultiplier() { return _soundVolumeMultiplier; }
 
 function playTone(frequency: number, duration: number, type: OscillatorType = "sine", volume = 0.3, delay = 0) {
+  volume = Math.min(volume * 2.5, 1); // Boost all SFX volumes
   const ctx = audioCtx();
   const effectiveVolume = volume * _soundVolumeMultiplier;
   const startTime = ctx.currentTime + delay;

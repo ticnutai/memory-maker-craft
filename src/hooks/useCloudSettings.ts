@@ -46,6 +46,23 @@ export interface StoredSettings {
   musicVolume?: number;
   soundVolume?: number;
   speechVolume?: number;
+  layoutPreset?: string;
+  customVoiceEnabled?: boolean;
+}
+
+type DbSettingsRow = Record<string, unknown>;
+
+function asNumber(value: unknown, fallback: number): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function asString(value: unknown, fallback: string): string {
+  return typeof value === "string" && value.length > 0 ? value : fallback;
+}
+
+function asBool(value: unknown, fallback: boolean): boolean {
+  return typeof value === "boolean" ? value : fallback;
 }
 
 export function useCloudSettings(initialTheme: string) {
@@ -66,37 +83,39 @@ export function useCloudSettings(initialTheme: string) {
   const deviceId = useRef(getDeviceId());
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>();
 
-  const applyData = useCallback((data: any) => {
+  const applyData = useCallback((data: DbSettingsRow) => {
     setSettings({
-      pairCount: data.pair_count,
-      cardMaxW: data.card_max_w,
-      emojiScale: Number(data.emoji_scale),
-      soundEnabled: data.sound_enabled,
-      speechEnabled: (data as any).speech_enabled ?? true,
-      speechRate: Number((data as any).speech_rate ?? 0.9),
-      flipDuration: Number(data.flip_duration),
-      musicType: data.music_type as StoredSettings["musicType"],
-      builtinMelodyId: data.builtin_melody_id || "twinkle",
-      customMusic: data.custom_music || undefined,
-      customMusicName: data.custom_music_name || undefined,
-      theme: data.theme || initialTheme,
-      bgTheme: (data as any).bg_theme || "default",
-      animationsEnabled: (data as any).animations_enabled !== false,
-      layoutMode: (data as any).layout_mode || "grid",
-      snapToGrid: (data as any).snap_to_grid !== false,
-      gridSize: Number((data as any).grid_size) || 20,
-      cardPositions: (data as any).card_positions || [],
-      musicVolume: (data as any).music_volume ?? 50,
-      soundVolume: (data as any).sound_volume ?? 50,
-      speechVolume: (data as any).speech_volume ?? 50,
+      pairCount: asNumber(data.pair_count, 4),
+      cardMaxW: asNumber(data.card_max_w, 480),
+      emojiScale: asNumber(data.emoji_scale, 1),
+      soundEnabled: asBool(data.sound_enabled, true),
+      speechEnabled: asBool(data.speech_enabled, true),
+      speechRate: asNumber(data.speech_rate, 0.9),
+      flipDuration: asNumber(data.flip_duration, 1),
+      musicType: asString(data.music_type, "none") as StoredSettings["musicType"],
+      builtinMelodyId: asString(data.builtin_melody_id, "twinkle"),
+      customMusic: typeof data.custom_music === "string" ? data.custom_music : undefined,
+      customMusicName: typeof data.custom_music_name === "string" ? data.custom_music_name : undefined,
+      theme: asString(data.theme, initialTheme),
+      bgTheme: asString(data.bg_theme, "default"),
+      animationsEnabled: asBool(data.animations_enabled, true),
+      layoutMode: asString(data.layout_mode, "grid") as "grid" | "free",
+      snapToGrid: asBool(data.snap_to_grid, true),
+      gridSize: asNumber(data.grid_size, 20),
+      cardPositions: Array.isArray(data.card_positions) ? (data.card_positions as { x: number; y: number }[]) : [],
+      musicVolume: asNumber(data.music_volume, 50),
+      soundVolume: asNumber(data.sound_volume, 50),
+      speechVolume: asNumber(data.speech_volume, 50),
+      layoutPreset: asString(data.layout_preset, "grid-3"),
+      customVoiceEnabled: asBool(data.custom_voice_enabled, true),
       cardStyle: {
-        borderRadius: data.card_border_radius ?? 16,
-        borderWidth: data.card_border_width ?? 4,
-        borderColor: data.card_border_color || "default",
-        backColor: data.card_back_color || "default",
-        backColor2: (data as any).card_back_color_2 || undefined,
-        backIcon: data.card_back_icon || "⭐",
-        shape: data.card_shape || "square",
+        borderRadius: asNumber(data.card_border_radius, 16),
+        borderWidth: asNumber(data.card_border_width, 4),
+        borderColor: asString(data.card_border_color, "default") as CardStyle["borderColor"],
+        backColor: asString(data.card_back_color, "default") as CardStyle["backColor"],
+        backColor2: typeof data.card_back_color_2 === "string" && data.card_back_color_2.length > 0 ? data.card_back_color_2 : undefined,
+        backIcon: asString(data.card_back_icon, "⭐"),
+        shape: asString(data.card_shape, "square") as CardStyle["shape"],
       },
     });
   }, [initialTheme]);
@@ -133,7 +152,9 @@ export function useCloudSettings(initialTheme: string) {
           filter: `device_id=eq.${deviceId.current}`,
         },
         (payload) => {
-          if (payload.new) applyData(payload.new);
+          if (payload.new) {
+            applyData(payload.new as DbSettingsRow);
+          }
         }
       )
       .subscribe();
@@ -177,6 +198,8 @@ export function useCloudSettings(initialTheme: string) {
         music_volume: newSettings.musicVolume ?? 50,
         sound_volume: newSettings.soundVolume ?? 50,
         speech_volume: newSettings.speechVolume ?? 50,
+        layout_preset: newSettings.layoutPreset || "grid-3",
+        custom_voice_enabled: newSettings.customVoiceEnabled !== false,
         updated_at: new Date().toISOString(),
       }, { onConflict: "device_id" });
     }, 500);
@@ -234,6 +257,8 @@ export function useCloudSettings(initialTheme: string) {
     musicVolume: settings.musicVolume ?? 50,
     soundVolume: settings.soundVolume ?? 50,
     speechVolume: settings.speechVolume ?? 50,
+    layoutPreset: settings.layoutPreset || "grid-3",
+    customVoiceEnabled: settings.customVoiceEnabled !== false,
   }), [settings]);
 
   return { settings, loaded, updateSetting, updateCardStyle, updateMultiple, toGameSettings };

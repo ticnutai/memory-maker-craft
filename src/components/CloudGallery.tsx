@@ -188,7 +188,7 @@ export default function CloudGallery({ onSelect, onClose, theme, mode = "images"
 
   const uploadFiles = async (files: FileList | File[]) => {
     setUploading(true);
-    let allFiles: File[] = [];
+    const allFiles: File[] = [];
 
     for (const file of Array.from(files)) {
       if (file.name.toLowerCase().endsWith(".zip")) {

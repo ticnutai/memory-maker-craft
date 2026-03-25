@@ -10,7 +10,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "doctor:copilot": "powershell -ExecutionPolicy Bypass -File ./scripts/copilot-chat-doctor.ps1 -DebugLogs",
+    "doctor:copilot:fix": "powershell -ExecutionPolicy Bypass -File ./scripts/copilot-chat-doctor.ps1 -AutoFix -DebugLogs",
+    "doctor:copilot:deep": "powershell -ExecutionPolicy Bypass -File ./scripts/copilot-chat-doctor.ps1 -AutoFix -DeepClean -DebugLogs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

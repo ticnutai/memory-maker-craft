@@ -2,42 +2,26 @@ import { useState } from "react";
 import CardSetSelect from "@/components/CardSetSelect";
 import GameBoard from "@/components/GameBoard";
 import TreasureHuntGame from "@/components/TreasureHuntGame";
+import TrainGame from "@/components/TrainGame";
 import { CardSetType, CardData, GameSettings } from "@/lib/gameData";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
-import { Gamepad2, Map, Settings } from "lucide-react";
+import { Gamepad2, Map, Train, Settings } from "lucide-react";
 
-type AppTab = "memory" | "treasure";
+type AppTab = "memory" | "treasure" | "train";
 type Screen = "home" | "game";
 
 const Index = () => {
-  const { settings: cloudSettings } = useCloudSettings("girl");
+  const { settings: cloudSettings, toGameSettings } = useCloudSettings("girl");
   const [tab, setTab] = useState<AppTab>("memory");
   const [screen, setScreen] = useState<Screen>("home");
   const [cardSetType, setCardSetType] = useState<CardSetType>("animals");
   const [customCards, setCustomCards] = useState<CardData[] | undefined>();
   const [showSettings, setShowSettings] = useState(false);
-  const [settings, setSettings] = useState<GameSettings>({
-    pairCount: 4,
-    cardMaxW: 480,
-    emojiScale: 1,
-    soundEnabled: true,
-    speechEnabled: true,
-    speechRate: 0.9,
-    flipDuration: 1,
-    musicType: "none",
-    cardStyle: {
-      borderRadius: 16,
-      borderWidth: 4,
-      borderColor: "default",
-      backColor: "default",
-      backColor2: undefined,
-      backIcon: "⭐",
-      shape: "square",
-    },
-  });
 
-  const handleCardSet = (set: CardSetType, gameSettings: GameSettings, cards?: CardData[]) => {
-    setSettings(gameSettings);
+  // Always use cloud-synced settings — no local duplication
+  const settings = toGameSettings();
+
+  const handleCardSet = (set: CardSetType, _gameSettings: GameSettings, cards?: CardData[]) => {
     setCardSetType(set);
     setCustomCards(set === "custom" ? cards : undefined);
     setScreen("game");
@@ -60,6 +44,8 @@ const Index = () => {
             settingsOpen={showSettings}
             onSettingsToggle={setShowSettings}
           />
+        ) : tab === "train" ? (
+          <TrainGame onHome={() => setTab("memory")} />
         ) : (
           <TreasureHuntGame onHome={() => setTab("memory")} />
         )}
@@ -94,6 +80,16 @@ const Index = () => {
           }`}
         >
           <Map className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => { setTab("train"); setScreen("home"); }}
+          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+            tab === "train"
+              ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
+              : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
+          }`}
+        >
+          <Train className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
 

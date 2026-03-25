@@ -59,7 +59,7 @@ export default function Confetti({ active }: { active: boolean }) {
       shape: shapes[Math.floor(Math.random() * shapes.length)],
     }));
 
-    let startTime = Date.now();
+    const startTime = Date.now();
 
     const animate = () => {
       const elapsed = Date.now() - startTime;

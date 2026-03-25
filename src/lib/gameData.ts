@@ -1,5 +1,5 @@
 export type ThemeType = "girl" | "boy";
-export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "custom" | "sea" | "space" | "food" | "sports" | "music" | "flags" | "nature";
+export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "real-animals" | "desserts" | "dinos" | "farm" | "real-vehicles" | "shapes" | "horses" | "sea" | "space" | "food" | "sports" | "music" | "flags" | "nature" | "custom";
 
 export interface CardStyle {
   borderRadius: number;
@@ -37,6 +37,8 @@ export interface GameSettings {
   musicVolume?: number;
   soundVolume?: number;
   speechVolume?: number;
+  layoutPreset?: string;
+  customVoiceEnabled?: boolean;
 }
 
 export interface CardData {
@@ -99,6 +101,132 @@ export const VEHICLES: CardData[] = [
   { id: "taxi", emoji: "🚕" }, { id: "sailboat", emoji: "⛵" },
 ];
 
+// ── Realistic Animals (image-based) ──
+import imgDog from "@/assets/cards/animals/dog.jpg";
+import imgCat from "@/assets/cards/animals/cat.jpg";
+import imgBunny from "@/assets/cards/animals/bunny.jpg";
+import imgPanda from "@/assets/cards/animals/panda.jpg";
+import imgPenguin from "@/assets/cards/animals/penguin.jpg";
+import imgOwl from "@/assets/cards/animals/owl.jpg";
+import imgFox from "@/assets/cards/animals/fox.jpg";
+import imgKoala from "@/assets/cards/animals/koala.jpg";
+
+export const REAL_ANIMALS: CardData[] = [
+  { id: "real-dog", emoji: "🐕", label: "כלב", image: imgDog },
+  { id: "real-cat", emoji: "🐱", label: "חתול", image: imgCat },
+  { id: "real-bunny", emoji: "🐰", label: "ארנב", image: imgBunny },
+  { id: "real-panda", emoji: "🐼", label: "פנדה", image: imgPanda },
+  { id: "real-penguin", emoji: "🐧", label: "פינגווין", image: imgPenguin },
+  { id: "real-owl", emoji: "🦉", label: "ינשוף", image: imgOwl },
+  { id: "real-fox", emoji: "🦊", label: "שועל", image: imgFox },
+  { id: "real-koala", emoji: "🐨", label: "קואלה", image: imgKoala },
+];
+
+// ── Desserts (image-based) ──
+import imgCupcake from "@/assets/cards/desserts/cupcake.jpg";
+import imgDonut from "@/assets/cards/desserts/donut.jpg";
+import imgIcecream from "@/assets/cards/desserts/icecream.jpg";
+import imgCake from "@/assets/cards/desserts/cake.jpg";
+import imgMacarons from "@/assets/cards/desserts/macarons.jpg";
+import imgCookies from "@/assets/cards/desserts/cookies.jpg";
+import imgLollipop from "@/assets/cards/desserts/lollipop.jpg";
+import imgChocolate from "@/assets/cards/desserts/chocolate.jpg";
+
+export const DESSERTS: CardData[] = [
+  { id: "cupcake", emoji: "🧁", label: "קאפקייק", image: imgCupcake },
+  { id: "donut", emoji: "🍩", label: "דונאט", image: imgDonut },
+  { id: "icecream", emoji: "🍦", label: "גלידה", image: imgIcecream },
+  { id: "cake", emoji: "🎂", label: "עוגה", image: imgCake },
+  { id: "macarons", emoji: "🍪", label: "מקרונים", image: imgMacarons },
+  { id: "cookies", emoji: "🍪", label: "עוגיות", image: imgCookies },
+  { id: "lollipop", emoji: "🍭", label: "סוכרייה", image: imgLollipop },
+  { id: "chocolate", emoji: "🍫", label: "שוקולד", image: imgChocolate },
+];
+
+// ── Dinosaurs (image-based) ──
+import imgTrex from "@/assets/cards/dinos/trex.jpg";
+import imgTriceratops from "@/assets/cards/dinos/triceratops.jpg";
+import imgBrachiosaurus from "@/assets/cards/dinos/brachiosaurus.jpg";
+import imgStegosaurus from "@/assets/cards/dinos/stegosaurus.jpg";
+import imgVelociraptor from "@/assets/cards/dinos/velociraptor.jpg";
+import imgPterodactyl from "@/assets/cards/dinos/pterodactyl.jpg";
+import imgSpinosaurus from "@/assets/cards/dinos/spinosaurus.jpg";
+import imgAnkylosaurus from "@/assets/cards/dinos/ankylosaurus.jpg";
+
+export const DINOS: CardData[] = [
+  { id: "trex", emoji: "🦖", label: "טירנוזאורוס", image: imgTrex },
+  { id: "triceratops", emoji: "🦕", label: "טריצרטופס", image: imgTriceratops },
+  { id: "brachiosaurus", emoji: "🦕", label: "ברכיוזאורוס", image: imgBrachiosaurus },
+  { id: "stegosaurus", emoji: "🦕", label: "סטגוזאורוס", image: imgStegosaurus },
+  { id: "velociraptor", emoji: "🦖", label: "ולוצירפטור", image: imgVelociraptor },
+  { id: "pterodactyl", emoji: "🦅", label: "טרודקטיל", image: imgPterodactyl },
+  { id: "spinosaurus", emoji: "🦖", label: "ספינוזאורוס", image: imgSpinosaurus },
+  { id: "ankylosaurus", emoji: "🦕", label: "אנקילוזאורוס", image: imgAnkylosaurus },
+];
+
+// ── Farm Animals (image-based) ──
+import imgHorse from "@/assets/cards/farm/horse.jpg";
+import imgElephant from "@/assets/cards/farm/elephant.jpg";
+import imgMonkey from "@/assets/cards/farm/monkey.jpg";
+import imgCow from "@/assets/cards/farm/cow.jpg";
+import imgSheep from "@/assets/cards/farm/sheep.jpg";
+import imgGoat from "@/assets/cards/farm/goat.jpg";
+import imgDonkey from "@/assets/cards/farm/donkey.jpg";
+import imgRooster from "@/assets/cards/farm/rooster.jpg";
+
+export const FARM_ANIMALS: CardData[] = [
+  { id: "horse", emoji: "🐴", label: "סוס", image: imgHorse },
+  { id: "elephant", emoji: "🐘", label: "פיל", image: imgElephant },
+  { id: "monkey", emoji: "🐒", label: "קוף", image: imgMonkey },
+  { id: "cow", emoji: "🐄", label: "פרה", image: imgCow },
+  { id: "sheep", emoji: "🐑", label: "כבשה", image: imgSheep },
+  { id: "goat", emoji: "🐐", label: "עז", image: imgGoat },
+  { id: "donkey", emoji: "🫏", label: "חמור", image: imgDonkey },
+  { id: "rooster", emoji: "🐓", label: "תרנגול", image: imgRooster },
+];
+
+// ── Realistic Vehicles (image-based) ──
+import imgCar from "@/assets/cards/vehicles/car.jpg";
+import imgTractor from "@/assets/cards/vehicles/tractor.jpg";
+import imgMotorcycle from "@/assets/cards/vehicles/motorcycle.jpg";
+import imgShip from "@/assets/cards/vehicles/ship.jpg";
+import imgFiretruck from "@/assets/cards/vehicles/firetruck.jpg";
+import imgAirplane from "@/assets/cards/vehicles/airplane.jpg";
+import imgBus from "@/assets/cards/vehicles/bus.jpg";
+import imgTrain from "@/assets/cards/vehicles/train.jpg";
+
+export const REAL_VEHICLES: CardData[] = [
+  { id: "car", emoji: "🚗", label: "מכונית", image: imgCar },
+  { id: "tractor", emoji: "🚜", label: "טרקטור", image: imgTractor },
+  { id: "motorcycle", emoji: "🏍️", label: "אופנוע", image: imgMotorcycle },
+  { id: "ship", emoji: "🚢", label: "אוניה", image: imgShip },
+  { id: "firetruck", emoji: "🚒", label: "כבאית", image: imgFiretruck },
+  { id: "airplane", emoji: "✈️", label: "מטוס", image: imgAirplane },
+  { id: "bus", emoji: "🚌", label: "אוטובוס", image: imgBus },
+  { id: "train", emoji: "🚂", label: "רכבת", image: imgTrain },
+];
+
+// ── Horses (image-based) ──
+import imgWhiteHorse from "@/assets/cards/horses/white-horse.png";
+import imgBrownHorse from "@/assets/cards/horses/brown-horse.png";
+import imgBlackHorse from "@/assets/cards/horses/black-horse.png";
+import imgPinkHorse from "@/assets/cards/horses/pink-horse.png";
+import imgGoldenHorse from "@/assets/cards/horses/golden-horse.png";
+import imgSpottedHorse from "@/assets/cards/horses/spotted-horse.png";
+import imgGrayHorse from "@/assets/cards/horses/gray-horse.png";
+import imgPony from "@/assets/cards/horses/pony.png";
+
+export const HORSES: CardData[] = [
+  { id: "horse-white", emoji: "🐴", label: "סוס לבן", image: imgWhiteHorse },
+  { id: "horse-brown", emoji: "🐴", label: "סוס חום", image: imgBrownHorse },
+  { id: "horse-black", emoji: "🐴", label: "סוס שחור", image: imgBlackHorse },
+  { id: "horse-pink", emoji: "🐴", label: "סוס ורוד", image: imgPinkHorse },
+  { id: "horse-golden", emoji: "🐴", label: "סוס זהוב", image: imgGoldenHorse },
+  { id: "horse-spotted", emoji: "🐴", label: "סוס מנומר", image: imgSpottedHorse },
+  { id: "horse-gray", emoji: "🐴", label: "סוס אפור", image: imgGrayHorse },
+  { id: "horse-pony", emoji: "🐴", label: "פוני", image: imgPony },
+];
+
 // ── Hebrew letters (expanded) ──
 export const HEBREW_LETTERS: CardData[] = [
   { id: "alef", emoji: "א", label: "אָלֶף" },
@@ -117,6 +245,26 @@ export const HEBREW_LETTERS: CardData[] = [
   { id: "nun", emoji: "נ", label: "נוּן" },
   { id: "samekh", emoji: "ס", label: "סָמֶך" },
   { id: "ayin", emoji: "ע", label: "עַיִן" },
+];
+
+// ── Shapes ──
+export const SHAPES: CardData[] = [
+  { id: "shape-triangle", emoji: "🔺", label: "משולש" },
+  { id: "shape-square", emoji: "🟧", label: "ריבוע" },
+  { id: "shape-circle", emoji: "🔵", label: "עיגול" },
+  { id: "shape-diamond", emoji: "🔷", label: "מעוין" },
+  { id: "shape-star", emoji: "⭐", label: "כוכב" },
+  { id: "shape-heart", emoji: "❤️", label: "לב" },
+  { id: "shape-hexagon", emoji: "⬡", label: "משושה" },
+  { id: "shape-pentagon", emoji: "⬠", label: "מחומש" },
+  { id: "shape-oval", emoji: "🥚", label: "אליפסה" },
+  { id: "shape-crescent", emoji: "🌙", label: "סהר" },
+  { id: "shape-cross", emoji: "✚", label: "פלוס" },
+  { id: "shape-arrow", emoji: "➤", label: "חץ" },
+  { id: "shape-red-circle", emoji: "🔴", label: "עיגול אדום" },
+  { id: "shape-green-square", emoji: "🟩", label: "ריבוע ירוק" },
+  { id: "shape-purple-diamond", emoji: "🟣", label: "עיגול סגול" },
+  { id: "shape-yellow-triangle", emoji: "🔶", label: "מעוין כתום" },
 ];
 
 export interface CardSetInfo {
@@ -232,6 +380,41 @@ export function getCardSets(theme: ThemeType): CardSetInfo[] {
       type: "hebrew", emoji: "א", label: "אותיות",
       color: "from-accent to-emerald-500",
       cards: HEBREW_LETTERS,
+    },
+    {
+      type: "real-animals", emoji: "📸", label: "חיות אמיתיות",
+      color: "from-amber-400 to-orange-500",
+      cards: REAL_ANIMALS,
+    },
+    {
+      type: "desserts", emoji: "🍰", label: "קינוחים",
+      color: "from-pink-400 to-rose-500",
+      cards: DESSERTS,
+    },
+    {
+      type: "dinos", emoji: "🦖", label: "דינוזאורים",
+      color: "from-green-500 to-emerald-600",
+      cards: DINOS,
+    },
+    {
+      type: "farm", emoji: "🐴", label: "חיות חווה",
+      color: "from-yellow-500 to-amber-600",
+      cards: FARM_ANIMALS,
+    },
+    {
+      type: "real-vehicles", emoji: "🚗", label: "כלי תחבורה",
+      color: "from-sky-500 to-indigo-600",
+      cards: REAL_VEHICLES,
+    },
+    {
+      type: "horses", emoji: "🐴", label: "סוסים",
+      color: "from-rose-400 to-pink-500",
+      cards: HORSES,
+    },
+    {
+      type: "shapes", emoji: "🔷", label: "צורות וצבעים",
+      color: "from-violet-500 to-fuchsia-500",
+      cards: SHAPES,
     },
     {
       type: "sea", emoji: "🐠", label: "עולם הים",

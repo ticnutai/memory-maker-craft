@@ -9,7 +9,7 @@ import ThemeBackground from "@/components/ThemeBackground";
 import { BgThemeId } from "@/components/ThemeBackground";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, Lightbulb, Timer, Eye, Users } from "lucide-react";
+import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, AudioLines, Lightbulb, Eye, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { setSoundVolumeMultiplier } from "@/lib/sounds";
 import { setSpeechVolumeMultiplier } from "@/lib/cardSpeech";
@@ -25,14 +25,22 @@ interface GameBoardProps {
 export default function GameBoard({ theme, settings, cardSetType, customCards, onHome }: GameBoardProps) {
   const { settings: liveCloud, toGameSettings, updateSetting } = useCloudSettings("girl");
   const liveSettings = { ...settings, ...toGameSettings() };
-  const [speechOn, setSpeechOn] = useState(settings.speechEnabled);
   const [globalMute, setGlobalMute] = useState(false);
   const setInfo = getCardSets(theme).find((s) => s.type === cardSetType);
   const cardData = customCards || setInfo?.cards || getCardSets(theme)[0].cards;
   const pairCount = Math.min(liveSettings.pairCount, cardData.length);
-  const effectiveSoundOn = liveSettings.soundEnabled && !globalMute;
+  const soundOn = liveSettings.soundEnabled;
+  const speechOn = liveSettings.speechEnabled;
+  const effectiveSoundOn = soundOn && !globalMute;
   const effectiveSpeechOn = speechOn && !globalMute;
-  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, effectiveSoundOn, effectiveSpeechOn, liveSettings.flipDuration, liveSettings.speechRate);
+  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(
+    pairCount,
+    effectiveSoundOn,
+    effectiveSpeechOn,
+    liveSettings.flipDuration,
+    liveSettings.speechRate,
+    liveSettings.customVoiceEnabled !== false
+  );
   const activeMelody = liveSettings.musicType === "builtin"
     ? BUILT_IN_MELODIES.find((m) => m.id === liveSettings.builtinMelodyId)
     : undefined;
@@ -77,7 +85,6 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
 
   // ── Volume slider popup ──
   const [volumePopup, setVolumePopup] = useState<"music" | "sound" | "speech" | null>(null);
-  const volumePopupTimer = useRef<ReturnType<typeof setTimeout>>();
 
   // Volume values from cloud (0-100)
   const musicVolume = liveCloud.musicVolume ?? 50;
@@ -401,7 +408,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             {/* Speech — click toggle, double-click volume */}
             <div className="relative">
               <Button variant="ghost" size="sm" disabled={globalMute}
-                onClick={() => setSpeechOn(!speechOn)}
+                onClick={() => updateSetting("speechEnabled", !speechOn)}
                 onDoubleClick={(e) => { e.stopPropagation(); setVolumePopup(volumePopup === "speech" ? null : "speech"); }}
                 className={speechOn && !globalMute ? "text-accent" : "text-muted-foreground"} title="לחיצה: הפעל/כבה | לחיצה כפולה: עוצמה">
                 {speechOn && !globalMute ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
@@ -419,6 +426,17 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                 </div>
               )}
             </div>
+            {/* Custom voice toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={globalMute}
+              className={liveSettings.customVoiceEnabled !== false ? "text-accent" : "text-muted-foreground"}
+              onClick={() => updateSetting("customVoiceEnabled" as any, !(liveSettings.customVoiceEnabled !== false))}
+              title="הקלטות אישיות"
+            >
+              <AudioLines className="w-4 h-4" />
+            </Button>
             {isFreeLayout && (
               <>
                 <Button variant="ghost" size="sm" onClick={() => setEditMode(!editMode)}

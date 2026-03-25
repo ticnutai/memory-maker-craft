@@ -1,11 +1,32 @@
 // Card-specific sound effects synthesized via Web Audio API
 // Enhanced with noise, filters, and modulation for realistic sounds
 
+interface GameAudioWindow extends Window {
+  __gameAudioCtx?: AudioContext;
+  __cardMasterGain?: GainNode;
+}
+
 const audioCtx = () => {
-  if (!(window as any).__gameAudioCtx) {
-    (window as any).__gameAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const w = window as GameAudioWindow;
+  if (!w.__gameAudioCtx) {
+    w.__gameAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
-  return (window as any).__gameAudioCtx as AudioContext;
+  const ctx = w.__gameAudioCtx;
+  if (ctx.state === "suspended") ctx.resume();
+  return ctx;
+};
+
+// Master gain for all card sounds - boost volume
+const getMasterGain = () => {
+  const w = window as GameAudioWindow;
+  const ctx = audioCtx();
+  if (!w.__cardMasterGain) {
+    const master = ctx.createGain();
+    master.gain.value = 2.5;
+    master.connect(ctx.destination);
+    w.__cardMasterGain = master;
+  }
+  return w.__cardMasterGain;
 };
 
 // Create white noise buffer for animal/vehicle sounds
@@ -21,12 +42,15 @@ function createNoiseBuffer(ctx: AudioContext, duration: number): AudioBuffer {
 
 type SoundFn = (ctx: AudioContext, time: number) => void;
 
+// Volume multiplier for all card sounds
+const VOL = 2.5;
+
 function makeOsc(ctx: AudioContext, freq: number, type: OscillatorType, start: number, dur: number, vol: number, dest: AudioNode) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(freq, start);
-  gain.gain.setValueAtTime(vol, start);
+  gain.gain.setValueAtTime(Math.min(vol * VOL, 1), start);
   gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
   osc.connect(gain);
   gain.connect(dest);
@@ -405,6 +429,124 @@ const animalSounds: Record<string, SoundFn> = {
     noise.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
     noise.start(t); noise.stop(t + 0.5);
   },
+
+  // Horse - neigh
+  horse: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(300, t);
+    osc.frequency.linearRampToValueAtTime(600, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(500, t + 0.3);
+    osc.frequency.linearRampToValueAtTime(350, t + 0.5);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.15, t + 0.05);
+    gain.gain.setValueAtTime(0.12, t + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.55);
+  },
+
+  // Elephant - trumpet
+  elephant: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth"; osc2.type = "square";
+    osc.frequency.setValueAtTime(250, t);
+    osc.frequency.linearRampToValueAtTime(500, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(400, t + 0.5);
+    osc2.frequency.setValueAtTime(253, t);
+    osc2.frequency.linearRampToValueAtTime(503, t + 0.15);
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    osc.connect(gain); osc2.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.55); osc2.start(t); osc2.stop(t + 0.55);
+  },
+
+  // Monkey - ooh ooh aah
+  monkey: (ctx, t) => {
+    [0, 0.12, 0.24].forEach((d, i) => {
+      const freq = i < 2 ? 600 : 800;
+      makeOsc(ctx, freq, "sawtooth", t + d, 0.1, 0.12, ctx.destination);
+    });
+  },
+
+  // Cow - moo
+  cow: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(150, t);
+    osc.frequency.linearRampToValueAtTime(180, t + 0.2);
+    osc.frequency.linearRampToValueAtTime(140, t + 0.6);
+    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.65);
+  },
+
+  // Sheep - baa
+  sheep: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(350, t);
+    osc.frequency.linearRampToValueAtTime(300, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(380, t + 0.3);
+    osc.frequency.linearRampToValueAtTime(280, t + 0.45);
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.5);
+  },
+
+  // Goat - meh
+  goat: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(400, t);
+    osc.frequency.linearRampToValueAtTime(350, t + 0.1);
+    osc.frequency.linearRampToValueAtTime(420, t + 0.25);
+    osc.frequency.linearRampToValueAtTime(320, t + 0.4);
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.45);
+  },
+
+  // Donkey - hee-haw
+  donkey: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(250, t);
+    osc.frequency.linearRampToValueAtTime(500, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(200, t + 0.35);
+    osc.frequency.linearRampToValueAtTime(450, t + 0.5);
+    osc.frequency.linearRampToValueAtTime(180, t + 0.7);
+    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.7);
+  },
+
+  // Rooster - cock-a-doodle-doo
+  rooster: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(500, t);
+    osc.frequency.linearRampToValueAtTime(800, t + 0.08);
+    osc.frequency.setValueAtTime(600, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(1000, t + 0.25);
+    osc.frequency.linearRampToValueAtTime(700, t + 0.45);
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.5);
+  },
 };
 
 // ── Vehicle sounds ──
@@ -667,14 +809,212 @@ hebrewNotes.forEach(([id, freq]) => {
   };
 });
 
+// ── Dinosaur sounds (for image-based dinos) ──
+
+const dinoSounds: Record<string, SoundFn> = {
+  triceratops: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(100, t);
+    osc.frequency.linearRampToValueAtTime(160, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(70, t + 0.5);
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.55);
+  },
+  brachiosaurus: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(80, t);
+    osc.frequency.linearRampToValueAtTime(120, t + 0.3);
+    osc.frequency.linearRampToValueAtTime(60, t + 0.8);
+    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.9);
+  },
+  stegosaurus: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(90, t);
+    osc.frequency.linearRampToValueAtTime(130, t + 0.2);
+    osc.frequency.linearRampToValueAtTime(75, t + 0.5);
+    gain.gain.setValueAtTime(0.16, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.55);
+  },
+  velociraptor: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(400, t);
+    osc.frequency.linearRampToValueAtTime(800, t + 0.1);
+    osc.frequency.linearRampToValueAtTime(300, t + 0.25);
+    osc.frequency.linearRampToValueAtTime(600, t + 0.35);
+    gain.gain.setValueAtTime(0.14, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.4);
+  },
+  pterodactyl: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(600, t);
+    osc.frequency.linearRampToValueAtTime(1200, t + 0.1);
+    osc.frequency.linearRampToValueAtTime(500, t + 0.3);
+    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.35);
+  },
+  spinosaurus: (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth"; osc2.type = "square";
+    osc.frequency.setValueAtTime(55, t);
+    osc.frequency.linearRampToValueAtTime(130, t + 0.25);
+    osc.frequency.linearRampToValueAtTime(45, t + 0.7);
+    osc2.frequency.setValueAtTime(58, t);
+    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+    osc.connect(gain); osc2.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.7); osc2.start(t); osc2.stop(t + 0.7);
+  },
+  ankylosaurus: (ctx, t) => {
+    // Heavy stomp + rumble
+    makeOsc(ctx, 70, "square", t, 0.15, 0.2, ctx.destination);
+    makeOsc(ctx, 60, "sawtooth", t + 0.1, 0.3, 0.15, ctx.destination);
+    makeOsc(ctx, 80, "square", t + 0.25, 0.12, 0.18, ctx.destination);
+  },
+};
+
+// ── Shape sounds ──
+const shapeSounds: Record<string, SoundFn> = {
+  "shape-triangle": (ctx, t) => {
+    [440, 554, 659].forEach((f, i) => makeOsc(ctx, f, "triangle", t + i * 0.1, 0.12, 0.15, ctx.destination));
+  },
+  "shape-square": (ctx, t) => {
+    makeOsc(ctx, 330, "square", t, 0.2, 0.12, ctx.destination);
+    makeOsc(ctx, 440, "square", t + 0.1, 0.15, 0.1, ctx.destination);
+  },
+  "shape-circle": (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(400, t);
+    osc.frequency.linearRampToValueAtTime(600, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(400, t + 0.3);
+    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.35);
+  },
+  "shape-diamond": (ctx, t) => {
+    [523, 659, 784, 659].forEach((f, i) => makeOsc(ctx, f, "sine", t + i * 0.08, 0.1, 0.12, ctx.destination));
+  },
+  "shape-star": (ctx, t) => {
+    [800, 1000, 1200, 1400, 1600].forEach((f, i) => makeOsc(ctx, f, "sine", t + i * 0.06, 0.08, 0.1, ctx.destination));
+  },
+  "shape-heart": (ctx, t) => {
+    makeOsc(ctx, 440, "sine", t, 0.15, 0.15, ctx.destination);
+    makeOsc(ctx, 440, "sine", t + 0.2, 0.15, 0.15, ctx.destination);
+    makeOsc(ctx, 523, "sine", t + 0.4, 0.25, 0.12, ctx.destination);
+  },
+  "shape-hexagon": (ctx, t) => {
+    [350, 440, 523, 440, 350, 440].forEach((f, i) => makeOsc(ctx, f, "triangle", t + i * 0.07, 0.08, 0.1, ctx.destination));
+  },
+  "shape-pentagon": (ctx, t) => {
+    [300, 380, 460, 540, 460].forEach((f, i) => makeOsc(ctx, f, "sine", t + i * 0.08, 0.1, 0.11, ctx.destination));
+  },
+  "shape-oval": (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(500, t);
+    osc.frequency.linearRampToValueAtTime(700, t + 0.2);
+    osc.frequency.linearRampToValueAtTime(500, t + 0.4);
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.4);
+  },
+  "shape-crescent": (ctx, t) => {
+    makeOsc(ctx, 600, "sine", t, 0.3, 0.1, ctx.destination);
+    makeOsc(ctx, 500, "sine", t + 0.15, 0.25, 0.08, ctx.destination);
+  },
+  "shape-cross": (ctx, t) => {
+    makeOsc(ctx, 440, "square", t, 0.1, 0.12, ctx.destination);
+    makeOsc(ctx, 554, "square", t + 0.12, 0.1, 0.12, ctx.destination);
+  },
+  "shape-arrow": (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(300, t);
+    osc.frequency.linearRampToValueAtTime(800, t + 0.25);
+    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.3);
+  },
+  "shape-red-circle": (ctx, t) => {
+    makeOsc(ctx, 500, "sine", t, 0.2, 0.15, ctx.destination);
+    makeOsc(ctx, 600, "sine", t + 0.1, 0.15, 0.12, ctx.destination);
+  },
+  "shape-green-square": (ctx, t) => {
+    makeOsc(ctx, 400, "square", t, 0.15, 0.12, ctx.destination);
+    makeOsc(ctx, 500, "square", t + 0.1, 0.12, 0.1, ctx.destination);
+  },
+  "shape-purple-diamond": (ctx, t) => {
+    [523, 659, 784].forEach((f, i) => makeOsc(ctx, f, "sine", t + i * 0.1, 0.12, 0.12, ctx.destination));
+  },
+  "shape-yellow-triangle": (ctx, t) => {
+    [440, 554, 659].forEach((f, i) => makeOsc(ctx, f, "triangle", t + i * 0.1, 0.12, 0.13, ctx.destination));
+  },
+};
+
 // ── Combined lookup ──
 
-const ALL_SOUNDS: Record<string, SoundFn> = {
+const BASE_SOUNDS: Record<string, SoundFn> = {
   ...animalSounds,
   ...vehicleSounds,
   ...fruitSounds,
   ...hebrewSounds,
+  ...dinoSounds,
+  ...shapeSounds,
 };
+
+// Build aliases: "real-dog" -> "dog", "real-cat" -> "cat", etc.
+const ALL_SOUNDS: Record<string, SoundFn> = { ...BASE_SOUNDS };
+Object.keys(BASE_SOUNDS).forEach((key) => {
+  ALL_SOUNDS[`real-${key}`] = BASE_SOUNDS[key];
+});
+// Horse variants all use the horse neigh sound with pitch variations
+["horse-white", "horse-brown", "horse-black", "horse-pink", "horse-golden", "horse-spotted", "horse-gray", "horse-pony"].forEach((id, i) => {
+  ALL_SOUNDS[id] = (ctx, t) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    const baseFreq = 280 + i * 25;
+    osc.frequency.setValueAtTime(baseFreq, t);
+    osc.frequency.linearRampToValueAtTime(baseFreq + 300, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(baseFreq + 200, t + 0.3);
+    osc.frequency.linearRampToValueAtTime(baseFreq + 50, t + 0.5);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.15, t + 0.05);
+    gain.gain.setValueAtTime(0.12, t + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.55);
+  };
+});
 
 export function playCardSound(cardId: string) {
   const fn = ALL_SOUNDS[cardId];
@@ -683,10 +1023,19 @@ export function playCardSound(cardId: string) {
   const ctx = audioCtx();
   if (ctx.state === "suspended") ctx.resume();
 
+  // Route all sound through a boost gain node
+  const boostGain = ctx.createGain();
+  boostGain.gain.value = 3.0;
+  boostGain.connect(ctx.destination);
+
+  // Temporarily swap destination for the sound function
+  const proxyCtx = Object.create(ctx, {
+    destination: { get: () => boostGain }
+  });
+
   try {
-    fn(ctx, ctx.currentTime);
+    fn(proxyCtx as AudioContext, ctx.currentTime);
   } catch {
-    // Fallback: simple beep
     makeOsc(ctx, 440, "sine", ctx.currentTime, 0.15, 0.1, ctx.destination);
   }
 }
