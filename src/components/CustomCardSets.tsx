@@ -372,7 +372,21 @@ export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: Cust
           </Button>
         </div>
 
-        {showCloudPicker && (
+        {/* Add emoji card */}
+        <div className="bg-card rounded-2xl border-2 border-muted p-3 space-y-2">
+          <p className="text-xs font-bold text-muted-foreground">➕ הוספת קלף אימוג׳י</p>
+          <div className="flex gap-2">
+            <input type="text" value={newEmojiCard.emoji} onChange={e => setNewEmojiCard(prev => ({ ...prev, emoji: e.target.value }))}
+              placeholder="🐶" className="w-14 h-10 rounded-lg border-2 border-muted text-center text-xl focus:outline-none focus:border-game-pink" />
+            <input type="text" value={newEmojiCard.label} onChange={e => setNewEmojiCard(prev => ({ ...prev, label: e.target.value }))}
+              placeholder="שם הקלף..." dir="rtl" className="flex-1 h-10 rounded-lg border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink" />
+            <Button variant={theme === "girl" ? "game-pink" : "game-blue"} size="sm" className="rounded-xl"
+              onClick={() => addEmojiCard(openSetId)} disabled={!newEmojiCard.emoji.trim()}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
           <div className="bg-card rounded-2xl border-2 border-muted shadow-lg p-3 space-y-2 bounce-in">
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-sm">☁️ בחירת תמונות מהענן</h4>
