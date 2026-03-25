@@ -335,6 +335,22 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
     loadRecordings();
   };
 
+  const startEditName = (rec: Recording) => {
+    setEditingNameId(rec.id);
+    setEditingName(rec.name);
+  };
+
+  const saveEditName = async () => {
+    if (!editingNameId || !editingName.trim()) return;
+    await supabase
+      .from("voice_recordings")
+      .update({ name: editingName.trim() } as any)
+      .eq("id", editingNameId);
+    setEditingNameId(null);
+    setEditingName("");
+    loadRecordings();
+  };
+
   const playRecording = (url: string) => {
     if (playingRef.current) {
       playingRef.current.pause();
