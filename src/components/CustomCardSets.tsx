@@ -391,6 +391,7 @@ export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: Cust
 
   const importFileRef = useRef<HTMLInputElement>(null);
 
+  const playSet = (s: CustomSet) => {
     const setItems = cards[s.id] || [];
     if (setItems.length < 2) { toast.error("צריך לפחות 2 קלפים כדי לשחק"); return; }
     const gameCards: CardData[] = setItems.map((c, i) => ({
