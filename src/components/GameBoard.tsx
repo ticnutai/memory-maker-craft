@@ -35,7 +35,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     ? BUILT_IN_MELODIES.find((m) => m.id === liveSettings.builtinMelodyId)
     : undefined;
   const customUrl = (liveSettings.musicType === "custom" || liveSettings.musicType === "cloud") ? liveSettings.customMusic : undefined;
-  const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(activeMelody, customUrl);
+  const { isPlaying: musicPlaying, start: startMusic, stop: stopMusic } = useBackgroundMusic(activeMelody, customUrl);
   const { showingAnimation, triggerAnimation, dismiss: dismissAnimation } = useGameAnimations();
 
   const isFreeLayout = liveSettings.layoutMode === "free";
@@ -69,13 +69,24 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   }, [isGameOver, triggerAnimation]);
 
   useEffect(() => {
+    if (liveSettings.musicType === "none") {
+      stopMusic();
+      return;
+    }
+
+    if (activeMelody || customUrl) {
+      startMusic();
+    }
+  }, [liveSettings.musicType, activeMelody, customUrl, startMusic, stopMusic]);
+
+  useEffect(() => {
     if (isFreeLayout) setEditMode(true);
     else setEditMode(false);
   }, [isFreeLayout]);
 
   useEffect(() => {
     startGame(cardData);
-  }, []);
+  }, [startGame, cardData]);
 
   useEffect(() => {
     if (isFreeLayout && cards.length > 0 && Object.keys(positions).length === 0) {
@@ -357,7 +368,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
         {/* Header */}
         <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm gap-1">
           <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
-            <Button variant="ghost" size="sm" className="w-8 h-8 sm:w-9 sm:h-9 p-0" onClick={() => { stopMusic(); onHome(); }}>
+            <Button variant="ghost" size="sm" className="w-8 h-8 sm:w-9 sm:h-9 p-0" onClick={onHome}>
               <Home className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
             {/* Sound effects toggle */}
@@ -365,7 +376,22 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
               {soundOn ? <Bell className="w-4 h-4 sm:w-5 sm:h-5" /> : <BellOff className="w-4 h-4 sm:w-5 sm:h-5" />}
             </Button>
             {/* Background music toggle */}
-            <Button variant="ghost" size="sm" className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${musicPlaying ? "text-accent" : "text-muted-foreground"}`} onClick={toggleMusic} title="מוזיקת רקע">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`w-8 h-8 sm:w-9 sm:h-9 p-0 ${liveSettings.musicType !== "none" ? "text-accent" : "text-muted-foreground"}`}
+              onClick={() => {
+                if (liveSettings.musicType !== "none") {
+                  updateSetting("musicType", "none");
+                  stopMusic();
+                  return;
+                }
+
+                const fallbackType = customUrl ? "custom" : "builtin";
+                updateSetting("musicType", fallbackType);
+              }}
+              title="מוזיקת רקע"
+            >
               <Music className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
             {/* Speech toggle */}
