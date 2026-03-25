@@ -453,7 +453,13 @@ export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: Cust
                 {card.image_url ? (
                   <img src={card.image_url} alt={card.label || ""} className="w-full aspect-square object-cover" />
                 ) : (
-                  <div className="w-full aspect-square flex items-center justify-center text-3xl bg-muted">{card.emoji}</div>
+                  <div className="w-full aspect-square flex items-center justify-center bg-muted relative">
+                    <span className="text-3xl">{card.emoji}</span>
+                    <input type="text" value={card.emoji}
+                      onChange={e => updateCardEmoji(openSetId, card.id, e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-center"
+                      title="שנה אימוג׳י" />
+                  </div>
                 )}
                 <div className="px-2 py-1">
                   <input type="text" value={card.label || ""} onChange={e => updateCardLabel(openSetId, card.id, e.target.value)}
