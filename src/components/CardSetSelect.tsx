@@ -162,15 +162,10 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     loadBgThemes();
   }, [deviceId]);
 
-  // Load layout presets
+  // Layout presets table is not available in backend yet, so keep this empty for now
   const loadLayoutPresets = useCallback(async () => {
-    const { data } = await (supabase as any)
-      .from("layout_presets")
-      .select("*")
-      .eq("device_id", deviceId)
-      .order("created_at", { ascending: false });
-    setLayoutPresets(data || []);
-  }, [deviceId]);
+    setLayoutPresets([]);
+  }, []);
 
   useEffect(() => { loadLayoutPresets(); }, [loadLayoutPresets]);
 
@@ -180,9 +175,8 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     }
   };
 
-  const deletePreset = async (id: string) => {
-    await (supabase as any).from("layout_presets").delete().eq("id", id);
-    loadLayoutPresets();
+  const deletePreset = async (_id: string) => {
+    setLayoutPresets([]);
   };
 
   // Play a custom set
