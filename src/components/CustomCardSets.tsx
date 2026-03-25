@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CardData } from "@/lib/gameData";
-import { Plus, Trash2, Edit2, Play, X, Upload, Download, Loader2, ChevronRight, CloudDownload, Copy, Sparkles, Zap, Timer } from "lucide-react";
+import { Plus, Trash2, Edit2, Play, X, Upload, Download, Loader2, ChevronRight, CloudDownload, Copy, Sparkles, Zap, Timer, FileDown, FileUp, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface CustomSet {
