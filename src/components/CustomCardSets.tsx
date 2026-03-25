@@ -772,11 +772,26 @@ export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: Cust
       )}
 
       {!showNewSet && (
-        <button onClick={() => { resetForm(); setShowNewSet(true); }}
-          className="w-full h-14 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center gap-2 text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all active:scale-[0.98]">
-          <Plus className="w-5 h-5" />
-          <span className="font-bold text-sm">צור ערכת קלפים חדשה</span>
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => { resetForm(); setShowNewSet(true); }}
+            className="flex-1 h-14 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center gap-2 text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all active:scale-[0.98]">
+            <Plus className="w-5 h-5" />
+            <span className="font-bold text-sm">ערכה חדשה</span>
+          </button>
+          <input ref={importFileRef} type="file" accept=".json" className="hidden"
+            onChange={e => { if (e.target.files?.[0]) importFromFile(e.target.files[0]); e.target.value = ""; }} />
+          <button onClick={() => importFileRef.current?.click()}
+            className="h-14 px-4 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center gap-2 text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all active:scale-[0.98]">
+            <FileUp className="w-5 h-5" />
+            <span className="font-bold text-sm">ייבוא</span>
+          </button>
+          <button onClick={importFromClipboard}
+            className="h-14 px-4 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center gap-2 text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all active:scale-[0.98]"
+            title="ייבוא מהלוח">
+            <Download className="w-5 h-5" />
+            <span className="font-bold text-sm">מלוח</span>
+          </button>
+        </div>
       )}
 
       {sets.length === 0 && !showNewSet && (
