@@ -180,10 +180,31 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     setLayoutPresets([]);
   };
 
+  // Clone a built-in set to cloud for editing
+  const cloneBuiltInToCloud = async (set: { type: string; emoji: string; label: string; color: string; cards: CardData[] }) => {
+    const { data: newSet, error } = await supabase.from("custom_card_sets").insert({
+      device_id: deviceId, name: set.label, emoji: set.emoji, color: set.color.includes("from-") ? "#60a5fa" : set.color,
+      settings_json: {} as any,
+    }).select().single();
+    if (error || !newSet) { toast.error("שגיאה ביצירת עותק"); return; }
+    // Insert cards
+    for (let i = 0; i < set.cards.length; i++) {
+      const c = set.cards[i];
+      await supabase.from("custom_card_items").insert({
+        set_id: (newSet as any).id, label: c.label || c.id, emoji: c.emoji,
+        image_url: c.image || null, sort_order: i,
+      });
+    }
+    toast.success(`ערכת "${set.label}" שוכפלה לעריכה! ✏️`);
+    await loadCustomSets();
+    setEditBuiltInSetId((newSet as any).id);
+    setShowSettings(true);
+    setSettingsTab("custom-sets");
+  };
+
   // Play a custom set
   const playCustomSet = async (setPreview: CustomSetPreview) => {
     if (setPreview.cardCount < 2) {
-      // Open settings to manage this set
       setShowSettings(true);
       setSettingsTab("custom-sets");
       return;
