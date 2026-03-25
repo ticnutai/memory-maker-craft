@@ -36,6 +36,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     : undefined;
   const customUrl = (liveSettings.musicType === "custom" || liveSettings.musicType === "cloud") ? liveSettings.customMusic : undefined;
   const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(activeMelody, customUrl);
+  const { showingAnimation, triggerAnimation, dismiss: dismissAnimation } = useGameAnimations();
 
   const isFreeLayout = liveSettings.layoutMode === "free";
   const snapEnabled = liveSettings.snapToGrid !== false;
