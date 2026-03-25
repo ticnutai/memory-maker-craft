@@ -4,7 +4,7 @@ import { CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import {
   Upload, Volume2, VolumeX, Music, Trash2, Cloud, Loader2,
-  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move, Paintbrush, Code2, FolderOpen
+  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move, Paintbrush, Code2, FolderOpen, Edit2
 } from "lucide-react";
 import DevPanel from "@/components/DevPanel";
 import VoiceRecorder from "@/components/VoiceRecorder";
@@ -97,6 +97,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
   const [customSets, setCustomSets] = useState<CustomSetPreview[]>([]);
   const [loadingSets, setLoadingSets] = useState(true);
   const [customBgThemes, setCustomBgThemes] = useState<any[]>([]);
+  const [editBuiltInSetId, setEditBuiltInSetId] = useState<string | null>(null);
   const [layoutPresets, setLayoutPresets] = useState<any[]>([]);
   const audioRef = useRef<HTMLInputElement>(null);
 
