@@ -70,10 +70,12 @@ function getDeviceId(): string {
 interface CustomCardSetsProps {
   theme: "girl" | "boy";
   onPlay: (cards: CardData[], setName: string) => void;
+  initialOpenSetId?: string | null;
 }
 
-export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
+export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: CustomCardSetsProps) {
   const [sets, setSets] = useState<CustomSet[]>([]);
+  const [newEmojiCard, setNewEmojiCard] = useState({ emoji: "", label: "" });
   const [cards, setCards] = useState<Record<string, CustomCard[]>>({});
   const [loading, setLoading] = useState(true);
   const [openSetId, setOpenSetId] = useState<string | null>(null);
@@ -117,6 +119,13 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
   }, []);
 
   useEffect(() => { loadSets(); }, [loadSets]);
+
+  useEffect(() => {
+    if (initialOpenSetId) {
+      setOpenSetId(initialOpenSetId);
+      loadCards(initialOpenSetId);
+    }
+  }, [initialOpenSetId, loadCards]);
 
   useEffect(() => {
     if (openSetId && !cards[openSetId]) loadCards(openSetId);
@@ -270,6 +279,24 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
     setCards(prev => ({ ...prev, [setId]: (prev[setId] || []).map(c => c.id === cardId ? { ...c, label } : c) }));
   };
 
+  const addEmojiCard = async (setId: string) => {
+    if (!newEmojiCard.emoji.trim()) { toast.error("בחרו אימוג׳י"); return; }
+    const existingCount = (cards[setId] || []).length;
+    const { data, error } = await supabase.from("custom_card_items").insert({
+      set_id: setId, label: newEmojiCard.label || newEmojiCard.emoji,
+      emoji: newEmojiCard.emoji, image_url: null, sort_order: existingCount,
+    }).select().single();
+    if (error) { toast.error("שגיאה בהוספת קלף"); return; }
+    if (data) setCards(prev => ({ ...prev, [setId]: [...(prev[setId] || []), data as CustomCard] }));
+    setNewEmojiCard({ emoji: "", label: "" });
+    toast.success("קלף נוסף! ✨");
+  };
+
+  const updateCardEmoji = async (setId: string, cardId: string, emoji: string) => {
+    await supabase.from("custom_card_items").update({ emoji }).eq("id", cardId);
+    setCards(prev => ({ ...prev, [setId]: (prev[setId] || []).map(c => c.id === cardId ? { ...c, emoji } : c) }));
+  };
+
   const playSet = (s: CustomSet) => {
     const setItems = cards[s.id] || [];
     if (setItems.length < 2) { toast.error("צריך לפחות 2 קלפים כדי לשחק"); return; }
@@ -345,6 +372,21 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
           </Button>
         </div>
 
+        {/* Add emoji card */}
+        <div className="bg-card rounded-2xl border-2 border-muted p-3 space-y-2">
+          <p className="text-xs font-bold text-muted-foreground">➕ הוספת קלף אימוג׳י</p>
+          <div className="flex gap-2">
+            <input type="text" value={newEmojiCard.emoji} onChange={e => setNewEmojiCard(prev => ({ ...prev, emoji: e.target.value }))}
+              placeholder="🐶" className="w-14 h-10 rounded-lg border-2 border-muted text-center text-xl focus:outline-none focus:border-game-pink" />
+            <input type="text" value={newEmojiCard.label} onChange={e => setNewEmojiCard(prev => ({ ...prev, label: e.target.value }))}
+              placeholder="שם הקלף..." dir="rtl" className="flex-1 h-10 rounded-lg border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink" />
+            <Button variant={theme === "girl" ? "game-pink" : "game-blue"} size="sm" className="rounded-xl"
+              onClick={() => addEmojiCard(openSetId)} disabled={!newEmojiCard.emoji.trim()}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
         {showCloudPicker && (
           <div className="bg-card rounded-2xl border-2 border-muted shadow-lg p-3 space-y-2 bounce-in">
             <div className="flex items-center justify-between">
@@ -411,7 +453,13 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
                 {card.image_url ? (
                   <img src={card.image_url} alt={card.label || ""} className="w-full aspect-square object-cover" />
                 ) : (
-                  <div className="w-full aspect-square flex items-center justify-center text-3xl bg-muted">{card.emoji}</div>
+                  <div className="w-full aspect-square flex items-center justify-center bg-muted relative">
+                    <span className="text-3xl">{card.emoji}</span>
+                    <input type="text" value={card.emoji}
+                      onChange={e => updateCardEmoji(openSetId, card.id, e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-center"
+                      title="שנה אימוג׳י" />
+                  </div>
                 )}
                 <div className="px-2 py-1">
                   <input type="text" value={card.label || ""} onChange={e => updateCardLabel(openSetId, card.id, e.target.value)}
