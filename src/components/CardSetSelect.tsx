@@ -315,14 +315,23 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
       <div className="w-full max-w-lg relative z-10 grid grid-cols-2 gap-3 sm:gap-4 bounce-in" style={{ animationDelay: "0.1s" }}>
         {/* Built-in sets */}
         {allCardSets.map((set, i) => (
-          <button key={set.type}
-            onClick={() => onSelectSet(set.type, settings)}
-            className={`bg-gradient-to-br ${set.color} rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground min-h-[100px] sm:min-h-[120px]`}
-            style={{ animationDelay: `${0.15 + i * 0.08}s` }}
-          >
-            <span className="text-4xl sm:text-5xl drop-shadow-sm">{set.emoji}</span>
-            <span className="font-bold text-xs sm:text-sm">{set.label}</span>
-          </button>
+          <div key={set.type} className="relative group">
+            <button
+              onClick={() => onSelectSet(set.type, settings)}
+              className={`w-full bg-gradient-to-br ${set.color} rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground min-h-[100px] sm:min-h-[120px]`}
+              style={{ animationDelay: `${0.15 + i * 0.08}s` }}
+            >
+              <span className="text-4xl sm:text-5xl drop-shadow-sm">{set.emoji}</span>
+              <span className="font-bold text-xs sm:text-sm">{set.label}</span>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); cloneBuiltInToCloud(set); }}
+              className="absolute top-2 left-2 w-7 h-7 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/50 active:scale-90"
+              title="ערוך ערכה"
+            >
+              <Edit2 className="w-3.5 h-3.5 text-white" />
+            </button>
+          </div>
         ))}
 
         {/* Custom sets as identical cards */}
@@ -780,6 +789,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                   <p className="font-bold text-lg text-center">🎴 ערכות מותאמות אישית</p>
                   <CustomCardSets
                     theme={theme}
+                    initialOpenSetId={editBuiltInSetId}
                     onPlay={(cards, name) => {
                       setShowSettings(false);
                       const customPairCount = Math.min(settings.pairCount, cards.length);
