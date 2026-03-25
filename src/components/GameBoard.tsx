@@ -54,6 +54,19 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const [alignLines, setAlignLines] = useState<{ x?: number; y?: number }>({});
   const [saveFlash, setSaveFlash] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
+  const prevMatchedRef = useRef(0);
+
+  // Trigger custom animations on match / win
+  useEffect(() => {
+    if (matchedCount > prevMatchedRef.current && matchedCount > 0) {
+      triggerAnimation("match");
+    }
+    prevMatchedRef.current = matchedCount;
+  }, [matchedCount, triggerAnimation]);
+
+  useEffect(() => {
+    if (isGameOver) triggerAnimation("win");
+  }, [isGameOver, triggerAnimation]);
 
   useEffect(() => {
     if (isFreeLayout) setEditMode(true);
