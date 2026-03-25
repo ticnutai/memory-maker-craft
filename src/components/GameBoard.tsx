@@ -387,10 +387,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                   return;
                 }
 
-                const fallbackType = liveSettings.customMusic
-                  ? (liveSettings.customMusicName?.startsWith("cloud:") ? "cloud" : "custom")
-                  : "builtin";
-
+                const fallbackType = customUrl ? "custom" : "builtin";
                 updateSetting("musicType", fallbackType);
               }}
               title="מוזיקת רקע"
