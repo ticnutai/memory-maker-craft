@@ -121,6 +121,13 @@ export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: Cust
   useEffect(() => { loadSets(); }, [loadSets]);
 
   useEffect(() => {
+    if (initialOpenSetId) {
+      setOpenSetId(initialOpenSetId);
+      loadCards(initialOpenSetId);
+    }
+  }, [initialOpenSetId, loadCards]);
+
+  useEffect(() => {
     if (openSetId && !cards[openSetId]) loadCards(openSetId);
   }, [openSetId, cards, loadCards]);
 
