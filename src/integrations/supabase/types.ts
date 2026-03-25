@@ -53,6 +53,45 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_animations: {
+        Row: {
+          animation_type: string
+          animation_url: string
+          created_at: string
+          device_id: string
+          duration_ms: number | null
+          event_type: string
+          id: string
+          is_active: boolean
+          name: string
+          thumbnail_url: string | null
+        }
+        Insert: {
+          animation_type?: string
+          animation_url: string
+          created_at?: string
+          device_id: string
+          duration_ms?: number | null
+          event_type?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          thumbnail_url?: string | null
+        }
+        Update: {
+          animation_type?: string
+          animation_url?: string
+          created_at?: string
+          device_id?: string
+          duration_ms?: number | null
+          event_type?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          thumbnail_url?: string | null
+        }
+        Relationships: []
+      }
       custom_bg_themes: {
         Row: {
           config: Json
