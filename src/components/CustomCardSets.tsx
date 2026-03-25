@@ -279,6 +279,24 @@ export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: Cust
     setCards(prev => ({ ...prev, [setId]: (prev[setId] || []).map(c => c.id === cardId ? { ...c, label } : c) }));
   };
 
+  const addEmojiCard = async (setId: string) => {
+    if (!newEmojiCard.emoji.trim()) { toast.error("בחרו אימוג׳י"); return; }
+    const existingCount = (cards[setId] || []).length;
+    const { data, error } = await supabase.from("custom_card_items").insert({
+      set_id: setId, label: newEmojiCard.label || newEmojiCard.emoji,
+      emoji: newEmojiCard.emoji, image_url: null, sort_order: existingCount,
+    }).select().single();
+    if (error) { toast.error("שגיאה בהוספת קלף"); return; }
+    if (data) setCards(prev => ({ ...prev, [setId]: [...(prev[setId] || []), data as CustomCard] }));
+    setNewEmojiCard({ emoji: "", label: "" });
+    toast.success("קלף נוסף! ✨");
+  };
+
+  const updateCardEmoji = async (setId: string, cardId: string, emoji: string) => {
+    await supabase.from("custom_card_items").update({ emoji }).eq("id", cardId);
+    setCards(prev => ({ ...prev, [setId]: (prev[setId] || []).map(c => c.id === cardId ? { ...c, emoji } : c) }));
+  };
+
   const playSet = (s: CustomSet) => {
     const setItems = cards[s.id] || [];
     if (setItems.length < 2) { toast.error("צריך לפחות 2 קלפים כדי לשחק"); return; }
