@@ -1,6 +1,7 @@
 import { useMemoryGame } from "@/hooks/useMemoryGame";
 import { useBackgroundMusic } from "@/hooks/useBackgroundMusic";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
+import { useGameAnimations } from "@/hooks/useGameAnimations";
 import { ThemeType, CardData, GameSettings, CardSetType, getCardSets, CardPosition } from "@/lib/gameData";
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import MemoryCard from "@/components/MemoryCard";
