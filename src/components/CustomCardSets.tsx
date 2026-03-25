@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CardData } from "@/lib/gameData";
-import { Plus, Trash2, Edit2, Play, X, Upload, Download, Loader2, ChevronRight, CloudDownload, Copy, Sparkles, Zap, Timer } from "lucide-react";
+import { Plus, Trash2, Edit2, Play, X, Upload, Download, Loader2, ChevronRight, CloudDownload, Copy, Sparkles, Zap, Timer, FileDown, FileUp, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface CustomSet {
@@ -296,6 +296,100 @@ export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: Cust
     await supabase.from("custom_card_items").update({ emoji }).eq("id", cardId);
     setCards(prev => ({ ...prev, [setId]: (prev[setId] || []).map(c => c.id === cardId ? { ...c, emoji } : c) }));
   };
+
+  // ── Export set as JSON ──
+  const exportSet = async (s: CustomSet) => {
+    const setItems = cards[s.id] || [];
+    if (setItems.length === 0) {
+      await loadCards(s.id);
+    }
+    const itemsToExport = cards[s.id] || [];
+    const exportData = {
+      version: 1,
+      type: "memory-game-card-set",
+      exportedAt: new Date().toISOString(),
+      set: { name: s.name, emoji: s.emoji, color: s.color, settings_json: s.settings_json },
+      cards: itemsToExport.map(c => ({
+        label: c.label, emoji: c.emoji, image_url: c.image_url, sort_order: c.sort_order,
+      })),
+    };
+    const json = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${s.name.replace(/\s+/g, "-")}.json`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`ערכת "${s.name}" יוצאה בהצלחה! 📦`);
+  };
+
+  // ── Share set (copy JSON to clipboard) ──
+  const shareSet = async (s: CustomSet) => {
+    const setItems = cards[s.id] || [];
+    if (setItems.length === 0) await loadCards(s.id);
+    const itemsToExport = cards[s.id] || [];
+    const exportData = {
+      version: 1, type: "memory-game-card-set",
+      exportedAt: new Date().toISOString(),
+      set: { name: s.name, emoji: s.emoji, color: s.color, settings_json: s.settings_json },
+      cards: itemsToExport.map(c => ({
+        label: c.label, emoji: c.emoji, image_url: c.image_url, sort_order: c.sort_order,
+      })),
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(exportData));
+      toast.success("הערכה הועתקה ללוח! 📋 שתפו אותה בכל מקום");
+    } catch { toast.error("שגיאה בהעתקה"); }
+  };
+
+  // ── Import set from JSON file ──
+  const importFromFile = async (file: File) => {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (data.type !== "memory-game-card-set" || !data.set || !data.cards) {
+        toast.error("קובץ לא תקין - צריך להיות קובץ ערכה מיוצאת"); return;
+      }
+      const { data: newSet, error } = await supabase.from("custom_card_sets").insert({
+        device_id: deviceId, name: data.set.name + " (מיובא)",
+        emoji: data.set.emoji || "📷", color: data.set.color || "#60a5fa",
+        settings_json: (data.set.settings_json || {}) as any,
+      }).select().single();
+      if (error || !newSet) { toast.error("שגיאה ביצירת ערכה"); return; }
+      for (const c of data.cards) {
+        await supabase.from("custom_card_items").insert({
+          set_id: (newSet as any).id, label: c.label, emoji: c.emoji || "📷",
+          image_url: c.image_url || null, sort_order: c.sort_order || 0,
+        });
+      }
+      toast.success(`ערכת "${data.set.name}" יובאה בהצלחה! 🎉`);
+      loadSets();
+    } catch { toast.error("שגיאה בקריאת הקובץ - ודאו שזה קובץ JSON תקין"); }
+  };
+
+  // ── Import from clipboard (pasted JSON) ──
+  const importFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const data = JSON.parse(text);
+      if (data.type !== "memory-game-card-set") { toast.error("תוכן הלוח אינו ערכת קלפים"); return; }
+      const { data: newSet, error } = await supabase.from("custom_card_sets").insert({
+        device_id: deviceId, name: data.set.name + " (מיובא)",
+        emoji: data.set.emoji || "📷", color: data.set.color || "#60a5fa",
+        settings_json: (data.set.settings_json || {}) as any,
+      }).select().single();
+      if (error || !newSet) { toast.error("שגיאה ביצירת ערכה"); return; }
+      for (const c of data.cards) {
+        await supabase.from("custom_card_items").insert({
+          set_id: (newSet as any).id, label: c.label, emoji: c.emoji || "📷",
+          image_url: c.image_url || null, sort_order: c.sort_order || 0,
+        });
+      }
+      toast.success(`ערכת "${data.set.name}" יובאה מהלוח! 🎉`);
+      loadSets();
+    } catch { toast.error("לא נמצא JSON תקין בלוח"); }
+  };
+
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   const playSet = (s: CustomSet) => {
     const setItems = cards[s.id] || [];
@@ -678,11 +772,26 @@ export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: Cust
       )}
 
       {!showNewSet && (
-        <button onClick={() => { resetForm(); setShowNewSet(true); }}
-          className="w-full h-14 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center gap-2 text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all active:scale-[0.98]">
-          <Plus className="w-5 h-5" />
-          <span className="font-bold text-sm">צור ערכת קלפים חדשה</span>
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => { resetForm(); setShowNewSet(true); }}
+            className="flex-1 h-14 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center gap-2 text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all active:scale-[0.98]">
+            <Plus className="w-5 h-5" />
+            <span className="font-bold text-sm">ערכה חדשה</span>
+          </button>
+          <input ref={importFileRef} type="file" accept=".json" className="hidden"
+            onChange={e => { if (e.target.files?.[0]) importFromFile(e.target.files[0]); e.target.value = ""; }} />
+          <button onClick={() => importFileRef.current?.click()}
+            className="h-14 px-4 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center gap-2 text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all active:scale-[0.98]">
+            <FileUp className="w-5 h-5" />
+            <span className="font-bold text-sm">ייבוא</span>
+          </button>
+          <button onClick={importFromClipboard}
+            className="h-14 px-4 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center gap-2 text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all active:scale-[0.98]"
+            title="ייבוא מהלוח">
+            <Download className="w-5 h-5" />
+            <span className="font-bold text-sm">מלוח</span>
+          </button>
+        </div>
       )}
 
       {sets.length === 0 && !showNewSet && (
@@ -717,6 +826,14 @@ export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: Cust
                 <button onClick={e => { e.stopPropagation(); editSet(s); }}
                   className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90">
                   <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+                <button onClick={e => { e.stopPropagation(); exportSet(s); }}
+                  className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="ייצוא JSON">
+                  <FileDown className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+                <button onClick={e => { e.stopPropagation(); shareSet(s); }}
+                  className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="העתק ללוח">
+                  <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
                 <button onClick={e => { e.stopPropagation(); duplicateSet(s); }}
                   className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90">
