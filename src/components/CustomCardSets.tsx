@@ -387,6 +387,7 @@ export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: Cust
           </div>
         </div>
 
+        {showCloudPicker && (
           <div className="bg-card rounded-2xl border-2 border-muted shadow-lg p-3 space-y-2 bounce-in">
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-sm">☁️ בחירת תמונות מהענן</h4>
