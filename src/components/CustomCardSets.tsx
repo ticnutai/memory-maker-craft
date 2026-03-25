@@ -297,7 +297,100 @@ export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: Cust
     setCards(prev => ({ ...prev, [setId]: (prev[setId] || []).map(c => c.id === cardId ? { ...c, emoji } : c) }));
   };
 
-  const playSet = (s: CustomSet) => {
+  // ── Export set as JSON ──
+  const exportSet = async (s: CustomSet) => {
+    const setItems = cards[s.id] || [];
+    if (setItems.length === 0) {
+      await loadCards(s.id);
+    }
+    const itemsToExport = cards[s.id] || [];
+    const exportData = {
+      version: 1,
+      type: "memory-game-card-set",
+      exportedAt: new Date().toISOString(),
+      set: { name: s.name, emoji: s.emoji, color: s.color, settings_json: s.settings_json },
+      cards: itemsToExport.map(c => ({
+        label: c.label, emoji: c.emoji, image_url: c.image_url, sort_order: c.sort_order,
+      })),
+    };
+    const json = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${s.name.replace(/\s+/g, "-")}.json`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`ערכת "${s.name}" יוצאה בהצלחה! 📦`);
+  };
+
+  // ── Share set (copy JSON to clipboard) ──
+  const shareSet = async (s: CustomSet) => {
+    const setItems = cards[s.id] || [];
+    if (setItems.length === 0) await loadCards(s.id);
+    const itemsToExport = cards[s.id] || [];
+    const exportData = {
+      version: 1, type: "memory-game-card-set",
+      exportedAt: new Date().toISOString(),
+      set: { name: s.name, emoji: s.emoji, color: s.color, settings_json: s.settings_json },
+      cards: itemsToExport.map(c => ({
+        label: c.label, emoji: c.emoji, image_url: c.image_url, sort_order: c.sort_order,
+      })),
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(exportData));
+      toast.success("הערכה הועתקה ללוח! 📋 שתפו אותה בכל מקום");
+    } catch { toast.error("שגיאה בהעתקה"); }
+  };
+
+  // ── Import set from JSON file ──
+  const importFromFile = async (file: File) => {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (data.type !== "memory-game-card-set" || !data.set || !data.cards) {
+        toast.error("קובץ לא תקין - צריך להיות קובץ ערכה מיוצאת"); return;
+      }
+      const { data: newSet, error } = await supabase.from("custom_card_sets").insert({
+        device_id: deviceId, name: data.set.name + " (מיובא)",
+        emoji: data.set.emoji || "📷", color: data.set.color || "#60a5fa",
+        settings_json: (data.set.settings_json || {}) as any,
+      }).select().single();
+      if (error || !newSet) { toast.error("שגיאה ביצירת ערכה"); return; }
+      for (const c of data.cards) {
+        await supabase.from("custom_card_items").insert({
+          set_id: (newSet as any).id, label: c.label, emoji: c.emoji || "📷",
+          image_url: c.image_url || null, sort_order: c.sort_order || 0,
+        });
+      }
+      toast.success(`ערכת "${data.set.name}" יובאה בהצלחה! 🎉`);
+      loadSets();
+    } catch { toast.error("שגיאה בקריאת הקובץ - ודאו שזה קובץ JSON תקין"); }
+  };
+
+  // ── Import from clipboard (pasted JSON) ──
+  const importFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const data = JSON.parse(text);
+      if (data.type !== "memory-game-card-set") { toast.error("תוכן הלוח אינו ערכת קלפים"); return; }
+      const { data: newSet, error } = await supabase.from("custom_card_sets").insert({
+        device_id: deviceId, name: data.set.name + " (מיובא)",
+        emoji: data.set.emoji || "📷", color: data.set.color || "#60a5fa",
+        settings_json: (data.set.settings_json || {}) as any,
+      }).select().single();
+      if (error || !newSet) { toast.error("שגיאה ביצירת ערכה"); return; }
+      for (const c of data.cards) {
+        await supabase.from("custom_card_items").insert({
+          set_id: (newSet as any).id, label: c.label, emoji: c.emoji || "📷",
+          image_url: c.image_url || null, sort_order: c.sort_order || 0,
+        });
+      }
+      toast.success(`ערכת "${data.set.name}" יובאה מהלוח! 🎉`);
+      loadSets();
+    } catch { toast.error("לא נמצא JSON תקין בלוח"); }
+  };
+
+  const importFileRef = useRef<HTMLInputElement>(null);
+
     const setItems = cards[s.id] || [];
     if (setItems.length < 2) { toast.error("צריך לפחות 2 קלפים כדי לשחק"); return; }
     const gameCards: CardData[] = setItems.map((c, i) => ({
