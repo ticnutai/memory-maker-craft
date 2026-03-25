@@ -295,6 +295,45 @@ export type Database = {
         }
         Relationships: []
       }
+      layout_presets: {
+        Row: {
+          align: string
+          cols: number
+          created_at: string
+          device_id: string
+          gap: number
+          id: string
+          is_custom: boolean
+          name: string
+          pattern: string
+          updated_at: string
+        }
+        Insert: {
+          align?: string
+          cols?: number
+          created_at?: string
+          device_id: string
+          gap?: number
+          id?: string
+          is_custom?: boolean
+          name?: string
+          pattern?: string
+          updated_at?: string
+        }
+        Update: {
+          align?: string
+          cols?: number
+          created_at?: string
+          device_id?: string
+          gap?: number
+          id?: string
+          is_custom?: boolean
+          name?: string
+          pattern?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       voice_recordings: {
         Row: {
           audio_url: string
