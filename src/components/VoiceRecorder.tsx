@@ -220,7 +220,6 @@ export default function VoiceRecorder({ theme }: VoiceRecorderProps) {
     const { data } = await supabase
       .from("voice_recordings")
       .select("*")
-      .eq("device_id", getDeviceId())
       .order("created_at", { ascending: false });
     if (data) setRecordings(data as Recording[]);
   };
