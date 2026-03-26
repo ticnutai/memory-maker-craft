@@ -807,13 +807,9 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                       {(cloud.sfxMode || "builtin") === "both" && "קריין AI + שילוב של שני מקורות הצליל"}
                     </p>
                     {(cloud.sfxMode === "elevenlabs" || cloud.sfxMode === "both") && (
-                      <div className="mt-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-800 space-y-1" dir="rtl">
-                        <p className="font-bold">⚠️ נדרש הגדרת API Key ב-Supabase</p>
-                        <p>להפעלת ElevenLabs יש להוסיף את המפתח כ-Secret בדשבורד של Supabase:</p>
-                        <code className="block bg-amber-100 rounded px-2 py-1 font-mono text-[10px] select-all">
-                          ELEVENLABS_API_KEY = your_api_key_here
-                        </code>
-                        <p className="text-amber-600">ללא מפתח — המערכת תחזור אוטומטית לקריין הדפדפן.</p>
+                      <div className="mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-800 space-y-1" dir="rtl">
+                        <p className="font-bold">✅ ElevenLabs מחובר ופעיל</p>
+                        <p>קריינות AI ואפקטי צליל מ-ElevenLabs זמינים. הקריין ישתמש במודל <span className="font-mono text-[10px]">eleven_multilingual_v2</span> לתמיכה מלאה בעברית, אנגלית וגרמנית.</p>
                       </div>
                     )}
                   </div>
