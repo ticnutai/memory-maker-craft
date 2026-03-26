@@ -30,7 +30,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const setInfo = getCardSets(theme).find((s) => s.type === cardSetType);
   const cardData = customCards || setInfo?.cards || getCardSets(theme)[0].cards;
   const pairCount = Math.min(liveSettings.pairCount, cardData.length);
-  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, soundOn, speechOn, liveSettings.flipDuration, liveSettings.speechRate, liveSettings.customVoiceEnabled !== false);
+  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, soundOn, speechOn, liveSettings.flipDuration, liveSettings.speechRate, liveSettings.customVoiceEnabled !== false, liveSettings.sfxMode || "builtin", liveSettings.elevenLabsEffectsEnabled === true);
   const activeMelody = liveSettings.musicType === "builtin"
     ? BUILT_IN_MELODIES.find((m) => m.id === liveSettings.builtinMelodyId)
     : undefined;

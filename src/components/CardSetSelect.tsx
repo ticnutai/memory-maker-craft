@@ -780,6 +780,47 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                       <p className="text-[10px] text-muted-foreground text-center">העלו ובחרו שירים, רינגטונים ומוזיקה מהענן</p>
                     </div>
                   )}
+                  {/* ─── SFX Mode ─── */}
+                  <div className="pt-3 border-t border-muted">
+                    <p className="font-bold text-lg text-center mb-3">🔊 מקור אפקטי צליל</p>
+                    <div className="flex gap-1 bg-muted rounded-xl p-1">
+                      {([
+                        { type: "builtin" as const, label: "מובנה", emoji: "🎹" },
+                        { type: "elevenlabs" as const, label: "ElevenLabs", emoji: "🤖" },
+                        { type: "both" as const, label: "שניהם", emoji: "🎼" },
+                      ]).map((opt) => (
+                        <button key={opt.type} onClick={() => updateSetting("sfxMode" as any, opt.type)}
+                          className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                            (cloud.sfxMode || "builtin") === opt.type ? "bg-game-pink text-primary-foreground shadow-sm" : "text-muted-foreground"
+                          }`}>{opt.emoji} {opt.label}</button>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground text-center mt-1">
+                      {(cloud.sfxMode || "builtin") === "builtin" && "צלילים סינתטיים מובנים (Web Audio)"}
+                      {(cloud.sfxMode || "builtin") === "elevenlabs" && "אפקטי צליל מיוצרים על ידי AI"}
+                      {(cloud.sfxMode || "builtin") === "both" && "שילוב של שני המקורות יחד"}
+                    </p>
+                  </div>
+
+                  {/* ─── Voice Effects ─── */}
+                  <div className="pt-3 border-t border-muted">
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold text-base">🗣️ אפקטי קול AI</p>
+                      <button
+                        onClick={() => updateSetting("elevenLabsEffectsEnabled" as any, !(cloud.elevenLabsEffectsEnabled === true))}
+                        className={`w-12 h-6 rounded-full transition-all ${
+                          cloud.elevenLabsEffectsEnabled === true ? "bg-game-pink" : "bg-muted"
+                        }`}
+                      >
+                        <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                          cloud.elevenLabsEffectsEnabled === true ? "translate-x-6" : "translate-x-0.5"
+                        }`} />
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      הקריין יגיד "כל הכבוד!", "מצוין!" ועוד בזמן המשחק
+                    </p>
+                  </div>
                 </div>
               )}
 

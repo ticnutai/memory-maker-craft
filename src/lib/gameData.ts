@@ -36,6 +36,9 @@ export interface GameSettings {
   animationsEnabled?: boolean;
   layoutPreset?: string;
   customVoiceEnabled?: boolean;
+  sfxMode?: "builtin" | "elevenlabs" | "both";
+  elevenLabsVoiceId?: string;
+  elevenLabsEffectsEnabled?: boolean;
 }
 
 export interface CardData {
