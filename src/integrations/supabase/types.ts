@@ -205,6 +205,7 @@ export type Database = {
           card_border_radius: number
           card_border_width: number
           card_max_w: number
+          card_positions: Json | null
           card_shape: string
           created_at: string
           custom_music: string | null
@@ -215,7 +216,10 @@ export type Database = {
           elevenlabs_voice_id: string | null
           emoji_scale: number
           flip_duration: number
+          grid_size: number | null
           id: string
+          layout_mode: string | null
+          layout_preset: string | null
           music_type: string
           pair_count: number
           sfx_mode: string
@@ -238,6 +242,7 @@ export type Database = {
           card_border_radius?: number
           card_border_width?: number
           card_max_w?: number
+          card_positions?: Json | null
           card_shape?: string
           created_at?: string
           custom_music?: string | null
@@ -248,7 +253,10 @@ export type Database = {
           elevenlabs_voice_id?: string | null
           emoji_scale?: number
           flip_duration?: number
+          grid_size?: number | null
           id?: string
+          layout_mode?: string | null
+          layout_preset?: string | null
           music_type?: string
           pair_count?: number
           sfx_mode?: string
@@ -271,6 +279,7 @@ export type Database = {
           card_border_radius?: number
           card_border_width?: number
           card_max_w?: number
+          card_positions?: Json | null
           card_shape?: string
           created_at?: string
           custom_music?: string | null
@@ -281,7 +290,10 @@ export type Database = {
           elevenlabs_voice_id?: string | null
           emoji_scale?: number
           flip_duration?: number
+          grid_size?: number | null
           id?: string
+          layout_mode?: string | null
+          layout_preset?: string | null
           music_type?: string
           pair_count?: number
           sfx_mode?: string
