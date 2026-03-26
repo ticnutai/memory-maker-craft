@@ -6,7 +6,7 @@ interface GameAudioWindow extends Window {
 const audioCtx = () => {
   const w = window as GameAudioWindow;
   if (!w.__gameAudioCtx) {
-    w.__gameAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    w.__gameAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
   }
   const ctx = w.__gameAudioCtx;
   if (ctx.state === "suspended") ctx.resume();

@@ -112,10 +112,10 @@ export function useCloudSettings(initialTheme: string) {
       speechVolume: asNumber(data.speech_volume, 50),
       layoutPreset: asString(data.layout_preset, "grid-3"),
       customVoiceEnabled: asBool(data.custom_voice_enabled, true),
-      sfxMode: asString((data as any).sfx_mode, "builtin"),
+      sfxMode: asString((data as any).sfx_mode, "builtin") as StoredSettings["sfxMode"],
       elevenLabsVoiceId: typeof (data as any).elevenlabs_voice_id === "string" ? (data as any).elevenlabs_voice_id : undefined,
       elevenLabsEffectsEnabled: asBool((data as any).elevenlabs_effects_enabled, false),
-      speechLang: asString((data as any).speech_lang, "he"),
+      speechLang: asString((data as any).speech_lang, "he") as StoredSettings["speechLang"],
       cardStyle: {
         borderRadius: asNumber(data.card_border_radius, 16),
         borderWidth: asNumber(data.card_border_width, 4),

@@ -49,7 +49,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     ? BUILT_IN_MELODIES.find((m) => m.id === liveSettings.builtinMelodyId)
     : undefined;
   const customUrl = (liveSettings.musicType === "custom" || liveSettings.musicType === "cloud") ? liveSettings.customMusic : undefined;
-  const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(
+  const { isPlaying: musicPlaying, start: startMusic, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(
     globalMute ? undefined : activeMelody,
     globalMute ? undefined : customUrl,
     (liveCloud.musicVolume ?? 50) / 100
@@ -321,7 +321,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     const posArr = cards.map(c => positions[c.uniqueId] || { x: 0, y: 0 });
     await supabase.from("layout_presets").insert({
       device_id: getDeviceId(),
-      name: name.trim(),
+      name: "פריסה משוכפלת",
       positions: posArr,
       pair_count: pairCount,
     } as any);
