@@ -208,7 +208,6 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     setShowSettings(true);
     setSettingsTab("custom-sets");
   };
-  };
 
   // Play a custom set
   const playCustomSet = async (setPreview: CustomSetPreview) => {

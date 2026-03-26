@@ -132,8 +132,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     return () => { clearTimeout(timer); document.removeEventListener("click", close); };
   }, [volumePopup]);
 
-  // ── Previous state refs for detecting match/mismatch ──
-  const prevMatchedRef = useRef(matchedCount);
+  // ── Previous state ref for detecting mismatch (match ref declared above) ──
   const prevMovesRef = useRef(moves);
 
   // ── Timer logic ──
@@ -318,7 +317,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     setTimeout(() => setSaveFlash(false), 1200);
   };
 
-  const duplicateLayout = () => {
+  const duplicateLayout = async () => {
     const posArr = cards.map(c => positions[c.uniqueId] || { x: 0, y: 0 });
     await supabase.from("layout_presets").insert({
       device_id: getDeviceId(),
