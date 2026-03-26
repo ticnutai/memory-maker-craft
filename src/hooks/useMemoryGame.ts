@@ -72,17 +72,22 @@ export function useMemoryGame(
     builtinFn();
   }, [soundEnabled, sfxMode, customVoiceEnabled, playCustomVoice]);
 
+  // Set speech language
+  useEffect(() => {
+    setSpeechLang(speechLang);
+  }, [speechLang]);
+
   // Play ElevenLabs voice effect (encouragement)
   const playVoiceEffect = useCallback((eventType: string) => {
     if (!elevenLabsEffectsEnabled || !soundEnabled) return;
-    const phrases = VOICE_EFFECTS[eventType];
+    const langPhrases = VOICE_EFFECTS[speechLang];
+    const phrases = langPhrases?.[eventType];
     if (!phrases) return;
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-    // Slight delay so it doesn't overlap with SFX
     setTimeout(() => {
       elevenLabsSpeak(phrase).catch(() => {});
     }, 400);
-  }, [elevenLabsEffectsEnabled, soundEnabled]);
+  }, [elevenLabsEffectsEnabled, soundEnabled, speechLang]);
 
   const startGame = useCallback((cardData: CardData[]) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
