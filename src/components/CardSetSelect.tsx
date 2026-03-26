@@ -830,7 +830,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                       </button>
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1">
-                      הקריין יגיד "כל הכבוד!", "מצוין!" ועוד בזמן המשחק (דורש API Key)
+                      הקריין יגיד "כל הכבוד!", "מצוין!" ועוד בזמן המשחק
                     </p>
                   </div>
 
