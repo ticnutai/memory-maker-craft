@@ -56,6 +56,7 @@ Object.keys(BASE_NAMES).forEach((key) => {
 });
 
 let lastSpoke = 0;
+let useElevenLabs = true; // Try ElevenLabs first, fallback to browser TTS
 
 export function speakCardName(cardId: string, rate: number = 0.9) {
   const name = CARD_NAMES_HE[cardId];
@@ -65,6 +66,22 @@ export function speakCardName(cardId: string, rate: number = 0.9) {
   if (now - lastSpoke < 400) return;
   lastSpoke = now;
 
+  if (useElevenLabs) {
+    import("@/lib/elevenLabs").then(({ elevenLabsSpeak }) => {
+      elevenLabsSpeak(name).then((success) => {
+        if (!success) {
+          // Fallback to browser TTS
+          speakWithBrowser(name, rate);
+        }
+      });
+    }).catch(() => speakWithBrowser(name, rate));
+    return;
+  }
+
+  speakWithBrowser(name, rate);
+}
+
+function speakWithBrowser(name: string, rate: number) {
   window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(name);
@@ -78,6 +95,10 @@ export function speakCardName(cardId: string, rate: number = 0.9) {
   if (heVoice) utterance.voice = heVoice;
 
   window.speechSynthesis.speak(utterance);
+}
+
+export function setElevenLabsTTS(enabled: boolean) {
+  useElevenLabs = enabled;
 }
 
 export function getCardNameHe(cardId: string): string | undefined {
