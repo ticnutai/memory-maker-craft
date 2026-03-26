@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { GameCard, CardData, createGameCards } from "@/lib/gameData";
 import { playFlipSound, playMatchSound, playMismatchSound, playWinSound, playStarSound } from "@/lib/sounds";
 import { playCardSound } from "@/lib/cardSounds";
-import { speakCardName } from "@/lib/cardSpeech";
+import { speakCardName, setSpeechLang, VOICE_EFFECTS, type SpeechLang } from "@/lib/cardSpeech";
 import { supabase } from "@/integrations/supabase/client";
 import { elevenLabsSfx, elevenLabsSpeak } from "@/lib/elevenLabs";
 
@@ -14,13 +14,6 @@ interface VoiceRec {
 
 type SfxMode = "builtin" | "elevenlabs" | "both";
 
-// Voice effect phrases for game events (Hebrew encouragement)
-const VOICE_EFFECTS: Record<string, string[]> = {
-  match: ["כל הכבוד!", "יופי!", "מצוין!", "נהדר!", "וואו!"],
-  win: ["ניצחת! מדהים!", "אלוף!", "שיחקת מעולה!", "כוכב!"],
-  mismatch: ["נסה שוב!", "לא נורא!", "קדימה!"],
-};
-
 export function useMemoryGame(
   pairCount: number = 4,
   soundEnabled: boolean = true,
@@ -29,7 +22,8 @@ export function useMemoryGame(
   speechRate: number = 0.9,
   customVoiceEnabled: boolean = true,
   sfxMode: SfxMode = "builtin",
-  elevenLabsEffectsEnabled: boolean = false
+  elevenLabsEffectsEnabled: boolean = false,
+  speechLang: SpeechLang = "he"
 ) {
   const [cards, setCards] = useState<GameCard[]>([]);
   const [flippedIds, setFlippedIds] = useState<string[]>([]);
