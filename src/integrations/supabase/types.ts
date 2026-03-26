@@ -226,6 +226,7 @@ export type Database = {
           snap_to_grid: boolean | null
           sound_enabled: boolean
           speech_enabled: boolean | null
+          speech_lang: string
           speech_rate: number | null
           theme: string | null
           updated_at: string
@@ -262,6 +263,7 @@ export type Database = {
           snap_to_grid?: boolean | null
           sound_enabled?: boolean
           speech_enabled?: boolean | null
+          speech_lang?: string
           speech_rate?: number | null
           theme?: string | null
           updated_at?: string
@@ -298,6 +300,7 @@ export type Database = {
           snap_to_grid?: boolean | null
           sound_enabled?: boolean
           speech_enabled?: boolean | null
+          speech_lang?: string
           speech_rate?: number | null
           theme?: string | null
           updated_at?: string

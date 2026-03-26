@@ -821,6 +821,26 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                       הקריין יגיד "כל הכבוד!", "מצוין!" ועוד בזמן המשחק
                     </p>
                   </div>
+
+                  {/* ─── Speech Language ─── */}
+                  <div className="pt-3 border-t border-muted">
+                    <p className="font-bold text-lg text-center mb-3">🌍 שפת קריינות</p>
+                    <div className="flex gap-1 bg-muted rounded-xl p-1">
+                      {([
+                        { type: "he" as const, label: "עברית", emoji: "🇮🇱" },
+                        { type: "en" as const, label: "English", emoji: "🇬🇧" },
+                        { type: "de" as const, label: "Deutsch", emoji: "🇩🇪" },
+                      ]).map((opt) => (
+                        <button key={opt.type} onClick={() => updateSetting("speechLang" as any, opt.type)}
+                          className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                            (cloud.speechLang || "he") === opt.type ? "bg-game-pink text-primary-foreground shadow-sm" : "text-muted-foreground"
+                          }`}>{opt.emoji} {opt.label}</button>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground text-center mt-1">
+                      הקריין ואפקטי הקול ידברו בשפה שנבחרה
+                    </p>
+                  </div>
                 </div>
               )}
 

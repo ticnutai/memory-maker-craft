@@ -39,6 +39,7 @@ export interface GameSettings {
   sfxMode?: "builtin" | "elevenlabs" | "both";
   elevenLabsVoiceId?: string;
   elevenLabsEffectsEnabled?: boolean;
+  speechLang?: "he" | "en" | "de";
 }
 
 export interface CardData {
