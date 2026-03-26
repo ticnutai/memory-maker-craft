@@ -13,7 +13,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, AudioLines, Lightbulb, Eye, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { setSoundVolumeMultiplier } from "@/lib/sounds";
-import { setSpeechVolumeMultiplier } from "@/lib/cardSpeech";
+import { setSpeechVolumeMultiplier, setElevenLabsTTS } from "@/lib/cardSpeech";
 
 interface GameBoardProps {
   theme: ThemeType;
@@ -70,6 +70,12 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const [saveFlash, setSaveFlash] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
   const prevMatchedRef = useRef(0);
+
+  // Sync ElevenLabs TTS flag with current sfxMode setting
+  useEffect(() => {
+    const mode = liveSettings.sfxMode || "builtin";
+    setElevenLabsTTS(mode === "elevenlabs" || mode === "both");
+  }, [liveSettings.sfxMode]);
 
   // Trigger custom animations on match / win
   useEffect(() => {

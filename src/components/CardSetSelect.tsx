@@ -788,7 +788,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                   )}
                   {/* ─── SFX Mode ─── */}
                   <div className="pt-3 border-t border-muted">
-                    <p className="font-bold text-lg text-center mb-3">🔊 מקור אפקטי צליל</p>
+                    <p className="font-bold text-lg text-center mb-3">🔊 מקור אפקטי צליל + קריין</p>
                     <div className="flex gap-1 bg-muted rounded-xl p-1">
                       {([
                         { type: "builtin" as const, label: "מובנה", emoji: "🎹" },
@@ -802,10 +802,20 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                       ))}
                     </div>
                     <p className="text-[10px] text-muted-foreground text-center mt-1">
-                      {(cloud.sfxMode || "builtin") === "builtin" && "צלילים סינתטיים מובנים (Web Audio)"}
-                      {(cloud.sfxMode || "builtin") === "elevenlabs" && "אפקטי צליל מיוצרים על ידי AI"}
-                      {(cloud.sfxMode || "builtin") === "both" && "שילוב של שני המקורות יחד"}
+                      {(cloud.sfxMode || "builtin") === "builtin" && "קריין דפדפן + צלילים סינתטיים מובנים"}
+                      {(cloud.sfxMode || "builtin") === "elevenlabs" && "קריין AI + אפקטי צליל מ-ElevenLabs"}
+                      {(cloud.sfxMode || "builtin") === "both" && "קריין AI + שילוב של שני מקורות הצליל"}
                     </p>
+                    {(cloud.sfxMode === "elevenlabs" || cloud.sfxMode === "both") && (
+                      <div className="mt-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-800 space-y-1" dir="rtl">
+                        <p className="font-bold">⚠️ נדרש הגדרת API Key ב-Supabase</p>
+                        <p>להפעלת ElevenLabs יש להוסיף את המפתח כ-Secret בדשבורד של Supabase:</p>
+                        <code className="block bg-amber-100 rounded px-2 py-1 font-mono text-[10px] select-all">
+                          ELEVENLABS_API_KEY = your_api_key_here
+                        </code>
+                        <p className="text-amber-600">ללא מפתח — המערכת תחזור אוטומטית לקריין הדפדפן.</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* ─── Voice Effects ─── */}
@@ -824,7 +834,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                       </button>
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1">
-                      הקריין יגיד "כל הכבוד!", "מצוין!" ועוד בזמן המשחק
+                      הקריין יגיד "כל הכבוד!", "מצוין!" ועוד בזמן המשחק (דורש API Key)
                     </p>
                   </div>
 

@@ -20,7 +20,8 @@ async function fetchAudio(functionName: string, body: Record<string, unknown>): 
     });
 
     if (!response.ok) {
-      console.warn(`ElevenLabs ${functionName} failed:`, response.status);
+      const msg = `ElevenLabs ${functionName} failed (${response.status})${response.status === 500 ? " — API key probably not set in Supabase secrets (ELEVENLABS_API_KEY)" : ""}`;
+      console.warn(msg);
       return null;
     }
 
