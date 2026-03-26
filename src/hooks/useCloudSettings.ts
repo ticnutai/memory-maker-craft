@@ -45,6 +45,9 @@ export interface StoredSettings {
   cardPositions?: { x: number; y: number }[];
   layoutPreset?: string;
   customVoiceEnabled?: boolean;
+  sfxMode?: "builtin" | "elevenlabs" | "both";
+  elevenLabsVoiceId?: string;
+  elevenLabsEffectsEnabled?: boolean;
 }
 
 export function useCloudSettings(initialTheme: string) {
@@ -87,6 +90,9 @@ export function useCloudSettings(initialTheme: string) {
       cardPositions: (data as any).card_positions || [],
       layoutPreset: (data as any).layout_preset || "grid-3",
       customVoiceEnabled: (data as any).custom_voice_enabled !== false,
+      sfxMode: (data as any).sfx_mode || "builtin",
+      elevenLabsVoiceId: (data as any).elevenlabs_voice_id || undefined,
+      elevenLabsEffectsEnabled: (data as any).elevenlabs_effects_enabled === true,
       cardStyle: {
         borderRadius: data.card_border_radius ?? 16,
         borderWidth: data.card_border_width ?? 4,
@@ -174,6 +180,9 @@ export function useCloudSettings(initialTheme: string) {
         card_positions: newSettings.cardPositions || [],
         layout_preset: newSettings.layoutPreset || "grid-3",
         custom_voice_enabled: newSettings.customVoiceEnabled !== false,
+        sfx_mode: newSettings.sfxMode || "builtin",
+        elevenlabs_voice_id: newSettings.elevenLabsVoiceId || null,
+        elevenlabs_effects_enabled: newSettings.elevenLabsEffectsEnabled === true,
         updated_at: new Date().toISOString(),
       }, { onConflict: "device_id" });
     }, 500);
@@ -230,6 +239,9 @@ export function useCloudSettings(initialTheme: string) {
     cardPositions: settings.cardPositions || [],
     layoutPreset: settings.layoutPreset || "grid-3",
     customVoiceEnabled: settings.customVoiceEnabled !== false,
+    sfxMode: settings.sfxMode || "builtin",
+    elevenLabsVoiceId: settings.elevenLabsVoiceId,
+    elevenLabsEffectsEnabled: settings.elevenLabsEffectsEnabled === true,
   }), [settings]);
 
   return { settings, loaded, updateSetting, updateCardStyle, updateMultiple, toGameSettings };
