@@ -211,13 +211,18 @@ export type Database = {
           custom_music_name: string | null
           custom_voice_enabled: boolean | null
           device_id: string
+          elevenlabs_effects_enabled: boolean
+          elevenlabs_voice_id: string | null
           emoji_scale: number
           flip_duration: number
           id: string
           music_type: string
           pair_count: number
+          sfx_mode: string
+          snap_to_grid: boolean | null
           sound_enabled: boolean
           speech_enabled: boolean | null
+          speech_lang: string
           speech_rate: number | null
           theme: string | null
           updated_at: string
@@ -239,13 +244,18 @@ export type Database = {
           custom_music_name?: string | null
           custom_voice_enabled?: boolean | null
           device_id: string
+          elevenlabs_effects_enabled?: boolean
+          elevenlabs_voice_id?: string | null
           emoji_scale?: number
           flip_duration?: number
           id?: string
           music_type?: string
           pair_count?: number
+          sfx_mode?: string
+          snap_to_grid?: boolean | null
           sound_enabled?: boolean
           speech_enabled?: boolean | null
+          speech_lang?: string
           speech_rate?: number | null
           theme?: string | null
           updated_at?: string
@@ -267,13 +277,18 @@ export type Database = {
           custom_music_name?: string | null
           custom_voice_enabled?: boolean | null
           device_id?: string
+          elevenlabs_effects_enabled?: boolean
+          elevenlabs_voice_id?: string | null
           emoji_scale?: number
           flip_duration?: number
           id?: string
           music_type?: string
           pair_count?: number
+          sfx_mode?: string
+          snap_to_grid?: boolean | null
           sound_enabled?: boolean
           speech_enabled?: boolean | null
+          speech_lang?: string
           speech_rate?: number | null
           theme?: string | null
           updated_at?: string

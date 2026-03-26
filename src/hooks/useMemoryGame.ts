@@ -2,8 +2,9 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { GameCard, CardData, createGameCards } from "@/lib/gameData";
 import { playFlipSound, playMatchSound, playMismatchSound, playWinSound, playStarSound } from "@/lib/sounds";
 import { playCardSound } from "@/lib/cardSounds";
-import { speakCardName } from "@/lib/cardSpeech";
+import { speakCardName, setSpeechLang, VOICE_EFFECTS, type SpeechLang } from "@/lib/cardSpeech";
 import { supabase } from "@/integrations/supabase/client";
+import { elevenLabsSfx, elevenLabsSpeak } from "@/lib/elevenLabs";
 
 interface VoiceRec {
   event_type: string;
@@ -11,11 +12,19 @@ interface VoiceRec {
   is_active: boolean;
 }
 
-function getDeviceId(): string {
-  return localStorage.getItem("memory-game-device-id") || "unknown";
-}
+type SfxMode = "builtin" | "elevenlabs" | "both";
 
-export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = true, speechEnabled: boolean = true, flipDuration: number = 1, speechRate: number = 0.9, customVoiceEnabled: boolean = true) {
+export function useMemoryGame(
+  pairCount: number = 4,
+  soundEnabled: boolean = true,
+  speechEnabled: boolean = true,
+  flipDuration: number = 1,
+  speechRate: number = 0.9,
+  customVoiceEnabled: boolean = true,
+  sfxMode: SfxMode = "builtin",
+  elevenLabsEffectsEnabled: boolean = false,
+  speechLang: SpeechLang = "he"
+) {
   const [cards, setCards] = useState<GameCard[]>([]);
   const [flippedIds, setFlippedIds] = useState<string[]>([]);
   const [moves, setMoves] = useState(0);
@@ -49,6 +58,41 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
     return true;
   }, []);
 
+  // Play SFX based on mode
+  const playSfx = useCallback((eventType: string, builtinFn: () => void) => {
+    if (!soundEnabled) return;
+
+    // Custom voice recordings take priority
+    if (customVoiceEnabled && playCustomVoice(eventType)) {
+      if (sfxMode !== "both") return;
+    }
+
+    if (sfxMode === "elevenlabs" || sfxMode === "both") {
+      elevenLabsSfx(eventType).catch(() => {});
+      if (sfxMode === "elevenlabs") return;
+    }
+
+    // Built-in Web Audio
+    builtinFn();
+  }, [soundEnabled, sfxMode, customVoiceEnabled, playCustomVoice]);
+
+  // Set speech language
+  useEffect(() => {
+    setSpeechLang(speechLang);
+  }, [speechLang]);
+
+  // Play ElevenLabs voice effect (encouragement)
+  const playVoiceEffect = useCallback((eventType: string) => {
+    if (!elevenLabsEffectsEnabled || !soundEnabled) return;
+    const langPhrases = VOICE_EFFECTS[speechLang];
+    const phrases = langPhrases?.[eventType];
+    if (!phrases) return;
+    const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+    setTimeout(() => {
+      elevenLabsSpeak(phrase).catch(() => {});
+    }, 400);
+  }, [elevenLabsEffectsEnabled, soundEnabled, speechLang]);
+
   const startGame = useCallback((cardData: CardData[]) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setCards(createGameCards(cardData, pairCount));
@@ -67,14 +111,12 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
     if (flippedIds.length >= 2) return;
 
     if (soundEnabled) {
-      playFlipSound();
+      playSfx("flip", playFlipSound);
       playCardSound(card.id);
     }
     if (speechEnabled) {
       setTimeout(() => speakCardName(card.id, speechRate), 150);
     }
-    // Custom flip voice
-    if (soundEnabled && customVoiceEnabled) playCustomVoice("flip");
 
     const newFlipped = [...flippedIds, uniqueId];
     setFlippedIds(newFlipped);
@@ -92,9 +134,8 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
 
       if (first.id === second.id) {
         timeoutRef.current = setTimeout(() => {
-          if (soundEnabled) {
-            if (!(customVoiceEnabled && playCustomVoice("match"))) playMatchSound();
-          }
+          playSfx("match", playMatchSound);
+          playVoiceEffect("match");
           setCards((prev) =>
             prev.map((c) =>
               c.id === first.id ? { ...c, isMatched: true, isFlipped: true } : c
@@ -108,17 +149,15 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
           if (newMatched === pairCount) {
             setTimeout(() => {
               setIsGameOver(true);
-              if (soundEnabled) {
-                if (!(customVoiceEnabled && playCustomVoice("win"))) playWinSound();
-              }
+              playSfx("win", playWinSound);
+              playVoiceEffect("win");
             }, 500);
           }
         }, 600);
       } else {
         timeoutRef.current = setTimeout(() => {
-          if (soundEnabled) {
-            if (!(customVoiceEnabled && playCustomVoice("mismatch"))) playMismatchSound();
-          }
+          playSfx("mismatch", playMismatchSound);
+          playVoiceEffect("mismatch");
           setCards((prev) =>
             prev.map((c) =>
               newFlipped.includes(c.uniqueId) ? { ...c, isFlipped: false } : c
@@ -129,7 +168,7 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
         }, flipDuration * 1000);
       }
     }
-  }, [cards, flippedIds, isChecking, matchedCount, pairCount, soundEnabled, speechEnabled, speechRate, flipDuration, customVoiceEnabled, playCustomVoice]);
+  }, [cards, flippedIds, isChecking, matchedCount, pairCount, soundEnabled, speechEnabled, speechRate, flipDuration, playSfx, playVoiceEffect]);
 
   return { cards, moves, matchedCount, isGameOver, flipCard, startGame };
 }

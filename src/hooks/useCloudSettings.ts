@@ -48,6 +48,10 @@ export interface StoredSettings {
   speechVolume?: number;
   layoutPreset?: string;
   customVoiceEnabled?: boolean;
+  sfxMode?: "builtin" | "elevenlabs" | "both";
+  elevenLabsVoiceId?: string;
+  elevenLabsEffectsEnabled?: boolean;
+  speechLang?: "he" | "en" | "de";
 }
 
 type DbSettingsRow = Record<string, unknown>;
@@ -108,6 +112,10 @@ export function useCloudSettings(initialTheme: string) {
       speechVolume: asNumber(data.speech_volume, 50),
       layoutPreset: asString(data.layout_preset, "grid-3"),
       customVoiceEnabled: asBool(data.custom_voice_enabled, true),
+      sfxMode: asString((data as any).sfx_mode, "builtin"),
+      elevenLabsVoiceId: typeof (data as any).elevenlabs_voice_id === "string" ? (data as any).elevenlabs_voice_id : undefined,
+      elevenLabsEffectsEnabled: asBool((data as any).elevenlabs_effects_enabled, false),
+      speechLang: asString((data as any).speech_lang, "he"),
       cardStyle: {
         borderRadius: asNumber(data.card_border_radius, 16),
         borderWidth: asNumber(data.card_border_width, 4),
@@ -200,6 +208,10 @@ export function useCloudSettings(initialTheme: string) {
         speech_volume: newSettings.speechVolume ?? 50,
         layout_preset: newSettings.layoutPreset || "grid-3",
         custom_voice_enabled: newSettings.customVoiceEnabled !== false,
+        sfx_mode: newSettings.sfxMode || "builtin",
+        elevenlabs_voice_id: newSettings.elevenLabsVoiceId || null,
+        elevenlabs_effects_enabled: newSettings.elevenLabsEffectsEnabled === true,
+        speech_lang: newSettings.speechLang || "he",
         updated_at: new Date().toISOString(),
       }, { onConflict: "device_id" });
     }, 500);
@@ -259,6 +271,10 @@ export function useCloudSettings(initialTheme: string) {
     speechVolume: settings.speechVolume ?? 50,
     layoutPreset: settings.layoutPreset || "grid-3",
     customVoiceEnabled: settings.customVoiceEnabled !== false,
+    sfxMode: settings.sfxMode || "builtin",
+    elevenLabsVoiceId: settings.elevenLabsVoiceId,
+    elevenLabsEffectsEnabled: settings.elevenLabsEffectsEnabled === true,
+    speechLang: settings.speechLang || "he",
   }), [settings]);
 
   return { settings, loaded, updateSetting, updateCardStyle, updateMultiple, toGameSettings };

@@ -40,7 +40,10 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     effectiveSpeechOn,
     liveSettings.flipDuration,
     liveSettings.speechRate,
-    liveSettings.customVoiceEnabled !== false
+    liveSettings.customVoiceEnabled !== false,
+    liveSettings.sfxMode || "builtin",
+    liveSettings.elevenLabsEffectsEnabled === true,
+    (liveSettings.speechLang as any) || "he"
   );
   const activeMelody = liveSettings.musicType === "builtin"
     ? BUILT_IN_MELODIES.find((m) => m.id === liveSettings.builtinMelodyId)
