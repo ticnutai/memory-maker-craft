@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CardData } from "@/lib/gameData";
-import { Plus, Trash2, Edit2, Play, X, Upload, Download, Loader2, ChevronRight, CloudDownload, Copy, Sparkles, Zap, Timer } from "lucide-react";
+import { Plus, Trash2, Edit2, Play, X, Upload, Download, Loader2, ChevronRight, CloudDownload, Copy, Sparkles, Zap, Timer, FileDown, FileUp, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface CustomSet {
@@ -70,10 +70,12 @@ function getDeviceId(): string {
 interface CustomCardSetsProps {
   theme: "girl" | "boy";
   onPlay: (cards: CardData[], setName: string) => void;
+  initialOpenSetId?: string | null;
 }
 
-export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
+export default function CustomCardSets({ theme, onPlay, initialOpenSetId }: CustomCardSetsProps) {
   const [sets, setSets] = useState<CustomSet[]>([]);
+  const [newEmojiCard, setNewEmojiCard] = useState({ emoji: "", label: "" });
   const [cards, setCards] = useState<Record<string, CustomCard[]>>({});
   const [loading, setLoading] = useState(true);
   const [openSetId, setOpenSetId] = useState<string | null>(null);
@@ -117,6 +119,13 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
   }, []);
 
   useEffect(() => { loadSets(); }, [loadSets]);
+
+  useEffect(() => {
+    if (initialOpenSetId) {
+      setOpenSetId(initialOpenSetId);
+      loadCards(initialOpenSetId);
+    }
+  }, [initialOpenSetId, loadCards]);
 
   useEffect(() => {
     if (openSetId && !cards[openSetId]) loadCards(openSetId);
@@ -255,6 +264,118 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
     setCards(prev => ({ ...prev, [setId]: (prev[setId] || []).map(c => c.id === cardId ? { ...c, label } : c) }));
   };
 
+  const addEmojiCard = async (setId: string) => {
+    if (!newEmojiCard.emoji.trim()) { toast.error("בחרו אימוג׳י"); return; }
+    const existingCount = (cards[setId] || []).length;
+    const { data, error } = await supabase.from("custom_card_items").insert({
+      set_id: setId, label: newEmojiCard.label || newEmojiCard.emoji,
+      emoji: newEmojiCard.emoji, image_url: null, sort_order: existingCount,
+    }).select().single();
+    if (error) { toast.error("שגיאה בהוספת קלף"); return; }
+    if (data) setCards(prev => ({ ...prev, [setId]: [...(prev[setId] || []), data as CustomCard] }));
+    setNewEmojiCard({ emoji: "", label: "" });
+    toast.success("קלף נוסף! ✨");
+  };
+
+  const updateCardEmoji = async (setId: string, cardId: string, emoji: string) => {
+    await supabase.from("custom_card_items").update({ emoji }).eq("id", cardId);
+    setCards(prev => ({ ...prev, [setId]: (prev[setId] || []).map(c => c.id === cardId ? { ...c, emoji } : c) }));
+  };
+
+  // ── Export set as JSON ──
+  const exportSet = async (s: CustomSet) => {
+    const setItems = cards[s.id] || [];
+    if (setItems.length === 0) {
+      await loadCards(s.id);
+    }
+    const itemsToExport = cards[s.id] || [];
+    const exportData = {
+      version: 1,
+      type: "memory-game-card-set",
+      exportedAt: new Date().toISOString(),
+      set: { name: s.name, emoji: s.emoji, color: s.color, settings_json: s.settings_json },
+      cards: itemsToExport.map(c => ({
+        label: c.label, emoji: c.emoji, image_url: c.image_url, sort_order: c.sort_order,
+      })),
+    };
+    const json = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${s.name.replace(/\s+/g, "-")}.json`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`ערכת "${s.name}" יוצאה בהצלחה! 📦`);
+  };
+
+  // ── Share set (copy JSON to clipboard) ──
+  const shareSet = async (s: CustomSet) => {
+    const setItems = cards[s.id] || [];
+    if (setItems.length === 0) await loadCards(s.id);
+    const itemsToExport = cards[s.id] || [];
+    const exportData = {
+      version: 1, type: "memory-game-card-set",
+      exportedAt: new Date().toISOString(),
+      set: { name: s.name, emoji: s.emoji, color: s.color, settings_json: s.settings_json },
+      cards: itemsToExport.map(c => ({
+        label: c.label, emoji: c.emoji, image_url: c.image_url, sort_order: c.sort_order,
+      })),
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(exportData));
+      toast.success("הערכה הועתקה ללוח! 📋 שתפו אותה בכל מקום");
+    } catch { toast.error("שגיאה בהעתקה"); }
+  };
+
+  // ── Import set from JSON file ──
+  const importFromFile = async (file: File) => {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (data.type !== "memory-game-card-set" || !data.set || !data.cards) {
+        toast.error("קובץ לא תקין - צריך להיות קובץ ערכה מיוצאת"); return;
+      }
+      const { data: newSet, error } = await supabase.from("custom_card_sets").insert({
+        device_id: deviceId, name: data.set.name + " (מיובא)",
+        emoji: data.set.emoji || "📷", color: data.set.color || "#60a5fa",
+        settings_json: (data.set.settings_json || {}) as any,
+      }).select().single();
+      if (error || !newSet) { toast.error("שגיאה ביצירת ערכה"); return; }
+      for (const c of data.cards) {
+        await supabase.from("custom_card_items").insert({
+          set_id: (newSet as any).id, label: c.label, emoji: c.emoji || "📷",
+          image_url: c.image_url || null, sort_order: c.sort_order || 0,
+        });
+      }
+      toast.success(`ערכת "${data.set.name}" יובאה בהצלחה! 🎉`);
+      loadSets();
+    } catch { toast.error("שגיאה בקריאת הקובץ - ודאו שזה קובץ JSON תקין"); }
+  };
+
+  // ── Import from clipboard (pasted JSON) ──
+  const importFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const data = JSON.parse(text);
+      if (data.type !== "memory-game-card-set") { toast.error("תוכן הלוח אינו ערכת קלפים"); return; }
+      const { data: newSet, error } = await supabase.from("custom_card_sets").insert({
+        device_id: deviceId, name: data.set.name + " (מיובא)",
+        emoji: data.set.emoji || "📷", color: data.set.color || "#60a5fa",
+        settings_json: (data.set.settings_json || {}) as any,
+      }).select().single();
+      if (error || !newSet) { toast.error("שגיאה ביצירת ערכה"); return; }
+      for (const c of data.cards) {
+        await supabase.from("custom_card_items").insert({
+          set_id: (newSet as any).id, label: c.label, emoji: c.emoji || "📷",
+          image_url: c.image_url || null, sort_order: c.sort_order || 0,
+        });
+      }
+      toast.success(`ערכת "${data.set.name}" יובאה מהלוח! 🎉`);
+      loadSets();
+    } catch { toast.error("לא נמצא JSON תקין בלוח"); }
+  };
+
+  const importFileRef = useRef<HTMLInputElement>(null);
+
   const playSet = (s: CustomSet) => {
     const setItems = cards[s.id] || [];
     if (setItems.length < 2) { toast.error("צריך לפחות 2 קלפים כדי לשחק"); return; }
@@ -330,6 +451,21 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
           </Button>
         </div>
 
+        {/* Add emoji card */}
+        <div className="bg-card rounded-2xl border-2 border-muted p-3 space-y-2">
+          <p className="text-xs font-bold text-muted-foreground">➕ הוספת קלף אימוג׳י</p>
+          <div className="flex gap-2">
+            <input type="text" value={newEmojiCard.emoji} onChange={e => setNewEmojiCard(prev => ({ ...prev, emoji: e.target.value }))}
+              placeholder="🐶" className="w-14 h-10 rounded-lg border-2 border-muted text-center text-xl focus:outline-none focus:border-game-pink" />
+            <input type="text" value={newEmojiCard.label} onChange={e => setNewEmojiCard(prev => ({ ...prev, label: e.target.value }))}
+              placeholder="שם הקלף..." dir="rtl" className="flex-1 h-10 rounded-lg border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink" />
+            <Button variant={theme === "girl" ? "game-pink" : "game-blue"} size="sm" className="rounded-xl"
+              onClick={() => addEmojiCard(openSetId)} disabled={!newEmojiCard.emoji.trim()}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
         {showCloudPicker && (
           <div className="bg-card rounded-2xl border-2 border-muted shadow-lg p-3 space-y-2 bounce-in">
             <div className="flex items-center justify-between">
@@ -396,7 +532,13 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
                 {card.image_url ? (
                   <img src={card.image_url} alt={card.label || ""} className="w-full aspect-square object-cover" />
                 ) : (
-                  <div className="w-full aspect-square flex items-center justify-center text-3xl bg-muted">{card.emoji}</div>
+                  <div className="w-full aspect-square flex items-center justify-center bg-muted relative">
+                    <span className="text-3xl">{card.emoji}</span>
+                    <input type="text" value={card.emoji}
+                      onChange={e => updateCardEmoji(openSetId, card.id, e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-center"
+                      title="שנה אימוג׳י" />
+                  </div>
                 )}
                 <div className="px-2 py-1">
                   <input type="text" value={card.label || ""} onChange={e => updateCardLabel(openSetId, card.id, e.target.value)}
@@ -615,11 +757,26 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
       )}
 
       {!showNewSet && (
-        <button onClick={() => { resetForm(); setShowNewSet(true); }}
-          className="w-full h-14 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center gap-2 text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all active:scale-[0.98]">
-          <Plus className="w-5 h-5" />
-          <span className="font-bold text-sm">צור ערכת קלפים חדשה</span>
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => { resetForm(); setShowNewSet(true); }}
+            className="flex-1 h-14 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center gap-2 text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all active:scale-[0.98]">
+            <Plus className="w-5 h-5" />
+            <span className="font-bold text-sm">ערכה חדשה</span>
+          </button>
+          <input ref={importFileRef} type="file" accept=".json" className="hidden"
+            onChange={e => { if (e.target.files?.[0]) importFromFile(e.target.files[0]); e.target.value = ""; }} />
+          <button onClick={() => importFileRef.current?.click()}
+            className="h-14 px-4 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center gap-2 text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all active:scale-[0.98]">
+            <FileUp className="w-5 h-5" />
+            <span className="font-bold text-sm">ייבוא</span>
+          </button>
+          <button onClick={importFromClipboard}
+            className="h-14 px-4 rounded-2xl border-2 border-dashed border-muted flex items-center justify-center gap-2 text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all active:scale-[0.98]"
+            title="ייבוא מהלוח">
+            <Download className="w-5 h-5" />
+            <span className="font-bold text-sm">מלוח</span>
+          </button>
+        </div>
       )}
 
       {sets.length === 0 && !showNewSet && (
@@ -654,6 +811,14 @@ export default function CustomCardSets({ theme, onPlay }: CustomCardSetsProps) {
                 <button onClick={e => { e.stopPropagation(); editSet(s); }}
                   className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90">
                   <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+                <button onClick={e => { e.stopPropagation(); exportSet(s); }}
+                  className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="ייצוא JSON">
+                  <FileDown className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+                <button onClick={e => { e.stopPropagation(); shareSet(s); }}
+                  className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="העתק ללוח">
+                  <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
                 <button onClick={e => { e.stopPropagation(); duplicateSet(s); }}
                   className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90">

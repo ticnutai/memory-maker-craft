@@ -31,7 +31,6 @@ export function useMemoryGame(pairCount: number = 4, soundEnabled: boolean = tru
       const { data } = await supabase
         .from("voice_recordings")
         .select("event_type, audio_url, is_active")
-        .eq("device_id", getDeviceId())
         .eq("is_active", true);
       voiceRecsRef.current = (data as VoiceRec[]) || [];
     };

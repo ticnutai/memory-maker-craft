@@ -20,6 +20,35 @@ export function useBackgroundMusic(melody?: MelodyInfo, customMusicUrl?: string,
     }
   }, [volume]);
 
+  const stop = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = undefined;
+    }
+
+    if (gainRef.current && ctxRef.current) {
+      try {
+        gainRef.current.gain.cancelScheduledValues(ctxRef.current.currentTime);
+        gainRef.current.gain.setValueAtTime(gainRef.current.gain.value || 0.5, ctxRef.current.currentTime);
+        gainRef.current.gain.linearRampToValueAtTime(0.001, ctxRef.current.currentTime + 0.2);
+      } catch {
+        // ignore audio timing errors
+      }
+    }
+
+    if (audioElRef.current) {
+      audioElRef.current.pause();
+      audioElRef.current.currentTime = 0;
+      audioElRef.current = null;
+    }
+
+    setTimeout(() => {
+      gainRef.current = null;
+    }, 250);
+
+    setIsPlaying(false);
+  }, []);
+
   const scheduleLoop = useCallback(() => {
     const ctx = ctxRef.current;
     const gain = gainRef.current;
@@ -43,22 +72,27 @@ export function useBackgroundMusic(melody?: MelodyInfo, customMusicUrl?: string,
 
   const startBuiltIn = useCallback(() => {
     if (!melody) return;
+
     if (!ctxRef.current) {
       ctxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
+
     const ctx = ctxRef.current;
     if (ctx.state === "suspended") ctx.resume();
+
     if (!gainRef.current) {
       gainRef.current = ctx.createGain();
       gainRef.current.gain.setValueAtTime(volumeRef.current, ctx.currentTime);
       gainRef.current.connect(ctx.destination);
     }
+
     scheduleLoop();
     intervalRef.current = setInterval(scheduleLoop, melody.loopDuration * 1000);
   }, [melody, scheduleLoop]);
 
   const startCustom = useCallback(() => {
     if (!customMusicUrl) return;
+
     const audio = new Audio(customMusicUrl);
     audio.loop = true;
     audio.volume = volumeRef.current;
@@ -67,33 +101,22 @@ export function useBackgroundMusic(melody?: MelodyInfo, customMusicUrl?: string,
   }, [customMusicUrl]);
 
   const start = useCallback(() => {
+    stop();
+
     if (customMusicUrl) {
       startCustom();
-    } else if (melody) {
-      startBuiltIn();
+      setIsPlaying(true);
+      return;
     }
-    setIsPlaying(true);
-  }, [customMusicUrl, melody, startCustom, startBuiltIn]);
 
-  const stop = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = undefined;
+    if (melody) {
+      startBuiltIn();
+      setIsPlaying(true);
+      return;
     }
-    if (gainRef.current && ctxRef.current) {
-      gainRef.current.gain.linearRampToValueAtTime(0.001, ctxRef.current.currentTime + 0.3);
-      // Reset gain node for next play
-      setTimeout(() => {
-        gainRef.current = null;
-      }, 500);
-    }
-    if (audioElRef.current) {
-      audioElRef.current.pause();
-      audioElRef.current.currentTime = 0;
-      audioElRef.current = null;
-    }
+
     setIsPlaying(false);
-  }, []);
+  }, [customMusicUrl, melody, startBuiltIn, startCustom, stop]);
 
   const toggle = useCallback(() => {
     if (isPlaying) stop();
@@ -115,5 +138,5 @@ export function useBackgroundMusic(melody?: MelodyInfo, customMusicUrl?: string,
     };
   }, []);
 
-  return { isPlaying, toggle, stop };
+  return { isPlaying, start, toggle, stop };
 }

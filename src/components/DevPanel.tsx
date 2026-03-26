@@ -5,6 +5,7 @@ import {
   Cloud, BarChart3, QrCode, X, ChevronDown, RotateCcw, ArrowLeftRight
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import AnimationManager from "@/components/AnimationManager";
 
 // ─── Types ───
 interface LogEntry {
@@ -855,6 +856,9 @@ export default function DevPanel({ deviceId }: { deviceId: string }) {
 
       {/* Game Stats */}
       <GameStats />
+
+      {/* Animation Manager */}
+      <AnimationManager />
 
       {/* GitHub Section — connected to network & console */}
       <GitHubStatus networkEntries={networkEntries} addLog={(type, msg) => setLogs(prev => [...prev.slice(-199), { time: new Date().toLocaleTimeString("he-IL"), type, message: msg }])} />

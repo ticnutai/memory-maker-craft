@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData";
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import {
   Upload, Volume2, VolumeX, Music, Trash2, Cloud, Loader2,
-  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move, Paintbrush, Code2, FolderOpen
+  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move, Paintbrush, Code2, FolderOpen, Edit2
 } from "lucide-react";
 import DevPanel from "@/components/DevPanel";
 import VoiceRecorder from "@/components/VoiceRecorder";
@@ -97,6 +98,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
   const [customSets, setCustomSets] = useState<CustomSetPreview[]>([]);
   const [loadingSets, setLoadingSets] = useState(true);
   const [customBgThemes, setCustomBgThemes] = useState<any[]>([]);
+  const [editBuiltInSetId, setEditBuiltInSetId] = useState<string | null>(null);
   const [layoutPresets, setLayoutPresets] = useState<any[]>([]);
   const audioRef = useRef<HTMLInputElement>(null);
 
@@ -162,7 +164,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     loadBgThemes();
   }, [deviceId]);
 
-  // Load layout presets
+  // Layout presets table is not available in backend yet, so keep this empty for now
   const loadLayoutPresets = useCallback(async () => {
     const { data } = await supabase
       .from("layout_presets")
@@ -185,10 +187,32 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     loadLayoutPresets();
   };
 
+  // Clone a built-in set to cloud for editing
+  const cloneBuiltInToCloud = async (set: { type: string; emoji: string; label: string; color: string; cards: CardData[] }) => {
+    const { data: newSet, error } = await supabase.from("custom_card_sets").insert({
+      device_id: deviceId, name: set.label, emoji: set.emoji, color: set.color.includes("from-") ? "#60a5fa" : set.color,
+      settings_json: {} as any,
+    }).select().single();
+    if (error || !newSet) { toast.error("שגיאה ביצירת עותק"); return; }
+    // Insert cards
+    for (let i = 0; i < set.cards.length; i++) {
+      const c = set.cards[i];
+      await supabase.from("custom_card_items").insert({
+        set_id: (newSet as any).id, label: c.label || c.id, emoji: c.emoji,
+        image_url: c.image || null, sort_order: i,
+      });
+    }
+    toast.success(`ערכת "${set.label}" שוכפלה לעריכה! ✏️`);
+    await loadCustomSets();
+    setEditBuiltInSetId((newSet as any).id);
+    setShowSettings(true);
+    setSettingsTab("custom-sets");
+  };
+  };
+
   // Play a custom set
   const playCustomSet = async (setPreview: CustomSetPreview) => {
     if (setPreview.cardCount < 2) {
-      // Open settings to manage this set
       setShowSettings(true);
       setSettingsTab("custom-sets");
       return;
@@ -298,14 +322,23 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
       <div className="w-full max-w-lg relative z-10 grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 bounce-in" style={{ animationDelay: "0.1s" }}>
         {/* Built-in sets */}
         {allCardSets.map((set, i) => (
-          <button key={set.type}
-            onClick={() => onSelectSet(set.type, settings)}
-            className={`bg-gradient-to-br ${set.color} rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground min-h-[100px]`}
-            style={{ animationDelay: `${0.15 + i * 0.05}s` }}
-          >
-            <span className="text-4xl drop-shadow-sm">{set.emoji}</span>
-            <span className="font-bold text-xs">{set.label}</span>
-          </button>
+          <div key={set.type} className="relative group">
+            <button
+              onClick={() => onSelectSet(set.type, settings)}
+              className={`w-full bg-gradient-to-br ${set.color} rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-200 active:scale-95 bounce-in text-primary-foreground min-h-[100px] sm:min-h-[120px]`}
+              style={{ animationDelay: `${0.15 + i * 0.08}s` }}
+            >
+              <span className="text-4xl sm:text-5xl drop-shadow-sm">{set.emoji}</span>
+              <span className="font-bold text-xs sm:text-sm">{set.label}</span>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); cloneBuiltInToCloud(set); }}
+              className="absolute top-2 left-2 w-7 h-7 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white/50 active:scale-90"
+              title="ערוך ערכה"
+            >
+              <Edit2 className="w-3.5 h-3.5 text-white" />
+            </button>
+          </div>
         ))}
 
         {/* Custom sets as identical cards */}
@@ -763,6 +796,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
                   <p className="font-bold text-lg text-center">🎴 ערכות מותאמות אישית</p>
                   <CustomCardSets
                     theme={theme}
+                    initialOpenSetId={editBuiltInSetId}
                     onPlay={(cards, name) => {
                       setShowSettings(false);
                       const customPairCount = Math.min(settings.pairCount, cards.length);

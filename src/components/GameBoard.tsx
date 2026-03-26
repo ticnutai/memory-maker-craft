@@ -1,6 +1,7 @@
 import { useMemoryGame } from "@/hooks/useMemoryGame";
 import { useBackgroundMusic } from "@/hooks/useBackgroundMusic";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
+import { useGameAnimations } from "@/hooks/useGameAnimations";
 import { ThemeType, CardData, GameSettings, CardSetType, getCardSets, CardPosition } from "@/lib/gameData";
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import MemoryCard from "@/components/MemoryCard";
@@ -50,6 +51,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     globalMute ? undefined : customUrl,
     (liveCloud.musicVolume ?? 50) / 100
   );
+  const { showingAnimation, triggerAnimation, dismiss: dismissAnimation } = useGameAnimations();
 
   const isFreeLayout = liveSettings.layoutMode === "free";
   const snapEnabled = liveSettings.snapToGrid !== false;
@@ -64,6 +66,30 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const [alignLines, setAlignLines] = useState<{ x?: number; y?: number }>({});
   const [saveFlash, setSaveFlash] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
+  const prevMatchedRef = useRef(0);
+
+  // Trigger custom animations on match / win
+  useEffect(() => {
+    if (matchedCount > prevMatchedRef.current && matchedCount > 0) {
+      triggerAnimation("match");
+    }
+    prevMatchedRef.current = matchedCount;
+  }, [matchedCount, triggerAnimation]);
+
+  useEffect(() => {
+    if (isGameOver) triggerAnimation("win");
+  }, [isGameOver, triggerAnimation]);
+
+  useEffect(() => {
+    if (liveSettings.musicType === "none") {
+      stopMusic();
+      return;
+    }
+
+    if (activeMelody || customUrl) {
+      startMusic();
+    }
+  }, [liveSettings.musicType, activeMelody, customUrl, startMusic, stopMusic]);
 
   // ── Timer ──
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -197,7 +223,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
 
   useEffect(() => {
     startGame(cardData);
-  }, []);
+  }, [startGame, cardData]);
 
   // Initialize positions when cards change in free mode
   useEffect(() => {
@@ -289,9 +315,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     setTimeout(() => setSaveFlash(false), 1200);
   };
 
-  const duplicateLayout = async () => {
-    const name = window.prompt("שם לפריסה החדשה:");
-    if (!name?.trim()) return;
+  const duplicateLayout = () => {
     const posArr = cards.map(c => positions[c.uniqueId] || { x: 0, y: 0 });
     await supabase.from("layout_presets").insert({
       device_id: getDeviceId(),
@@ -350,6 +374,30 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     <div dir="rtl" className={animationsOff ? "no-animations" : ""}>
       <ThemeBackground themeId={bgThemeId} girlTheme={theme === "girl"} className="flex flex-col">
         <Confetti active={isGameOver && !animationsOff} />
+
+        {/* Custom animation overlay */}
+        {showingAnimation && (
+          <div
+            className="fixed inset-0 z-[60] pointer-events-none flex items-center justify-center"
+            onClick={dismissAnimation}
+          >
+            {showingAnimation.type === "video" ? (
+              <video
+                src={showingAnimation.url}
+                autoPlay
+                muted
+                className="max-w-[60vw] max-h-[60vh] rounded-2xl shadow-2xl animate-scale-in pointer-events-auto"
+                onEnded={dismissAnimation}
+              />
+            ) : (
+              <img
+                src={showingAnimation.url}
+                alt=""
+                className="max-w-[60vw] max-h-[60vh] rounded-2xl shadow-2xl animate-scale-in pointer-events-auto"
+              />
+            )}
+          </div>
+        )}
 
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between px-2 sm:px-4 py-2 sm:py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm relative gap-y-1">
