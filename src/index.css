@@ -321,3 +321,20 @@
 .no-animations .matched-glow {
   box-shadow: none !important;
 }
+
+/* ══ ABC Glow Letters ══ */
+.abc-glow-letter {
+  background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: abc-gradient-shift 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(255, 107, 107, 0.6)) drop-shadow(0 0 16px rgba(72, 219, 251, 0.4));
+}
+
+@keyframes abc-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
