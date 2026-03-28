@@ -1,5 +1,5 @@
 export type ThemeType = "girl" | "boy";
-export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "real-animals" | "desserts" | "dinos" | "farm" | "real-vehicles" | "shapes" | "horses" | "sea" | "space" | "food" | "sports" | "music" | "flags" | "nature" | "custom";
+export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "real-animals" | "desserts" | "dinos" | "farm" | "real-vehicles" | "shapes" | "horses" | "sea" | "space" | "food" | "sports" | "music" | "flags" | "nature" | "abc" | "custom";
 
 export interface CardStyle {
   borderRadius: number;
