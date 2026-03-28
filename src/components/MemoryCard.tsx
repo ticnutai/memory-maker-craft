@@ -77,6 +77,7 @@ export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, 
     : "";
 
   const isLetter = emoji.length === 1 && /[\u0590-\u05FF]/.test(emoji);
+  const isAbcLetter = emoji.length === 1 && /[A-Z]/.test(emoji);
   const baseFontSize = 3;
   const fontSize = baseFontSize * emojiScale;
 
@@ -111,6 +112,16 @@ export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, 
             <div className={`w-full h-full relative overflow-hidden ${isFlipped && !isMatched ? "image-reveal" : ""} ${isMatched ? "image-matched" : ""}`} style={{ borderRadius: `${Math.max(0, cardStyle.borderRadius - cardStyle.borderWidth)}px` }}>
               <img src={image} alt={label || ""} className="w-full h-full object-cover" loading="lazy" />
               {isMatched && <div className="gold-frame-overlay" style={{ borderRadius: `${Math.max(0, cardStyle.borderRadius - cardStyle.borderWidth)}px` }} />}
+            </div>
+          ) : isAbcLetter ? (
+            <div className="flex flex-col items-center gap-0.5">
+              <span
+                className={`select-none font-black abc-glow-letter ${isFlipped && !isMatched ? "emoji-reveal" : ""}`}
+                style={{ fontSize: `${fontSize}rem`, lineHeight: 1.1 }}
+              >
+                {emoji}
+              </span>
+              {label && <span className="text-xs sm:text-sm text-muted-foreground font-medium">{label}</span>}
             </div>
           ) : isLetter ? (
             <div className="flex flex-col items-center gap-0.5">
