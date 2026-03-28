@@ -363,6 +363,26 @@ export const NATURE: CardData[] = [
   { id: "fire", emoji: "🔥" }, { id: "mountain", emoji: "🏔️" },
 ];
 
+// ── ABC Letters ──
+export const ABC_LETTERS: CardData[] = [
+  { id: "abc-A", emoji: "A", label: "Apple" },
+  { id: "abc-B", emoji: "B", label: "Ball" },
+  { id: "abc-C", emoji: "C", label: "Cat" },
+  { id: "abc-D", emoji: "D", label: "Dog" },
+  { id: "abc-E", emoji: "E", label: "Elephant" },
+  { id: "abc-F", emoji: "F", label: "Fish" },
+  { id: "abc-G", emoji: "G", label: "Giraffe" },
+  { id: "abc-H", emoji: "H", label: "Horse" },
+  { id: "abc-I", emoji: "I", label: "Ice cream" },
+  { id: "abc-J", emoji: "J", label: "Jellyfish" },
+  { id: "abc-K", emoji: "K", label: "Kite" },
+  { id: "abc-L", emoji: "L", label: "Lion" },
+  { id: "abc-M", emoji: "M", label: "Moon" },
+  { id: "abc-N", emoji: "N", label: "Nest" },
+  { id: "abc-O", emoji: "O", label: "Octopus" },
+  { id: "abc-P", emoji: "P", label: "Penguin" },
+];
+
 export function getCardSets(theme: ThemeType): CardSetInfo[] {
   return [
     {
@@ -454,6 +474,11 @@ export function getCardSets(theme: ThemeType): CardSetInfo[] {
       type: "nature", emoji: "🌿", label: "טבע",
       color: "from-lime-400 to-green-500",
       cards: NATURE,
+    },
+    {
+      type: "abc", emoji: "🔤", label: "ABC אותיות",
+      color: "from-cyan-400 to-violet-500",
+      cards: ABC_LETTERS,
     },
   ];
 }
