@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { GameCard, CardData, createGameCards } from "@/lib/gameData";
-import { playFlipSound, playMatchSound, playMismatchSound, playWinSound, playStarSound } from "@/lib/sounds";
+import { playFlipSound, playMatchSound, playMismatchSound, playWinSound, playStarSound, getSoundVolumeMultiplier } from "@/lib/sounds";
 import { playCardSound } from "@/lib/cardSounds";
 import { speakCardName, setSpeechLang, VOICE_EFFECTS, type SpeechLang } from "@/lib/cardSpeech";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +31,8 @@ export function useMemoryGame(
   const [matchedCount, setMatchedCount] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const voiceRecsRef = useRef<VoiceRec[]>([]);
 
@@ -51,7 +53,9 @@ export function useMemoryGame(
     if (recs.length === 0) return false;
     const rec = recs[Math.floor(Math.random() * recs.length)];
     try {
-      new Audio(rec.audio_url).play();
+      const audio = new Audio(rec.audio_url);
+      audio.volume = Math.min(getSoundVolumeMultiplier() * 2, 1);
+      audio.play();
     } catch {
       return false;
     }
@@ -101,6 +105,8 @@ export function useMemoryGame(
     setMatchedCount(0);
     setIsChecking(false);
     setIsGameOver(false);
+    setCurrentStreak(0);
+    setMaxStreak(0);
   }, [pairCount]);
 
   const flipCard = useCallback((uniqueId: string) => {
@@ -143,6 +149,11 @@ export function useMemoryGame(
           );
           const newMatched = matchedCount + 1;
           setMatchedCount(newMatched);
+          setCurrentStreak((prev) => {
+            const newStreak = prev + 1;
+            setMaxStreak((ms) => Math.max(ms, newStreak));
+            return newStreak;
+          });
           if (soundEnabled) setTimeout(() => playStarSound(), 300);
           setFlippedIds([]);
           setIsChecking(false);
@@ -158,6 +169,7 @@ export function useMemoryGame(
         timeoutRef.current = setTimeout(() => {
           playSfx("mismatch", playMismatchSound);
           playVoiceEffect("mismatch");
+          setCurrentStreak(0);
           setCards((prev) =>
             prev.map((c) =>
               newFlipped.includes(c.uniqueId) ? { ...c, isFlipped: false } : c
@@ -170,6 +182,6 @@ export function useMemoryGame(
     }
   }, [cards, flippedIds, isChecking, matchedCount, pairCount, soundEnabled, speechEnabled, speechRate, flipDuration, playSfx, playVoiceEffect]);
 
-  return { cards, moves, matchedCount, isGameOver, flipCard, startGame };
+  return { cards, moves, matchedCount, isGameOver, flipCard, startGame, currentStreak, maxStreak };
 }
 

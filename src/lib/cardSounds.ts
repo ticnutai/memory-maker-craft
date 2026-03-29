@@ -1,5 +1,6 @@
 // Card-specific sound effects synthesized via Web Audio API
 // Enhanced with noise, filters, and modulation for realistic sounds
+import { getSoundVolumeMultiplier } from "./sounds";
 
 const audioCtx = () => {
   if (!(window as any).__gameAudioCtx) {
@@ -10,16 +11,19 @@ const audioCtx = () => {
   return ctx;
 };
 
-// Master gain for all card sounds - boost volume
+// Master gain for all card sounds - controlled by user volume setting
 const getMasterGain = () => {
   const ctx = audioCtx();
   if (!(window as any).__cardMasterGain) {
     const master = ctx.createGain();
-    master.gain.value = 2.5;
+    master.gain.value = getSoundVolumeMultiplier();
     master.connect(ctx.destination);
     (window as any).__cardMasterGain = master;
   }
-  return (window as any).__cardMasterGain as GainNode;
+  // Always sync with current volume setting
+  const master = (window as any).__cardMasterGain as GainNode;
+  master.gain.value = getSoundVolumeMultiplier();
+  return master;
 };
 
 // Create white noise buffer for animal/vehicle sounds
@@ -35,8 +39,8 @@ function createNoiseBuffer(ctx: AudioContext, duration: number): AudioBuffer {
 
 type SoundFn = (ctx: AudioContext, time: number) => void;
 
-// Volume multiplier for all card sounds
-const VOL = 2.5;
+// Volume multiplier for all card sounds (base level, scaled by user volume)
+const VOL = 1.0;
 
 function makeOsc(ctx: AudioContext, freq: number, type: OscillatorType, start: number, dur: number, vol: number, dest: AudioNode) {
   const osc = ctx.createOscillator();

@@ -268,8 +268,9 @@ let useElevenLabs = true;
 let currentLang: SpeechLang = "he";
 
 // Global speech volume multiplier (0-1)
-let _speechVolumeMultiplier = 0.5;
+let _speechVolumeMultiplier = 0.7;
 export function setSpeechVolumeMultiplier(v: number) { _speechVolumeMultiplier = Math.max(0, Math.min(1, v)); }
+export function getSpeechVolumeMultiplier() { return _speechVolumeMultiplier; }
 
 export function setSpeechLang(lang: SpeechLang) {
   currentLang = lang;

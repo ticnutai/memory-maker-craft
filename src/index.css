@@ -348,3 +348,131 @@
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
+
+/* ══ Streak / Combo Effects ══ */
+.streak-indicator {
+  animation: streakPulse 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes streakPulse {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.combo-flash {
+  animation: comboFlash 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes comboFlash {
+  0% { transform: scale(0) rotate(-15deg); opacity: 0; }
+  40% { transform: scale(1.4) rotate(5deg); opacity: 1; }
+  70% { transform: scale(0.9) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.combo-glow-3 {
+  box-shadow: 0 0 20px 6px rgba(255, 165, 0, 0.4), 0 0 40px 12px rgba(255, 165, 0, 0.15);
+  animation: comboGlow3 1.5s ease-in-out infinite;
+}
+@keyframes comboGlow3 {
+  0%, 100% { box-shadow: 0 0 20px 6px rgba(255, 165, 0, 0.4); }
+  50% { box-shadow: 0 0 30px 10px rgba(255, 200, 0, 0.6); }
+}
+
+.combo-glow-5 {
+  box-shadow: 0 0 25px 8px rgba(255, 50, 50, 0.5), 0 0 50px 15px rgba(255, 100, 0, 0.2);
+  animation: comboGlow5 1s ease-in-out infinite;
+}
+@keyframes comboGlow5 {
+  0%, 100% { box-shadow: 0 0 25px 8px rgba(255, 50, 50, 0.5); }
+  50% { box-shadow: 0 0 40px 14px rgba(255, 80, 0, 0.7); }
+}
+
+/* ══ Achievement Popup ══ */
+.achievement-popup {
+  animation: achievementSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1), achievementSlideOut 0.5s ease-in 3.5s forwards;
+}
+@keyframes achievementSlideIn {
+  0% { transform: translateY(-100%) scale(0.8); opacity: 0; }
+  60% { transform: translateY(10px) scale(1.05); }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes achievementSlideOut {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+
+/* ══ Challenge Mode Timer Urgency ══ */
+.timer-warning {
+  animation: timerPulse 0.5s ease-in-out infinite;
+  color: #ef4444 !important;
+}
+@keyframes timerPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.timer-critical {
+  animation: timerCritical 0.3s ease-in-out infinite;
+  color: #ef4444 !important;
+  font-weight: 900 !important;
+}
+@keyframes timerCritical {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.5; }
+}
+
+/* ══ Player Turn Animation ══ */
+.player-turn-switch {
+  animation: turnSwitch 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes turnSwitch {
+  0% { transform: translateX(-20px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* ══ Hint Glow ══ */
+.hint-glow {
+  animation: hintPulse 0.6s ease-in-out 2;
+}
+@keyframes hintPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+  50% { box-shadow: 0 0 20px 8px rgba(250, 204, 21, 0.6); }
+}
+
+/* ══ Stats Bar ══ */
+.stats-bar-fill {
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ══ Training Mode - cards peek ══ */
+.training-peek {
+  animation: trainingPeek 0.4s ease-out;
+}
+@keyframes trainingPeek {
+  0% { opacity: 0; filter: blur(4px); }
+  100% { opacity: 1; filter: blur(0); }
+}
+
+/* ── Audio mixer sliders ── */
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 999px;
+}
+input[type="range"]::-moz-range-track {
+  height: 10px;
+  border-radius: 999px;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.8);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+input[type="range"]:focus {
+  outline: none;
+}
+input[type="range"]:focus::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2), 0 2px 12px rgba(0, 0, 0, 0.3);
+}

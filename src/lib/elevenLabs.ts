@@ -1,5 +1,7 @@
 // ElevenLabs integration service — TTS, SFX, Music
 // Uses edge functions to keep API key secure
+import { getSoundVolumeMultiplier } from "./sounds";
+import { getSpeechVolumeMultiplier } from "./cardSpeech";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -46,7 +48,7 @@ export async function elevenLabsSpeak(text: string, voiceId?: string): Promise<b
   if (url) {
     try {
       const audio = new Audio(url);
-      audio.volume = 0.85;
+      audio.volume = Math.min(0.85 * getSpeechVolumeMultiplier() * 2, 1);
       await audio.play();
       return true;
     } catch { /* fallback */ }
@@ -78,7 +80,7 @@ export async function elevenLabsSfx(eventType: string): Promise<boolean> {
   if (url) {
     try {
       const audio = new Audio(url);
-      audio.volume = eventType === "win" ? 0.9 : 0.7;
+      audio.volume = Math.min((eventType === "win" ? 0.9 : 0.7) * getSoundVolumeMultiplier() * 2, 1);
       await audio.play();
       return true;
     } catch { /* fallback */ }

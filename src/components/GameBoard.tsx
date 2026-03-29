@@ -1,6 +1,7 @@
 import { useMemoryGame } from "@/hooks/useMemoryGame";
 import { useBackgroundMusic } from "@/hooks/useBackgroundMusic";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
+import { useGameStats } from "@/hooks/useGameStats";
 import { ThemeType, CardData, GameSettings, CardSetType, getCardSets, CardPosition } from "@/lib/gameData";
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import MemoryCard from "@/components/MemoryCard";
@@ -9,7 +10,7 @@ import ThemeBackground from "@/components/ThemeBackground";
 import { BgThemeId } from "@/components/ThemeBackground";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, Lightbulb, Timer, Eye, Users, Pause, Play } from "lucide-react";
+import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, Lightbulb, Timer, Eye, Users, Pause, Play, Trophy, Zap, BarChart3, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { setSoundVolumeMultiplier, playSirenMatch, playFireCrackle } from "@/lib/sounds";
 import { setSpeechVolumeMultiplier, setElevenLabsTTS } from "@/lib/cardSpeech";
@@ -32,7 +33,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const pairCount = Math.min(liveSettings.pairCount, cardData.length);
   const effectiveSoundOn = liveSettings.soundEnabled && !globalMute;
   const effectiveSpeechOn = speechOn && !globalMute;
-  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, effectiveSoundOn, effectiveSpeechOn, liveSettings.flipDuration, liveSettings.speechRate, liveSettings.customVoiceEnabled !== false, (liveSettings.sfxMode as any) || "builtin", liveSettings.elevenLabsEffectsEnabled === true, (liveSettings.speechLang as any) || "he");
+  const { cards, moves, matchedCount, isGameOver, flipCard, startGame, currentStreak, maxStreak } = useMemoryGame(pairCount, effectiveSoundOn, effectiveSpeechOn, liveSettings.flipDuration, liveSettings.speechRate, liveSettings.customVoiceEnabled !== false, (liveSettings.sfxMode as any) || "builtin", liveSettings.elevenLabsEffectsEnabled === true, (liveSettings.speechLang as any) || "he");
+  const { stats, unlockedIds, newAchievement, recordGame, getSetStats, dismissAchievement, allAchievements } = useGameStats();
   const activeMelody = liveSettings.musicType === "builtin"
     ? BUILT_IN_MELODIES.find((m) => m.id === liveSettings.builtinMelodyId)
     : undefined;
@@ -40,7 +42,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(
     globalMute ? undefined : activeMelody,
     globalMute ? undefined : customUrl,
-    (liveCloud.musicVolume ?? 50) / 100
+    (liveCloud.musicVolume ?? 70) / 100
   );
 
   const isFreeLayout = liveSettings.layoutMode === "free";
@@ -78,8 +80,19 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const [currentPlayer, setCurrentPlayer] = useState<1 | 2>(1);
   const [scores, setScores] = useState({ p1: 0, p2: 0 });
 
+  // ── Challenge Mode ──
+  const [challengeMode, setChallengeMode] = useState(false);
+  const [challengeTimeLimit, setChallengeTimeLimit] = useState(60);
+  const [challengeLives, setChallengeLives] = useState(5);
+  const challengeStartLives = useRef(5);
+
+  // ── Stats Panel ──
+  const [showStats, setShowStats] = useState(false);
+
+  // ── Streak display ──
+  const [streakFlash, setStreakFlash] = useState(0);
+
   // ── Volume slider popup ──
-  const [volumePopup, setVolumePopup] = useState<"music" | "sound" | "speech" | null>(null);
   const volumePopupTimer = useRef<ReturnType<typeof setTimeout>>();
 
   // Volume values from cloud (0-100)
@@ -102,14 +115,6 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     const images = cardData.map(c => c.image).filter(Boolean) as string[];
     images.forEach(src => { const img = new Image(); img.src = src; });
   }, [cardData]);
-
-  // Close volume popup on outside click
-  useEffect(() => {
-    if (!volumePopup) return;
-    const close = () => setVolumePopup(null);
-    const timer = setTimeout(() => document.addEventListener("click", close), 100);
-    return () => { clearTimeout(timer); document.removeEventListener("click", close); };
-  }, [volumePopup]);
 
   // ── Previous state refs for detecting match/mismatch ──
   const prevMatchedRef = useRef(matchedCount);
@@ -143,6 +148,15 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
         localStorage.setItem(movesKey, moves.toString());
         setBestMoves(moves);
       }
+      // Record to stats
+      recordGame({
+        cardSet: cardSetType,
+        pairCount,
+        moves,
+        time: timerSeconds,
+        streak: maxStreak,
+        mode: challengeMode ? "challenge" : twoPlayerMode ? "two-player" : trainingMode ? "training" : "classic",
+      });
       return;
     }
     if (isPaused) {
@@ -236,6 +250,40 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   useEffect(() => {
     if (cardSetType === "firesam" && matchedCount > 0) playSirenMatch();
   }, [matchedCount, cardSetType]);
+
+  // ── Challenge mode: lives deduction on mismatch ──
+  useEffect(() => {
+    if (!challengeMode) return;
+    if (moves > prevMovesRef.current && matchedCount === prevMatchedRef.current) {
+      // mismatch in challenge mode = lose a life
+      setChallengeLives((l) => {
+        if (l <= 1) {
+          setIsTimedOut(true); // reuse timed-out overlay as "game lost"
+          if (timerRef.current) clearInterval(timerRef.current);
+          return 0;
+        }
+        return l - 1;
+      });
+    }
+  }, [moves, matchedCount, challengeMode]);
+
+  // ── Challenge mode: time limit countdown ──
+  useEffect(() => {
+    if (!challengeMode || isGameOver || isTimedOut) return;
+    if (timerSeconds >= challengeTimeLimit) {
+      setIsTimedOut(true);
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = undefined; }
+    }
+  }, [timerSeconds, challengeMode, challengeTimeLimit, isGameOver, isTimedOut]);
+
+  // ── Streak flash display ──
+  useEffect(() => {
+    if (currentStreak >= 3) {
+      setStreakFlash(currentStreak);
+      const t = setTimeout(() => setStreakFlash(0), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [currentStreak]);
 
   // הפעל מצב עריכה אוטומטית כשעוברים למצב חופשי
   useEffect(() => {
@@ -363,6 +411,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     setTrainingCountdown(0);
     setCurrentPlayer(1);
     setScores({ p1: 0, p2: 0 });
+    setChallengeLives(challengeStartLives.current);
+    setStreakFlash(0);
     prevMatchedRef.current = 0;
     prevMovesRef.current = 0;
     startGame(cardData);
@@ -394,6 +444,17 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     <span key={i} className="text-xl bounce-in" style={{ animationDelay: `${i * 0.1}s` }}>⭐</span>
   ));
 
+  // ── Audio mixer panel ──
+  const [showMixer, setShowMixer] = useState(false);
+
+  // Close mixer on outside click
+  useEffect(() => {
+    if (!showMixer) return;
+    const close = () => setShowMixer(false);
+    const timer = setTimeout(() => document.addEventListener("click", close), 100);
+    return () => { clearTimeout(timer); document.removeEventListener("click", close); };
+  }, [showMixer]);
+
   const animationsOff = liveSettings.animationsEnabled === false;
 
   return (
@@ -412,67 +473,64 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
               className={globalMute ? "text-destructive" : "text-green-500"} title={globalMute ? "הפעל הכל" : "השתק הכל"}>
               {globalMute ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
             </Button>
-            {/* Music — click toggle, double-click volume */}
+            {/* Audio mixer toggle */}
             <div className="relative">
-              <Button variant="ghost" size="sm" disabled={globalMute}
-                onClick={toggleMusic}
-                onDoubleClick={(e) => { e.stopPropagation(); setVolumePopup(volumePopup === "music" ? null : "music"); }}
-                className={musicPlaying && !globalMute ? "text-accent" : "text-muted-foreground"} title="לחיצה: הפעל/כבה | לחיצה כפולה: עוצמה">
-                {musicPlaying && !globalMute ? <Music className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+              <Button variant="ghost" size="sm" onClick={() => setShowMixer(!showMixer)}
+                className={showMixer ? "text-yellow-500" : "text-muted-foreground"} title="מיקסר שמע">
+                <span className="text-base">🎛️</span>
               </Button>
-              {volumePopup === "music" && (
-                <div className="absolute top-full right-0 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto mt-1 z-50 bg-card border border-border rounded-xl shadow-xl p-3 w-40 sm:w-44 space-y-1.5" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex justify-between items-center text-xs font-bold">
-                    <span>🎵 עוצמת מוזיקה</span>
-                    <span className="text-muted-foreground">{musicVolume}%</span>
+              {showMixer && (
+                <div className="absolute top-full right-0 mt-1 z-50 bg-card/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl p-4 w-72 space-y-4" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-black">🎛️ מיקסר שמע סטריאו</span>
+                    <button onClick={() => setShowMixer(false)} className="text-muted-foreground hover:text-foreground text-lg leading-none">✕</button>
                   </div>
-                  <input type="range" min={0} max={100} step={5} value={musicVolume}
-                    onChange={(e) => updateSetting("musicVolume" as any, Number(e.target.value))}
-                    className="w-full h-2 rounded-full cursor-pointer accent-pink-500" />
-                  <div className="flex justify-between text-[9px] text-muted-foreground"><span>🔇</span><span>🔊</span></div>
-                </div>
-              )}
-            </div>
-            {/* Sound effects — click toggle, double-click volume */}
-            <div className="relative">
-              <Button variant="ghost" size="sm" disabled={globalMute}
-                onClick={() => updateSetting("soundEnabled", !liveSettings.soundEnabled)}
-                onDoubleClick={(e) => { e.stopPropagation(); setVolumePopup(volumePopup === "sound" ? null : "sound"); }}
-                className={liveSettings.soundEnabled && !globalMute ? "text-accent" : "text-muted-foreground"} title="לחיצה: הפעל/כבה | לחיצה כפולה: עוצמה">
-                {liveSettings.soundEnabled && !globalMute ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-                <span className="text-[10px] mr-0.5">🔊</span>
-              </Button>
-              {volumePopup === "sound" && (
-                <div className="absolute top-full right-0 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto mt-1 z-50 bg-card border border-border rounded-xl shadow-xl p-3 w-40 sm:w-44 space-y-1.5" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex justify-between items-center text-xs font-bold">
-                    <span>🔊 עוצמת צלילים</span>
-                    <span className="text-muted-foreground">{soundVolume}%</span>
+
+                  {/* Music volume */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <button onClick={toggleMusic} className={`flex items-center gap-1.5 text-xs font-bold ${musicPlaying && !globalMute ? "text-pink-400" : "text-muted-foreground"}`}>
+                        {musicPlaying && !globalMute ? <Music className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                        <span>🎵 מוזיקה</span>
+                      </button>
+                      <span className="text-xs text-muted-foreground font-mono w-10 text-left">{musicVolume}%</span>
+                    </div>
+                    <input type="range" min={0} max={100} step={1} value={musicVolume}
+                      onChange={(e) => updateSetting("musicVolume" as any, Number(e.target.value))}
+                      className="w-full h-2.5 rounded-full cursor-pointer appearance-none bg-gradient-to-r from-pink-500/20 via-pink-500/50 to-pink-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-pink-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-pink-500/40 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white/80 [&::-webkit-slider-thumb]:cursor-pointer" />
                   </div>
-                  <input type="range" min={0} max={100} step={5} value={soundVolume}
-                    onChange={(e) => updateSetting("soundVolume" as any, Number(e.target.value))}
-                    className="w-full h-2 rounded-full cursor-pointer accent-pink-500" />
-                  <div className="flex justify-between text-[9px] text-muted-foreground"><span>🔇</span><span>🔊</span></div>
-                </div>
-              )}
-            </div>
-            {/* Speech — click toggle, double-click volume */}
-            <div className="relative">
-              <Button variant="ghost" size="sm" disabled={globalMute}
-                onClick={() => setSpeechOn(!speechOn)}
-                onDoubleClick={(e) => { e.stopPropagation(); setVolumePopup(volumePopup === "speech" ? null : "speech"); }}
-                className={speechOn && !globalMute ? "text-accent" : "text-muted-foreground"} title="לחיצה: הפעל/כבה | לחיצה כפולה: עוצמה">
-                {speechOn && !globalMute ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
-              </Button>
-              {volumePopup === "speech" && (
-                <div className="absolute top-full right-0 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto mt-1 z-50 bg-card border border-border rounded-xl shadow-xl p-3 w-40 sm:w-44 space-y-1.5" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex justify-between items-center text-xs font-bold">
-                    <span>🗣️ עוצמת הכרזה</span>
-                    <span className="text-muted-foreground">{speechVolume}%</span>
+
+                  {/* Sound effects volume */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <button onClick={() => updateSetting("soundEnabled", !liveSettings.soundEnabled)} className={`flex items-center gap-1.5 text-xs font-bold ${liveSettings.soundEnabled && !globalMute ? "text-blue-400" : "text-muted-foreground"}`}>
+                        {liveSettings.soundEnabled && !globalMute ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                        <span>🔊 צלילים</span>
+                      </button>
+                      <span className="text-xs text-muted-foreground font-mono w-10 text-left">{soundVolume}%</span>
+                    </div>
+                    <input type="range" min={0} max={100} step={1} value={soundVolume}
+                      onChange={(e) => updateSetting("soundVolume" as any, Number(e.target.value))}
+                      className="w-full h-2.5 rounded-full cursor-pointer appearance-none bg-gradient-to-r from-blue-500/20 via-blue-500/50 to-blue-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-blue-500/40 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white/80 [&::-webkit-slider-thumb]:cursor-pointer" />
                   </div>
-                  <input type="range" min={0} max={100} step={5} value={speechVolume}
-                    onChange={(e) => updateSetting("speechVolume" as any, Number(e.target.value))}
-                    className="w-full h-2 rounded-full cursor-pointer accent-pink-500" />
-                  <div className="flex justify-between text-[9px] text-muted-foreground"><span>🔇</span><span>🔊</span></div>
+
+                  {/* Speech volume */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <button onClick={() => setSpeechOn(!speechOn)} className={`flex items-center gap-1.5 text-xs font-bold ${speechOn && !globalMute ? "text-green-400" : "text-muted-foreground"}`}>
+                        {speechOn && !globalMute ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+                        <span>🗣️ הכרזה</span>
+                      </button>
+                      <span className="text-xs text-muted-foreground font-mono w-10 text-left">{speechVolume}%</span>
+                    </div>
+                    <input type="range" min={0} max={100} step={1} value={speechVolume}
+                      onChange={(e) => updateSetting("speechVolume" as any, Number(e.target.value))}
+                      className="w-full h-2.5 rounded-full cursor-pointer appearance-none bg-gradient-to-r from-green-500/20 via-green-500/50 to-green-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-green-500/40 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white/80 [&::-webkit-slider-thumb]:cursor-pointer" />
+                  </div>
+
+                  <div className="text-[10px] text-muted-foreground text-center pt-1 border-t border-border/30">
+                    🎧 שמע סטריאו עם אפקטים מרחביים
+                  </div>
                 </div>
               )}
             </div>
@@ -503,9 +561,11 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             )}
           </div>
           <div className="flex items-center gap-1.5 sm:gap-3 text-xs sm:text-sm font-bold">
-            <span>{isPaused ? "⏸️" : "⏱️"} {formatTime(timerSeconds)}</span>
+            <span className={challengeMode && (challengeTimeLimit - timerSeconds) <= 5 ? "timer-critical" : challengeMode && (challengeTimeLimit - timerSeconds) <= 15 ? "timer-warning" : ""}>{isPaused ? "⏸️" : "⏱️"} {challengeMode ? formatTime(Math.max(0, challengeTimeLimit - timerSeconds)) : formatTime(timerSeconds)}</span>
             <span>🎯 {matchedCount}/{pairCount}</span>
+            {currentStreak >= 3 && <span className="streak-indicator text-orange-400">🔥x{currentStreak}</span>}
             <span>🔄 {moves}</span>
+            {challengeMode && <span>{"❤️".repeat(challengeLives)}{"🖤".repeat(Math.max(0, challengeStartLives.current - challengeLives))}</span>}
             {twoPlayerMode && (
               <span className={`px-2 py-0.5 rounded-full text-xs ${currentPlayer === 1 ? "bg-blue-500/20 text-blue-400" : "bg-pink-500/20 text-pink-400"}`}>
                 שחקן {currentPlayer}
@@ -528,6 +588,16 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             <Button variant="ghost" size="sm" onClick={() => { setTwoPlayerMode(!twoPlayerMode); setCurrentPlayer(1); setScores({ p1: 0, p2: 0 }); }}
               className={twoPlayerMode ? "text-green-500" : "text-muted-foreground"} title="מצב שני שחקנים">
               <Users className="w-5 h-5" />
+            </Button>
+            {/* Challenge mode */}
+            <Button variant="ghost" size="sm" onClick={() => { setChallengeMode(!challengeMode); if (!challengeMode) { setChallengeLives(challengeStartLives.current); } }}
+              className={challengeMode ? "text-red-500" : "text-muted-foreground"} title="מצב אתגר">
+              <Target className="w-5 h-5" />
+            </Button>
+            {/* Stats */}
+            <Button variant="ghost" size="sm" onClick={() => setShowStats(!showStats)}
+              className={showStats ? "text-yellow-500" : "text-muted-foreground"} title="סטטיסטיקות והישגים">
+              <Trophy className="w-5 h-5" />
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setIsPaused((p) => !p)} disabled={isGameOver || isTimedOut || moves === 0}
               className={isPaused ? "text-yellow-500" : "text-muted-foreground"} title={isPaused ? "המשך" : "השהה"}>
@@ -667,6 +737,29 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
           )}
         </div>
 
+        {/* Streak flash overlay */}
+        {streakFlash >= 3 && (
+          <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-40">
+            <div className={`combo-flash text-6xl sm:text-8xl font-black ${streakFlash >= 5 ? "combo-glow-5" : "combo-glow-3"}`}>
+              {streakFlash >= 5 ? "💥" : "🔥"} x{streakFlash}!
+            </div>
+          </div>
+        )}
+
+        {/* Achievement popup */}
+        {newAchievement && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 achievement-popup">
+            <div className="bg-gradient-to-r from-yellow-500/90 to-amber-600/90 text-white rounded-2xl px-6 py-3 shadow-2xl flex items-center gap-3 min-w-64">
+              <span className="text-3xl">{newAchievement.icon}</span>
+              <div>
+                <div className="text-xs font-medium opacity-80">הישג חדש!</div>
+                <div className="font-bold text-sm">{newAchievement.label}</div>
+              </div>
+              <button onClick={dismissAchievement} className="mr-auto text-white/60 hover:text-white text-lg">✕</button>
+            </div>
+          </div>
+        )}
+
         {/* Pause overlay */}
         {isPaused && !isGameOver && (
           <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -692,9 +785,16 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
         {isTimedOut && !isGameOver && (
           <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-card rounded-3xl p-8 max-w-xs w-full text-center shadow-2xl bounce-in space-y-4">
-              <div className="text-6xl">⌛</div>
-              <h2 className="text-2xl font-black text-foreground">הזמן נגמר!</h2>
+              <div className="text-6xl">{challengeMode && challengeLives <= 0 ? "💔" : "⌛"}</div>
+              <h2 className="text-2xl font-black text-foreground">
+                {challengeMode && challengeLives <= 0 ? "נגמרו החיים!" : "הזמן נגמר!"}
+              </h2>
               <p className="text-muted-foreground">מצאתם {matchedCount} מתוך {pairCount} זוגות</p>
+              {challengeMode && (
+                <p className="text-sm text-muted-foreground">
+                  ⏱️ {formatTime(timerSeconds)} | 🔄 {moves} ניסיונות
+                </p>
+              )}
               <div className="flex flex-col gap-3 pt-2">
                 <Button variant={theme === "girl" ? "game-pink" : "game-blue"} size="lg" onClick={restart} className="text-lg">
                   🔄 נסו שוב
