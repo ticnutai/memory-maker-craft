@@ -1,0 +1,147 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - generic:
+        - generic: 🧸
+        - generic: 🎈
+        - generic: 🌈
+        - generic: ⭐
+        - generic: 🦄
+        - generic: 🎀
+        - generic: 🍭
+        - generic: 🌸
+        - generic: 💖
+        - generic: 🎪
+        - generic: 🐰
+        - generic: 🦋
+      - generic [ref=e6]:
+        - heading "🎮 משחקי זיכרון 🎮" [level=1] [ref=e7]
+        - paragraph [ref=e8]: בחרו ערכה להתחיל לשחק!
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - button "🐾 חיות" [ref=e11] [cursor=pointer]:
+            - generic [ref=e12]: 🐾
+            - generic [ref=e13]: חיות
+          - button "ערוך ערכה" [ref=e14] [cursor=pointer]:
+            - img [ref=e15]
+        - generic [ref=e17]:
+          - button "🍎 פירות" [ref=e18] [cursor=pointer]:
+            - generic [ref=e19]: 🍎
+            - generic [ref=e20]: פירות
+          - button "ערוך ערכה" [ref=e21] [cursor=pointer]:
+            - img [ref=e22]
+        - generic [ref=e24]:
+          - button "🚀 כלי רכב" [ref=e25] [cursor=pointer]:
+            - generic [ref=e26]: 🚀
+            - generic [ref=e27]: כלי רכב
+          - button "ערוך ערכה" [ref=e28] [cursor=pointer]:
+            - img [ref=e29]
+        - generic [ref=e31]:
+          - button "א אותיות" [ref=e32] [cursor=pointer]:
+            - generic [ref=e33]: א
+            - generic [ref=e34]: אותיות
+          - button "ערוך ערכה" [ref=e35] [cursor=pointer]:
+            - img [ref=e36]
+        - generic [ref=e38]:
+          - button "📸 חיות אמיתיות" [ref=e39] [cursor=pointer]:
+            - generic [ref=e40]: 📸
+            - generic [ref=e41]: חיות אמיתיות
+          - button "ערוך ערכה" [ref=e42] [cursor=pointer]:
+            - img [ref=e43]
+        - generic [ref=e45]:
+          - button "🍰 קינוחים" [ref=e46] [cursor=pointer]:
+            - generic [ref=e47]: 🍰
+            - generic [ref=e48]: קינוחים
+          - button "ערוך ערכה" [ref=e49] [cursor=pointer]:
+            - img [ref=e50]
+        - generic [ref=e52]:
+          - button "🦖 דינוזאורים" [ref=e53] [cursor=pointer]:
+            - generic [ref=e54]: 🦖
+            - generic [ref=e55]: דינוזאורים
+          - button "ערוך ערכה" [ref=e56] [cursor=pointer]:
+            - img [ref=e57]
+        - generic [ref=e59]:
+          - button "🐴 חיות חווה" [ref=e60] [cursor=pointer]:
+            - generic [ref=e61]: 🐴
+            - generic [ref=e62]: חיות חווה
+          - button "ערוך ערכה" [ref=e63] [cursor=pointer]:
+            - img [ref=e64]
+        - generic [ref=e66]:
+          - button "🚗 כלי תחבורה" [ref=e67] [cursor=pointer]:
+            - generic [ref=e68]: 🚗
+            - generic [ref=e69]: כלי תחבורה
+          - button "ערוך ערכה" [ref=e70] [cursor=pointer]:
+            - img [ref=e71]
+        - generic [ref=e73]:
+          - button "🐴 סוסים" [ref=e74] [cursor=pointer]:
+            - generic [ref=e75]: 🐴
+            - generic [ref=e76]: סוסים
+          - button "ערוך ערכה" [ref=e77] [cursor=pointer]:
+            - img [ref=e78]
+        - generic [ref=e80]:
+          - button "🔷 צורות וצבעים" [ref=e81] [cursor=pointer]:
+            - generic [ref=e82]: 🔷
+            - generic [ref=e83]: צורות וצבעים
+          - button "ערוך ערכה" [ref=e84] [cursor=pointer]:
+            - img [ref=e85]
+        - generic [ref=e87]:
+          - button "🐠 עולם הים" [ref=e88] [cursor=pointer]:
+            - generic [ref=e89]: 🐠
+            - generic [ref=e90]: עולם הים
+          - button "ערוך ערכה" [ref=e91] [cursor=pointer]:
+            - img [ref=e92]
+        - generic [ref=e94]:
+          - button "🚀 חלל" [ref=e95] [cursor=pointer]:
+            - generic [ref=e96]: 🚀
+            - generic [ref=e97]: חלל
+          - button "ערוך ערכה" [ref=e98] [cursor=pointer]:
+            - img [ref=e99]
+        - generic [ref=e101]:
+          - button "🍕 אוכל ומתוקים" [ref=e102] [cursor=pointer]:
+            - generic [ref=e103]: 🍕
+            - generic [ref=e104]: אוכל ומתוקים
+          - button "ערוך ערכה" [ref=e105] [cursor=pointer]:
+            - img [ref=e106]
+        - generic [ref=e108]:
+          - button "⚽ ספורט" [ref=e109] [cursor=pointer]:
+            - generic [ref=e110]: ⚽
+            - generic [ref=e111]: ספורט
+          - button "ערוך ערכה" [ref=e112] [cursor=pointer]:
+            - img [ref=e113]
+        - generic [ref=e115]:
+          - button "🎸 מוזיקה" [ref=e116] [cursor=pointer]:
+            - generic [ref=e117]: 🎸
+            - generic [ref=e118]: מוזיקה
+          - button "ערוך ערכה" [ref=e119] [cursor=pointer]:
+            - img [ref=e120]
+        - generic [ref=e122]:
+          - button "🇮🇱 דגלים" [ref=e123] [cursor=pointer]:
+            - generic [ref=e124]: 🇮🇱
+            - generic [ref=e125]: דגלים
+          - button "ערוך ערכה" [ref=e126] [cursor=pointer]:
+            - img [ref=e127]
+        - generic [ref=e129]:
+          - button "🌿 טבע" [ref=e130] [cursor=pointer]:
+            - generic [ref=e131]: 🌿
+            - generic [ref=e132]: טבע
+          - button "ערוך ערכה" [ref=e133] [cursor=pointer]:
+            - img [ref=e134]
+        - button "ערכה חדשה" [ref=e136] [cursor=pointer]:
+          - img [ref=e138]
+          - generic [ref=e139]: ערכה חדשה
+    - button [ref=e140] [cursor=pointer]:
+      - img [ref=e141]
+    - generic [ref=e144]:
+      - button [ref=e145] [cursor=pointer]:
+        - img [ref=e146]
+      - button [ref=e148] [cursor=pointer]:
+        - img [ref=e149]
+      - button [ref=e151] [cursor=pointer]:
+        - img [ref=e152]
+```

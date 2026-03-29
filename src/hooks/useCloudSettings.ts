@@ -121,7 +121,7 @@ export function useCloudSettings(initialTheme: string) {
         borderWidth: asNumber(data.card_border_width, 4),
         borderColor: asString(data.card_border_color, "default") as CardStyle["borderColor"],
         backColor: asString(data.card_back_color, "default") as CardStyle["backColor"],
-        backColor2: typeof data.card_back_color_2 === "string" && data.card_back_color_2.length > 0 ? data.card_back_color_2 : undefined,
+        backColor2: typeof data.card_back_color_2 === "string" && (data.card_back_color_2 as string).length > 0 ? data.card_back_color_2 as string : undefined,
         backIcon: asString(data.card_back_icon, "⭐"),
         shape: asString(data.card_shape, "square") as CardStyle["shape"],
       },
@@ -160,9 +160,7 @@ export function useCloudSettings(initialTheme: string) {
           filter: `device_id=eq.${deviceId.current}`,
         },
         (payload) => {
-          if (payload.new) {
-            applyData(payload.new as DbSettingsRow);
-          }
+          if (payload.new) applyData(payload.new as DbSettingsRow);
         }
       )
       .subscribe();

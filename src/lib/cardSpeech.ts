@@ -50,6 +50,41 @@ const CARD_NAMES: Record<SpeechLang, Record<string, string>> = {
     "horse-white": "סוס לבן", "horse-brown": "סוס חום", "horse-black": "סוס שחור",
     "horse-pink": "סוס ורוד", "horse-golden": "סוס זהוב", "horse-spotted": "סוס מנומר",
     "horse-gray": "סוס אפור", "horse-pony": "פוני",
+    // Pokémon
+    "pkm-1": "בולבסאור", "pkm-4": "צ'רמנדר", "pkm-7": "סקוורטל", "pkm-25": "פיקאצ'ו",
+    "pkm-39": "ג'יגלפאף", "pkm-52": "מיאות", "pkm-54": "פסידאק", "pkm-79": "סלופוק",
+    "pkm-94": "גנגר", "pkm-113": "צ'נסי", "pkm-131": "לפראס", "pkm-133": "איבי",
+    "pkm-143": "סנולקס", "pkm-147": "דרטיני", "pkm-175": "טוג'פי", "pkm-196": "אספיאון",
+    // Fireman Sam
+    "fs-sam": "סמי הכבאי", "fs-elvis": "אלביס", "fs-penny": "פני", "fs-steele": "סטיל",
+    "fs-norman": "נורמן", "fs-dilys": "דיליס", "fs-trevor": "טרבור", "fs-jupiter": "יופיטר",
+    "fs-wallaby": "וולבי", "fs-tom": "טום תומס", "fs-bella": "בלה לזניה", "fs-mike": "מייק פלאד",
+    "fs-charlie": "צ'רלי ג'ונס", "fs-bronwyn": "ברונווין", "fs-twins": "שרה וג'יימס", "fs-mandy": "מנדי",
+    // Jungle
+    "jg-lion": "אריה", "jg-tiger": "נמר", "jg-elephant": "פיל", "jg-giraffe": "ג'ירפה",
+    "jg-zebra": "זברה", "jg-hippo": "היפופוטם", "jg-monkey": "קוף", "jg-parrot": "תוכי",
+    "jg-snake": "נחש", "jg-croc": "תנין", "jg-gorilla": "גורילה", "jg-cheetah": "צ'יטה",
+    "jg-flamingo": "פלמינגו", "jg-rhino": "קרנף", "jg-panda": "פנדה", "jg-kangaroo": "קנגורו",
+    // Bugs
+    "bug-butterfly": "פרפר", "bug-bee": "דבורה", "bug-ladybug": "פרת משה רבנו", "bug-ant": "נמלה",
+    "bug-spider": "עכביש", "bug-scorpion": "עקרב", "bug-mosquito": "יתוש", "bug-worm": "תולעת",
+    "bug-beetle": "חיפושית", "bug-roach": "מקק", "bug-fly": "זבוב", "bug-snail": "חילזון",
+    "bug-caterpillar": "זחל", "bug-cricket": "צרצר", "bug-microbe": "חיידק", "bug-crab": "סרטן",
+    // Holidays
+    "hol-rosh": "ראש השנה", "hol-yomkippur": "יום כיפור", "hol-sukkot": "סוכות", "hol-simchat": "שמחת תורה",
+    "hol-hanukkah": "חנוכה", "hol-purim": "פורים", "hol-pesach": "פסח", "hol-shavuot": "שבועות",
+    "hol-shabbat": "שבת", "hol-tubishvat": "ט״ו בשבט", "hol-independence": "יום העצמאות", "hol-shofar": "שופר",
+    "hol-honey": "דבש", "hol-lagbaomer": "ל״ג בעומר", "hol-jerusalem": "יום ירושלים", "hol-memorial": "יום הזיכרון",
+    // Flowers
+    "fl-rose": "ורד", "fl-sunflower": "חמנייה", "fl-tulip": "צבעוני", "fl-daisy": "חינניות",
+    "fl-orchid": "סחלב", "fl-lavender": "לבנדר", "fl-lotus": "לוטוס", "fl-poppy": "כלנית",
+    "fl-lily": "שושן", "fl-iris": "אירוס", "fl-magnolia": "מגנוליה", "fl-hyacinth": "יקינתון",
+    "fl-daffodil": "נרקיס", "fl-dahlia": "דליה", "fl-marigold": "ציפורן", "fl-hydrangea": "הורטנזיה",
+    // Birds
+    "bird-eagle": "נשר", "bird-owl": "ינשוף", "bird-parrot": "תוכי", "bird-penguin": "פינגווין",
+    "bird-flamingo": "פלמינגו", "bird-toucan": "טוקן", "bird-peacock": "טווס", "bird-hummingbird": "יונת דבש",
+    "bird-robin": "רובין", "bird-swan": "ברבור", "bird-hawk": "נץ", "bird-pigeon": "יונה",
+    "bird-sparrow": "דרור", "bird-crow": "עורב", "bird-woodpecker": "נקר", "bird-pelican": "פליקן",
   },
   en: {
     bunny: "bunny", butterfly: "butterfly", cat: "cat", unicorn: "unicorn",
@@ -88,6 +123,41 @@ const CARD_NAMES: Record<SpeechLang, Record<string, string>> = {
     "horse-white": "white horse", "horse-brown": "brown horse", "horse-black": "black horse",
     "horse-pink": "pink horse", "horse-golden": "golden horse", "horse-spotted": "spotted horse",
     "horse-gray": "gray horse", "horse-pony": "pony",
+    // Pokémon
+    "pkm-1": "Bulbasaur", "pkm-4": "Charmander", "pkm-7": "Squirtle", "pkm-25": "Pikachu",
+    "pkm-39": "Jigglypuff", "pkm-52": "Meowth", "pkm-54": "Psyduck", "pkm-79": "Slowpoke",
+    "pkm-94": "Gengar", "pkm-113": "Chansey", "pkm-131": "Lapras", "pkm-133": "Eevee",
+    "pkm-143": "Snorlax", "pkm-147": "Dratini", "pkm-175": "Togepi", "pkm-196": "Espeon",
+    // Fireman Sam
+    "fs-sam": "Fireman Sam", "fs-elvis": "Elvis", "fs-penny": "Penny", "fs-steele": "Officer Steele",
+    "fs-norman": "Norman", "fs-dilys": "Dilys", "fs-trevor": "Trevor", "fs-jupiter": "Jupiter",
+    "fs-wallaby": "Wallaby", "fs-tom": "Tom Thomas", "fs-bella": "Bella Lasagne", "fs-mike": "Mike Flood",
+    "fs-charlie": "Charlie Jones", "fs-bronwyn": "Bronwyn", "fs-twins": "Sarah and James", "fs-mandy": "Mandy",
+    // Jungle
+    "jg-lion": "lion", "jg-tiger": "tiger", "jg-elephant": "elephant", "jg-giraffe": "giraffe",
+    "jg-zebra": "zebra", "jg-hippo": "hippo", "jg-monkey": "monkey", "jg-parrot": "parrot",
+    "jg-snake": "snake", "jg-croc": "crocodile", "jg-gorilla": "gorilla", "jg-cheetah": "cheetah",
+    "jg-flamingo": "flamingo", "jg-rhino": "rhinoceros", "jg-panda": "panda", "jg-kangaroo": "kangaroo",
+    // Bugs
+    "bug-butterfly": "butterfly", "bug-bee": "bee", "bug-ladybug": "ladybug", "bug-ant": "ant",
+    "bug-spider": "spider", "bug-scorpion": "scorpion", "bug-mosquito": "mosquito", "bug-worm": "worm",
+    "bug-beetle": "beetle", "bug-roach": "cockroach", "bug-fly": "fly", "bug-snail": "snail",
+    "bug-caterpillar": "caterpillar", "bug-cricket": "cricket", "bug-microbe": "microbe", "bug-crab": "crab",
+    // Holidays
+    "hol-rosh": "Rosh Hashana", "hol-yomkippur": "Yom Kippur", "hol-sukkot": "Sukkot", "hol-simchat": "Simchat Torah",
+    "hol-hanukkah": "Hanukkah", "hol-purim": "Purim", "hol-pesach": "Passover", "hol-shavuot": "Shavuot",
+    "hol-shabbat": "Sabbath", "hol-tubishvat": "Tu Bishvat", "hol-independence": "Independence Day", "hol-shofar": "shofar",
+    "hol-honey": "honey", "hol-lagbaomer": "Lag Baomer", "hol-jerusalem": "Jerusalem Day", "hol-memorial": "Memorial Day",
+    // Flowers
+    "fl-rose": "rose", "fl-sunflower": "sunflower", "fl-tulip": "tulip", "fl-daisy": "daisy",
+    "fl-orchid": "orchid", "fl-lavender": "lavender", "fl-lotus": "lotus", "fl-poppy": "poppy",
+    "fl-lily": "lily", "fl-iris": "iris", "fl-magnolia": "magnolia", "fl-hyacinth": "hyacinth",
+    "fl-daffodil": "daffodil", "fl-dahlia": "dahlia", "fl-marigold": "marigold", "fl-hydrangea": "hydrangea",
+    // Birds
+    "bird-eagle": "eagle", "bird-owl": "owl", "bird-parrot": "parrot", "bird-penguin": "penguin",
+    "bird-flamingo": "flamingo", "bird-toucan": "toucan", "bird-peacock": "peacock", "bird-hummingbird": "hummingbird",
+    "bird-robin": "robin", "bird-swan": "swan", "bird-hawk": "hawk", "bird-pigeon": "pigeon",
+    "bird-sparrow": "sparrow", "bird-crow": "crow", "bird-woodpecker": "woodpecker", "bird-pelican": "pelican",
   },
   de: {
     bunny: "Hase", butterfly: "Schmetterling", cat: "Katze", unicorn: "Einhorn",
@@ -126,6 +196,41 @@ const CARD_NAMES: Record<SpeechLang, Record<string, string>> = {
     "horse-white": "weißes Pferd", "horse-brown": "braunes Pferd", "horse-black": "schwarzes Pferd",
     "horse-pink": "rosa Pferd", "horse-golden": "goldenes Pferd", "horse-spotted": "geflecktes Pferd",
     "horse-gray": "graues Pferd", "horse-pony": "Pony",
+    // Pokémon
+    "pkm-1": "Bisasam", "pkm-4": "Glumanda", "pkm-7": "Schiggy", "pkm-25": "Pikachu",
+    "pkm-39": "Pummeluff", "pkm-52": "Mauzi", "pkm-54": "Enton", "pkm-79": "Flegmon",
+    "pkm-94": "Gengar", "pkm-113": "Chaneira", "pkm-131": "Lapras", "pkm-133": "Evoli",
+    "pkm-143": "Relaxo", "pkm-147": "Dratini", "pkm-175": "Togepi", "pkm-196": "Psiana",
+    // Fireman Sam
+    "fs-sam": "Feuerwehrmann Sam", "fs-elvis": "Elvis", "fs-penny": "Penny", "fs-steele": "Hauptmann Steele",
+    "fs-norman": "Norman", "fs-dilys": "Dilys", "fs-trevor": "Trevor", "fs-jupiter": "Jupiter",
+    "fs-wallaby": "Wallaby", "fs-tom": "Tom Thomas", "fs-bella": "Bella Lasagne", "fs-mike": "Mike Flood",
+    "fs-charlie": "Charlie Jones", "fs-bronwyn": "Bronwyn", "fs-twins": "Sarah und James", "fs-mandy": "Mandy",
+    // Jungle
+    "jg-lion": "Löwe", "jg-tiger": "Tiger", "jg-elephant": "Elefant", "jg-giraffe": "Giraffe",
+    "jg-zebra": "Zebra", "jg-hippo": "Nilpferd", "jg-monkey": "Affe", "jg-parrot": "Papagei",
+    "jg-snake": "Schlange", "jg-croc": "Krokodil", "jg-gorilla": "Gorilla", "jg-cheetah": "Gepard",
+    "jg-flamingo": "Flamingo", "jg-rhino": "Nashorn", "jg-panda": "Panda", "jg-kangaroo": "Känguru",
+    // Bugs
+    "bug-butterfly": "Schmetterling", "bug-bee": "Biene", "bug-ladybug": "Marienkäfer", "bug-ant": "Ameise",
+    "bug-spider": "Spinne", "bug-scorpion": "Skorpion", "bug-mosquito": "Mücke", "bug-worm": "Wurm",
+    "bug-beetle": "Käfer", "bug-roach": "Schabe", "bug-fly": "Fliege", "bug-snail": "Schnecke",
+    "bug-caterpillar": "Raupe", "bug-cricket": "Grille", "bug-microbe": "Mikrobe", "bug-crab": "Krabbe",
+    // Holidays
+    "hol-rosh": "Rosch haSchana", "hol-yomkippur": "Jom Kippur", "hol-sukkot": "Sukkot", "hol-simchat": "Simchat Tora",
+    "hol-hanukkah": "Chanukka", "hol-purim": "Purim", "hol-pesach": "Pessach", "hol-shavuot": "Schawuot",
+    "hol-shabbat": "Schabbat", "hol-tubishvat": "Tu biSchvat", "hol-independence": "Unabhängigkeitstag", "hol-shofar": "Schofar",
+    "hol-honey": "Honig", "hol-lagbaomer": "Lag baOmer", "hol-jerusalem": "Jerusalemtag", "hol-memorial": "Gedenktag",
+    // Flowers
+    "fl-rose": "Rose", "fl-sunflower": "Sonnenblume", "fl-tulip": "Tulpe", "fl-daisy": "Gänseblümchen",
+    "fl-orchid": "Orchidee", "fl-lavender": "Lavendel", "fl-lotus": "Lotus", "fl-poppy": "Mohn",
+    "fl-lily": "Lilie", "fl-iris": "Schwertlilie", "fl-magnolia": "Magnolie", "fl-hyacinth": "Hyazinthe",
+    "fl-daffodil": "Narzisse", "fl-dahlia": "Dahlie", "fl-marigold": "Ringblume", "fl-hydrangea": "Hortensie",
+    // Birds
+    "bird-eagle": "Adler", "bird-owl": "Eule", "bird-parrot": "Papagei", "bird-penguin": "Pinguin",
+    "bird-flamingo": "Flamingo", "bird-toucan": "Tukan", "bird-peacock": "Pfau", "bird-hummingbird": "Kolibri",
+    "bird-robin": "Rotkehlchen", "bird-swan": "Schwan", "bird-hawk": "Habicht", "bird-pigeon": "Taube",
+    "bird-sparrow": "Sperling", "bird-crow": "Krähe", "bird-woodpecker": "Specht", "bird-pelican": "Pelikan",
   },
 };
 

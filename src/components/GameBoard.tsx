@@ -1,7 +1,6 @@
 import { useMemoryGame } from "@/hooks/useMemoryGame";
 import { useBackgroundMusic } from "@/hooks/useBackgroundMusic";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
-import { useGameAnimations } from "@/hooks/useGameAnimations";
 import { ThemeType, CardData, GameSettings, CardSetType, getCardSets, CardPosition } from "@/lib/gameData";
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import MemoryCard from "@/components/MemoryCard";
@@ -10,9 +9,9 @@ import ThemeBackground from "@/components/ThemeBackground";
 import { BgThemeId } from "@/components/ThemeBackground";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, AudioLines, Lightbulb, Eye, Users } from "lucide-react";
+import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, Lightbulb, Timer, Eye, Users, Pause, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { setSoundVolumeMultiplier } from "@/lib/sounds";
+import { setSoundVolumeMultiplier, playSirenMatch, playFireCrackle } from "@/lib/sounds";
 import { setSpeechVolumeMultiplier, setElevenLabsTTS } from "@/lib/cardSpeech";
 
 interface GameBoardProps {
@@ -26,35 +25,23 @@ interface GameBoardProps {
 export default function GameBoard({ theme, settings, cardSetType, customCards, onHome }: GameBoardProps) {
   const { settings: liveCloud, toGameSettings, updateSetting } = useCloudSettings("girl");
   const liveSettings = { ...settings, ...toGameSettings() };
+  const [speechOn, setSpeechOn] = useState(settings.speechEnabled);
   const [globalMute, setGlobalMute] = useState(false);
   const setInfo = getCardSets(theme).find((s) => s.type === cardSetType);
   const cardData = customCards || setInfo?.cards || getCardSets(theme)[0].cards;
   const pairCount = Math.min(liveSettings.pairCount, cardData.length);
-  const soundOn = liveSettings.soundEnabled;
-  const speechOn = liveSettings.speechEnabled;
-  const effectiveSoundOn = soundOn && !globalMute;
+  const effectiveSoundOn = liveSettings.soundEnabled && !globalMute;
   const effectiveSpeechOn = speechOn && !globalMute;
-  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(
-    pairCount,
-    effectiveSoundOn,
-    effectiveSpeechOn,
-    liveSettings.flipDuration,
-    liveSettings.speechRate,
-    liveSettings.customVoiceEnabled !== false,
-    liveSettings.sfxMode || "builtin",
-    liveSettings.elevenLabsEffectsEnabled === true,
-    (liveSettings.speechLang as any) || "he"
-  );
+  const { cards, moves, matchedCount, isGameOver, flipCard, startGame } = useMemoryGame(pairCount, effectiveSoundOn, effectiveSpeechOn, liveSettings.flipDuration, liveSettings.speechRate, liveSettings.customVoiceEnabled !== false, (liveSettings.sfxMode as any) || "builtin", liveSettings.elevenLabsEffectsEnabled === true, (liveSettings.speechLang as any) || "he");
   const activeMelody = liveSettings.musicType === "builtin"
     ? BUILT_IN_MELODIES.find((m) => m.id === liveSettings.builtinMelodyId)
     : undefined;
   const customUrl = (liveSettings.musicType === "custom" || liveSettings.musicType === "cloud") ? liveSettings.customMusic : undefined;
-  const { isPlaying: musicPlaying, start: startMusic, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(
+  const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(
     globalMute ? undefined : activeMelody,
     globalMute ? undefined : customUrl,
     (liveCloud.musicVolume ?? 50) / 100
   );
-  const { showingAnimation, triggerAnimation, dismiss: dismissAnimation } = useGameAnimations();
 
   const isFreeLayout = liveSettings.layoutMode === "free";
   const snapEnabled = liveSettings.snapToGrid !== false;
@@ -69,41 +56,14 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const [alignLines, setAlignLines] = useState<{ x?: number; y?: number }>({});
   const [saveFlash, setSaveFlash] = useState(false);
   const boardRef = useRef<HTMLDivElement>(null);
-  const prevMatchedRef = useRef(0);
-
-  // Sync ElevenLabs TTS flag with current sfxMode setting
-  useEffect(() => {
-    const mode = liveSettings.sfxMode || "builtin";
-    setElevenLabsTTS(mode === "elevenlabs" || mode === "both");
-  }, [liveSettings.sfxMode]);
-
-  // Trigger custom animations on match / win
-  useEffect(() => {
-    if (matchedCount > prevMatchedRef.current && matchedCount > 0) {
-      triggerAnimation("match");
-    }
-    prevMatchedRef.current = matchedCount;
-  }, [matchedCount, triggerAnimation]);
-
-  useEffect(() => {
-    if (isGameOver) triggerAnimation("win");
-  }, [isGameOver, triggerAnimation]);
-
-  useEffect(() => {
-    if (liveSettings.musicType === "none") {
-      stopMusic();
-      return;
-    }
-
-    if (activeMelody || customUrl) {
-      startMusic();
-    }
-  }, [liveSettings.musicType, activeMelody, customUrl, startMusic, stopMusic]);
 
   // ── Timer ──
   const [timerSeconds, setTimerSeconds] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const [bestTime, setBestTime] = useState<number | null>(null);
+  const [bestMoves, setBestMoves] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isTimedOut, setIsTimedOut] = useState(false);
 
   // ── Hint ──
   const [hintsLeft, setHintsLeft] = useState(3);
@@ -120,6 +80,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
 
   // ── Volume slider popup ──
   const [volumePopup, setVolumePopup] = useState<"music" | "sound" | "speech" | null>(null);
+  const volumePopupTimer = useRef<ReturnType<typeof setTimeout>>();
 
   // Volume values from cloud (0-100)
   const musicVolume = liveCloud.musicVolume ?? 50;
@@ -130,6 +91,18 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   useEffect(() => { setSoundVolumeMultiplier(soundVolume / 100); }, [soundVolume]);
   useEffect(() => { setSpeechVolumeMultiplier(speechVolume / 100); }, [speechVolume]);
 
+  // Sync ElevenLabs TTS flag with current sfxMode setting
+  useEffect(() => {
+    const mode = (liveSettings.sfxMode as string) || "builtin";
+    setElevenLabsTTS(mode === "elevenlabs" || mode === "both");
+  }, [liveSettings.sfxMode]);
+
+  // Preload card images for smooth reveal
+  useEffect(() => {
+    const images = cardData.map(c => c.image).filter(Boolean) as string[];
+    images.forEach(src => { const img = new Image(); img.src = src; });
+  }, [cardData]);
+
   // Close volume popup on outside click
   useEffect(() => {
     if (!volumePopup) return;
@@ -138,7 +111,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     return () => { clearTimeout(timer); document.removeEventListener("click", close); };
   }, [volumePopup]);
 
-  // ── Previous state ref for detecting mismatch (match ref declared above) ──
+  // ── Previous state refs for detecting match/mismatch ──
+  const prevMatchedRef = useRef(matchedCount);
   const prevMovesRef = useRef(moves);
 
   // ── Timer logic ──
@@ -147,6 +121,10 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     const key = `best-time-${cardSetType}-${pairCount}`;
     const stored = localStorage.getItem(key);
     if (stored) setBestTime(parseInt(stored, 10));
+    // Load best moves from localStorage
+    const movesKey = `best-moves-${cardSetType}-${pairCount}`;
+    const storedMoves = localStorage.getItem(movesKey);
+    if (storedMoves) setBestMoves(parseInt(storedMoves, 10));
   }, [cardSetType, pairCount]);
 
   useEffect(() => {
@@ -154,18 +132,49 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
       // Stop timer
       if (timerRef.current) clearInterval(timerRef.current);
       // Save best time
-      const key = `best-time-${cardSetType}-${pairCount}`;
+      const timeKey = `best-time-${cardSetType}-${pairCount}`;
       if (bestTime === null || timerSeconds < bestTime) {
-        localStorage.setItem(key, timerSeconds.toString());
+        localStorage.setItem(timeKey, timerSeconds.toString());
         setBestTime(timerSeconds);
+      }
+      // Save best moves
+      const movesKey = `best-moves-${cardSetType}-${pairCount}`;
+      if (bestMoves === null || moves < bestMoves) {
+        localStorage.setItem(movesKey, moves.toString());
+        setBestMoves(moves);
       }
       return;
     }
+    if (isPaused) {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = undefined; }
+      return;
+    }
     if (moves > 0 && !timerRef.current) {
-      timerRef.current = setInterval(() => setTimerSeconds((s) => s + 1), 1000);
+      timerRef.current = setInterval(() => {
+        setTimerSeconds((s) => {
+          if (s + 1 >= 600) {
+            clearInterval(timerRef.current!);
+            timerRef.current = undefined;
+            setIsTimedOut(true);
+            return s + 1;
+          }
+          return s + 1;
+        });
+      }, 1000);
     }
     return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = undefined; } };
-  }, [moves, isGameOver]);
+  }, [moves, isGameOver, isPaused]);
+
+  // ── Escape key to toggle pause ──
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isGameOver && !isTimedOut && moves > 0) {
+        setIsPaused((p) => !p);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [isGameOver, isTimedOut, moves]);
 
   // ── Hint logic ──
   const useHint = () => {
@@ -223,6 +232,11 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     prevMovesRef.current = newMoves;
   }, [matchedCount, moves, twoPlayerMode, currentPlayer]);
 
+  // ── Fireman Sam: fire sounds on match ──
+  useEffect(() => {
+    if (cardSetType === "firesam" && matchedCount > 0) playSirenMatch();
+  }, [matchedCount, cardSetType]);
+
   // הפעל מצב עריכה אוטומטית כשעוברים למצב חופשי
   useEffect(() => {
     if (isFreeLayout) setEditMode(true);
@@ -231,7 +245,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
 
   useEffect(() => {
     startGame(cardData);
-  }, [startGame, cardData]);
+  }, []);
 
   // Initialize positions when cards change in free mode
   useEffect(() => {
@@ -324,10 +338,12 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   };
 
   const duplicateLayout = async () => {
+    const name = window.prompt("שם לפריסה החדשה:");
+    if (!name?.trim()) return;
     const posArr = cards.map(c => positions[c.uniqueId] || { x: 0, y: 0 });
     await supabase.from("layout_presets").insert({
       device_id: getDeviceId(),
-      name: "פריסה משוכפלת",
+      name: name.trim(),
       positions: posArr,
       pair_count: pairCount,
     } as any);
@@ -338,6 +354,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const restart = () => {
     setPositions({});
     setTimerSeconds(0);
+    setIsPaused(false);
+    setIsTimedOut(false);
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = undefined; }
     setHintsLeft(3);
     setHintCards([]);
@@ -382,30 +400,6 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     <div dir="rtl" className={animationsOff ? "no-animations" : ""}>
       <ThemeBackground themeId={bgThemeId} girlTheme={theme === "girl"} className="flex flex-col">
         <Confetti active={isGameOver && !animationsOff} />
-
-        {/* Custom animation overlay */}
-        {showingAnimation && (
-          <div
-            className="fixed inset-0 z-[60] pointer-events-none flex items-center justify-center"
-            onClick={dismissAnimation}
-          >
-            {showingAnimation.type === "video" ? (
-              <video
-                src={showingAnimation.url}
-                autoPlay
-                muted
-                className="max-w-[60vw] max-h-[60vh] rounded-2xl shadow-2xl animate-scale-in pointer-events-auto"
-                onEnded={dismissAnimation}
-              />
-            ) : (
-              <img
-                src={showingAnimation.url}
-                alt=""
-                className="max-w-[60vw] max-h-[60vh] rounded-2xl shadow-2xl animate-scale-in pointer-events-auto"
-              />
-            )}
-          </div>
-        )}
 
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between px-2 sm:px-4 py-2 sm:py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm relative gap-y-1">
@@ -464,7 +458,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             {/* Speech — click toggle, double-click volume */}
             <div className="relative">
               <Button variant="ghost" size="sm" disabled={globalMute}
-                onClick={() => updateSetting("speechEnabled", !speechOn)}
+                onClick={() => setSpeechOn(!speechOn)}
                 onDoubleClick={(e) => { e.stopPropagation(); setVolumePopup(volumePopup === "speech" ? null : "speech"); }}
                 className={speechOn && !globalMute ? "text-accent" : "text-muted-foreground"} title="לחיצה: הפעל/כבה | לחיצה כפולה: עוצמה">
                 {speechOn && !globalMute ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
@@ -482,17 +476,6 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                 </div>
               )}
             </div>
-            {/* Custom voice toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={globalMute}
-              className={liveSettings.customVoiceEnabled !== false ? "text-accent" : "text-muted-foreground"}
-              onClick={() => updateSetting("customVoiceEnabled" as any, !(liveSettings.customVoiceEnabled !== false))}
-              title="הקלטות אישיות"
-            >
-              <AudioLines className="w-4 h-4" />
-            </Button>
             {isFreeLayout && (
               <>
                 <Button variant="ghost" size="sm" onClick={() => setEditMode(!editMode)}
@@ -520,7 +503,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             )}
           </div>
           <div className="flex items-center gap-1.5 sm:gap-3 text-xs sm:text-sm font-bold">
-            <span>⏱️ {formatTime(timerSeconds)}</span>
+            <span>{isPaused ? "⏸️" : "⏱️"} {formatTime(timerSeconds)}</span>
             <span>🎯 {matchedCount}/{pairCount}</span>
             <span>🔄 {moves}</span>
             {twoPlayerMode && (
@@ -545,6 +528,10 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             <Button variant="ghost" size="sm" onClick={() => { setTwoPlayerMode(!twoPlayerMode); setCurrentPlayer(1); setScores({ p1: 0, p2: 0 }); }}
               className={twoPlayerMode ? "text-green-500" : "text-muted-foreground"} title="מצב שני שחקנים">
               <Users className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setIsPaused((p) => !p)} disabled={isGameOver || isTimedOut || moves === 0}
+              className={isPaused ? "text-yellow-500" : "text-muted-foreground"} title={isPaused ? "המשך" : "השהה"}>
+              {isPaused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
             </Button>
             <Button variant="ghost" size="sm" onClick={restart}>
               <RotateCcw className="w-5 h-5" />
@@ -644,7 +631,9 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                       theme={theme}
                       emojiScale={liveSettings.emojiScale}
                       cardStyle={liveSettings.cardStyle}
-                      onClick={() => { if (!editMode && !trainingMode) flipCard(card.uniqueId); }}
+                      onClick={() => { if (!editMode && !trainingMode && !isPaused) { flipCard(card.uniqueId); if (cardSetType === "firesam") playFireCrackle(); } }}
+                      extraMatchClass={cardSetType === "firesam" ? "fire-matched-glow" : undefined}
+                      sparkleEmojis={cardSetType === "firesam" ? ["🔥", "💧", "🚒", "⛑️"] : undefined}
                     />
                   </div>
                 );
@@ -667,7 +656,9 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                       theme={theme}
                       emojiScale={liveSettings.emojiScale}
                       cardStyle={liveSettings.cardStyle}
-                      onClick={() => { if (!trainingMode) flipCard(card.uniqueId); }}
+                      onClick={() => { if (!trainingMode && !isPaused) { flipCard(card.uniqueId); if (cardSetType === "firesam") playFireCrackle(); } }}
+                      extraMatchClass={cardSetType === "firesam" ? "fire-matched-glow" : undefined}
+                      sparkleEmojis={cardSetType === "firesam" ? ["🔥", "💧", "🚒", "⛑️"] : undefined}
                     />
                   </div>
                 );
@@ -675,6 +666,46 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             </div>
           )}
         </div>
+
+        {/* Pause overlay */}
+        {isPaused && !isGameOver && (
+          <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-card rounded-3xl p-8 max-w-xs w-full text-center shadow-2xl bounce-in space-y-4">
+              <div className="text-6xl">⏸️</div>
+              <h2 className="text-2xl font-black text-foreground">המשחק מושהה</h2>
+              <div className="flex flex-col gap-3 pt-2">
+                <Button variant={theme === "girl" ? "game-pink" : "game-blue"} size="lg" onClick={() => setIsPaused(false)} className="text-lg">
+                  ▶️ המשך
+                </Button>
+                <Button variant="outline" size="lg" onClick={restart} className="text-lg">
+                  🔄 התחל מחדש
+                </Button>
+                <Button variant="outline" size="lg" onClick={() => { stopMusic(); onHome(); }} className="text-lg">
+                  🏠 חזרה הביתה
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Timed out overlay */}
+        {isTimedOut && !isGameOver && (
+          <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-card rounded-3xl p-8 max-w-xs w-full text-center shadow-2xl bounce-in space-y-4">
+              <div className="text-6xl">⌛</div>
+              <h2 className="text-2xl font-black text-foreground">הזמן נגמר!</h2>
+              <p className="text-muted-foreground">מצאתם {matchedCount} מתוך {pairCount} זוגות</p>
+              <div className="flex flex-col gap-3 pt-2">
+                <Button variant={theme === "girl" ? "game-pink" : "game-blue"} size="lg" onClick={restart} className="text-lg">
+                  🔄 נסו שוב
+                </Button>
+                <Button variant="outline" size="lg" onClick={() => { stopMusic(); onHome(); }} className="text-lg">
+                  🏠 חזרה הביתה
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Win overlay */}
         {isGameOver && (
@@ -688,11 +719,12 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
               </div>
               <h2 className="text-3xl font-black text-foreground">🎉 כל הכבוד! 🎉</h2>
               <p className="text-muted-foreground text-lg">סיימתם ב-{moves} ניסיונות!</p>
-              <div className="flex justify-center gap-4 text-sm text-muted-foreground">
+              <div className="flex justify-center gap-4 text-sm text-muted-foreground flex-wrap">
                 <span>⏱️ זמן: {formatTime(timerSeconds)}</span>
-                {bestTime !== null && <span>🥇 שיא: {formatTime(bestTime)}</span>}
+                {bestTime !== null && <span>🥇 שיא זמן: {formatTime(bestTime)}</span>}
+                {bestMoves !== null && <span>🎯 שיא ניסיונות: {bestMoves}</span>}
               </div>
-              {bestTime !== null && timerSeconds <= bestTime && (
+              {((bestTime !== null && timerSeconds <= bestTime) || (bestMoves !== null && moves <= bestMoves)) && (
                 <p className="text-yellow-500 font-bold text-lg bounce-in">🎊 שיא חדש! 🎊</p>
               )}
               {twoPlayerMode && (

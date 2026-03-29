@@ -1,14 +1,9 @@
 // Rich Web Audio API sound effects — no external files needed
-interface GameAudioWindow extends Window {
-  __gameAudioCtx?: AudioContext;
-}
-
 const audioCtx = () => {
-  const w = window as GameAudioWindow;
-  if (!w.__gameAudioCtx) {
-    w.__gameAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  if (!(window as any).__gameAudioCtx) {
+    (window as any).__gameAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
   }
-  const ctx = w.__gameAudioCtx;
+  const ctx = (window as any).__gameAudioCtx as AudioContext;
   if (ctx.state === "suspended") ctx.resume();
   return ctx;
 };
@@ -185,4 +180,77 @@ export function playStarSound() {
   playTone(1200, 0.08, "sine", 0.12);
   playTone(1500, 0.1, "sine", 0.15, 0.06);
   playTone(1800, 0.12, "sine", 0.1, 0.12);
+}
+
+// ── Fire Station (Fireman Sam) sound effects ──
+
+export function playFireCrackle() {
+  const ctx = audioCtx();
+  const now = ctx.currentTime;
+  const eff = _soundVolumeMultiplier;
+
+  // Brown-noise burst — fire texture
+  const bufSize = Math.floor(ctx.sampleRate * 0.13);
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < bufSize; i++) {
+    const w = Math.random() * 2 - 1;
+    last = (last + 0.02 * w) / 1.02;
+    data[i] = last * 8;
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const bpf = ctx.createBiquadFilter();
+  bpf.type = "bandpass";
+  bpf.frequency.setValueAtTime(700, now);
+  bpf.frequency.exponentialRampToValueAtTime(200, now + 0.12);
+  bpf.Q.setValueAtTime(0.8, now);
+  const gainN = ctx.createGain();
+  gainN.gain.setValueAtTime(0.4 * eff, now);
+  gainN.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+  src.connect(bpf); bpf.connect(gainN); gainN.connect(ctx.destination);
+  src.start(now); src.stop(now + 0.15);
+
+  // Crackle pops
+  [0, 0.03, 0.08].forEach((delay) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(80 + Math.random() * 140, now + delay);
+    g.gain.setValueAtTime(0.15 * eff, now + delay);
+    g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.022);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(now + delay); osc.stop(now + delay + 0.025);
+  });
+}
+
+export function playSirenMatch() {
+  const ctx = audioCtx();
+  const now = ctx.currentTime;
+  const eff = 0.22 * _soundVolumeMultiplier;
+
+  // Two quick wee-woo sweeps
+  [0, 0.3].forEach((offset) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(350, now + offset);
+    osc.frequency.exponentialRampToValueAtTime(780, now + offset + 0.22);
+    g.gain.setValueAtTime(eff, now + offset);
+    g.gain.setValueAtTime(eff, now + offset + 0.19);
+    g.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.28);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(now + offset); osc.stop(now + offset + 0.3);
+  });
+  // Upper harmony
+  const h = ctx.createOscillator();
+  const gh = ctx.createGain();
+  h.type = "square";
+  h.frequency.setValueAtTime(530, now);
+  h.frequency.exponentialRampToValueAtTime(1100, now + 0.55);
+  gh.gain.setValueAtTime(eff * 0.35, now);
+  gh.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+  h.connect(gh); gh.connect(ctx.destination);
+  h.start(now); h.stop(now + 0.6);
 }

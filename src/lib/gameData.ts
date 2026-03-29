@@ -1,5 +1,5 @@
 export type ThemeType = "girl" | "boy";
-export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "real-animals" | "desserts" | "dinos" | "farm" | "real-vehicles" | "shapes" | "horses" | "sea" | "space" | "food" | "sports" | "music" | "flags" | "nature" | "abc" | "custom";
+export type CardSetType = "animals" | "fruits" | "vehicles" | "hebrew" | "real-animals" | "desserts" | "dinos" | "farm" | "real-vehicles" | "shapes" | "horses" | "sea" | "space" | "food" | "sports" | "music" | "flags" | "nature" | "abc" | "custom" | "pokemon" | "firesam" | "jungle" | "bugs" | "holidays" | "flowers" | "birds";
 
 export interface CardStyle {
   borderRadius: number;
@@ -39,10 +39,6 @@ export interface GameSettings {
   speechVolume?: number;
   layoutPreset?: string;
   customVoiceEnabled?: boolean;
-  sfxMode?: "builtin" | "elevenlabs" | "both";
-  elevenLabsVoiceId?: string;
-  elevenLabsEffectsEnabled?: boolean;
-  speechLang?: "he" | "en" | "de";
 }
 
 export interface CardData {
@@ -383,6 +379,146 @@ export const ABC_LETTERS: CardData[] = [
   { id: "abc-P", emoji: "P", label: "Penguin" },
 ];
 
+// ── Fire Station (Fireman Sam theme) — images via Wikimedia Commons ──
+export const FIRE_STATION: CardData[] = [
+  { id: "fs-sam",     emoji: "👨‍🚒", label: "סמי הכבאי",   image: "/cards/firesam/sam.png" },
+  { id: "fs-elvis",   emoji: "🎸",  label: "אלביס",         image: "/cards/firesam/elvis.png" },
+  { id: "fs-penny",   emoji: "👩‍🚒", label: "פני",           image: "/cards/firesam/penny.png" },
+  { id: "fs-steele",  emoji: "🎖️",  label: "סטיל",          image: "/cards/firesam/steele.png" },
+  { id: "fs-norman",  emoji: "😈",  label: "נורמן",         image: "/cards/firesam/norman.png" },
+  { id: "fs-dilys",   emoji: "👩",  label: "דיליס",         image: "/cards/firesam/dilys.png" },
+  { id: "fs-trevor",  emoji: "🚌",  label: "טרבור",         image: "/cards/firesam/trevor.png" },
+  { id: "fs-jupiter", emoji: "🚒",  label: "יופיטר",        image: "/cards/firesam/jupiter.jpg" },
+  { id: "fs-wallaby", emoji: "🚁",  label: "וולבי",         image: "/cards/firesam/wallaby.png" },
+  { id: "fs-tom",     emoji: "🧗",  label: "טום",           image: "/cards/firesam/tom.png" },
+  { id: "fs-bella",   emoji: "🍕",  label: "בלה",           image: "/cards/firesam/bella.png" },
+  { id: "fs-mike",    emoji: "🔧",  label: "מייק",          image: "/cards/firesam/mike.png" },
+  { id: "fs-charlie", emoji: "🎣",  label: "צ'רלי",         image: "/cards/firesam/charlie.png" },
+  { id: "fs-bronwyn", emoji: "👩‍🍳", label: "ברונווין",      image: "/cards/firesam/bronwyn.png" },
+  { id: "fs-twins",   emoji: "👧",  label: "שרה וג'יימס",  image: "/cards/firesam/twins.png" },
+  { id: "fs-mandy",   emoji: "🏃",  label: "מנדי",          image: "/cards/firesam/mandy.png" },
+];
+
+// ── Pokémon (free official artwork via PokeAPI CDN — no API key required) ──
+export const POKEMON: CardData[] = [
+  { id: "pkm-1",   emoji: "🌿", label: "בולבסאור",  image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png" },
+  { id: "pkm-4",   emoji: "🔥", label: "צ'רמנדר",   image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png" },
+  { id: "pkm-7",   emoji: "💧", label: "סקוורטל",   image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png" },
+  { id: "pkm-25",  emoji: "⚡", label: "פיקאצ'ו",   image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" },
+  { id: "pkm-39",  emoji: "🎤", label: "ג'יגלפאף",  image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/39.png" },
+  { id: "pkm-52",  emoji: "😸", label: "מיאות",     image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/52.png" },
+  { id: "pkm-54",  emoji: "🦆", label: "פסידאק",    image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/54.png" },
+  { id: "pkm-79",  emoji: "😴", label: "סלופוק",    image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/79.png" },
+  { id: "pkm-94",  emoji: "👻", label: "גנגר",      image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png" },
+  { id: "pkm-113", emoji: "💖", label: "צ'נסי",     image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/113.png" },
+  { id: "pkm-131", emoji: "🌊", label: "לפראס",     image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/131.png" },
+  { id: "pkm-133", emoji: "⭐", label: "איבי",      image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png" },
+  { id: "pkm-143", emoji: "😴", label: "סנולקס",    image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png" },
+  { id: "pkm-147", emoji: "🐉", label: "דרטיני",    image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/147.png" },
+  { id: "pkm-175", emoji: "💕", label: "טוג'פי",    image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/175.png" },
+  { id: "pkm-196", emoji: "🌞", label: "אספיאון",   image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/196.png" },
+];
+
+// ── Jungle Animals ──
+export const JUNGLE_ANIMALS: CardData[] = [
+  { id: "jg-lion",     emoji: "🦁", label: "אריה" },
+  { id: "jg-tiger",    emoji: "🐯", label: "נמר" },
+  { id: "jg-elephant", emoji: "🐘", label: "פיל" },
+  { id: "jg-giraffe",  emoji: "🦒", label: "ג'ירפה" },
+  { id: "jg-zebra",    emoji: "🦓", label: "זברה" },
+  { id: "jg-hippo",    emoji: "🦛", label: "היפופוטם" },
+  { id: "jg-monkey",   emoji: "🐒", label: "קוף" },
+  { id: "jg-parrot",   emoji: "🦜", label: "תוכי" },
+  { id: "jg-snake",    emoji: "🐍", label: "נחש" },
+  { id: "jg-croc",     emoji: "🐊", label: "תנין" },
+  { id: "jg-gorilla",  emoji: "🦍", label: "גורילה" },
+  { id: "jg-cheetah",  emoji: "🐆", label: "צ'יטה" },
+  { id: "jg-flamingo", emoji: "🦩", label: "פלמינגו" },
+  { id: "jg-rhino",    emoji: "🦏", label: "קרנף" },
+  { id: "jg-panda",    emoji: "🐼", label: "פנדה" },
+  { id: "jg-kangaroo", emoji: "🦘", label: "קנגורו" },
+];
+
+// ── Bugs & Insects ──
+export const BUGS: CardData[] = [
+  { id: "bug-butterfly",   emoji: "🦋", label: "פרפר" },
+  { id: "bug-bee",         emoji: "🐝", label: "דבורה" },
+  { id: "bug-ladybug",     emoji: "🐞", label: "פרת משה רבנו" },
+  { id: "bug-ant",         emoji: "🐜", label: "נמלה" },
+  { id: "bug-spider",      emoji: "🕷️", label: "עכביש" },
+  { id: "bug-scorpion",    emoji: "🦂", label: "עקרב" },
+  { id: "bug-mosquito",    emoji: "🦟", label: "יתוש" },
+  { id: "bug-worm",        emoji: "🪱", label: "תולעת" },
+  { id: "bug-beetle",      emoji: "🪲", label: "חיפושית" },
+  { id: "bug-roach",       emoji: "🪳", label: "מקק" },
+  { id: "bug-fly",         emoji: "🪰", label: "זבוב" },
+  { id: "bug-snail",       emoji: "🐌", label: "חילזון" },
+  { id: "bug-caterpillar", emoji: "🐛", label: "זחל" },
+  { id: "bug-cricket",     emoji: "🦗", label: "צרצר" },
+  { id: "bug-microbe",     emoji: "🦠", label: "חיידק" },
+  { id: "bug-crab",        emoji: "🦀", label: "סרטן" },
+];
+
+// ── Jewish Holidays ──
+export const JEWISH_HOLIDAYS: CardData[] = [
+  { id: "hol-rosh",         emoji: "🍎", label: "ראש השנה" },
+  { id: "hol-yomkippur",    emoji: "🤍", label: "יום כיפור" },
+  { id: "hol-sukkot",       emoji: "🌿", label: "סוכות" },
+  { id: "hol-simchat",      emoji: "📜", label: "שמחת תורה" },
+  { id: "hol-hanukkah",     emoji: "🕎", label: "חנוכה" },
+  { id: "hol-purim",        emoji: "🎭", label: "פורים" },
+  { id: "hol-pesach",       emoji: "🌊", label: "פסח" },
+  { id: "hol-shavuot",      emoji: "🌾", label: "שבועות" },
+  { id: "hol-shabbat",      emoji: "🕯️", label: "שבת" },
+  { id: "hol-tubishvat",    emoji: "🌳", label: "ט״ו בשבט" },
+  { id: "hol-independence", emoji: "🇮🇱", label: "יום העצמאות" },
+  { id: "hol-shofar",       emoji: "📯", label: "שופר" },
+  { id: "hol-honey",        emoji: "🍯", label: "דבש" },
+  { id: "hol-lagbaomer",    emoji: "🔥", label: "ל״ג בעומר" },
+  { id: "hol-jerusalem",    emoji: "🏛️", label: "יום ירושלים" },
+  { id: "hol-memorial",     emoji: "🕊️", label: "יום הזיכרון" },
+];
+
+// ── Real Flowers — images via Wikimedia Commons ──
+export const REAL_FLOWERS: CardData[] = [
+  { id: "fl-rose",      emoji: "🌹", label: "ורד",      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Rosa_rubiginosa.jpg" },
+  { id: "fl-sunflower", emoji: "🌻", label: "חמנייה",   image: "https://commons.wikimedia.org/wiki/Special:FilePath/Helianthus_annuus.jpg" },
+  { id: "fl-tulip",     emoji: "🌷", label: "צבעוני",   image: "https://commons.wikimedia.org/wiki/Special:FilePath/Tulipa_gesneriana.jpg" },
+  { id: "fl-daisy",     emoji: "🌼", label: "חינניות",  image: "https://commons.wikimedia.org/wiki/Special:FilePath/Bellis_perennis_white_(aka).jpg" },
+  { id: "fl-orchid",    emoji: "🌸", label: "סחלב",     image: "https://commons.wikimedia.org/wiki/Special:FilePath/Phalaenopsis_hybrid.jpg" },
+  { id: "fl-lavender",  emoji: "💜", label: "לבנדר",    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Lavandula_stoechas.jpg" },
+  { id: "fl-lotus",     emoji: "🪷", label: "לוטוס",    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Nelumbo_nucifera_Gaertn_5.jpg" },
+  { id: "fl-poppy",     emoji: "🌺", label: "כלנית",    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Papaver_rhoeas_1.jpg" },
+  { id: "fl-lily",      emoji: "🌼", label: "שושן",     image: "https://commons.wikimedia.org/wiki/Special:FilePath/Lilium_candidum.jpg" },
+  { id: "fl-iris",      emoji: "💐", label: "אירוס",    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Iris_germanica.jpg" },
+  { id: "fl-magnolia",  emoji: "🌸", label: "מגנוליה",  image: "https://commons.wikimedia.org/wiki/Special:FilePath/Magnolia_stellata.jpg" },
+  { id: "fl-hyacinth",  emoji: "💐", label: "יקינתון",  image: "https://commons.wikimedia.org/wiki/Special:FilePath/Hyacinthus_orientalis.jpg" },
+  { id: "fl-daffodil",  emoji: "🌼", label: "נרקיס",    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Narcissus_pseudonarcissus.jpg" },
+  { id: "fl-dahlia",    emoji: "🌺", label: "דליה",     image: "https://commons.wikimedia.org/wiki/Special:FilePath/Dahlia_pinnata.jpg" },
+  { id: "fl-marigold",  emoji: "🌼", label: "ציפורן",   image: "https://commons.wikimedia.org/wiki/Special:FilePath/Tagetes_patula.jpg" },
+  { id: "fl-hydrangea", emoji: "💐", label: "הורטנזיה", image: "https://commons.wikimedia.org/wiki/Special:FilePath/Hydrangea_macrophylla.jpg" },
+];
+
+// ── Real Birds — images via Wikimedia Commons ──
+export const REAL_BIRDS: CardData[] = [
+  { id: "bird-eagle",       emoji: "🦅", label: "נשר",      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Haliaeetus_leucocephalus.jpg" },
+  { id: "bird-owl",         emoji: "🦉", label: "ינשוף",     image: "https://commons.wikimedia.org/wiki/Special:FilePath/Strix_aluco.jpg" },
+  { id: "bird-parrot",      emoji: "🦜", label: "תוכי",      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Rainbow_lorikeet.jpg" },
+  { id: "bird-penguin",     emoji: "🐧", label: "פינגווין",  image: "https://commons.wikimedia.org/wiki/Special:FilePath/Emperor_penguin.jpg" },
+  { id: "bird-flamingo",    emoji: "🦩", label: "פלמינגו",   image: "https://commons.wikimedia.org/wiki/Special:FilePath/Phoenicopterus_roseus_Camargue_23.jpg" },
+  { id: "bird-toucan",      emoji: "🐦", label: "טוקן",      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Ramphastos_toco.jpg" },
+  { id: "bird-peacock",     emoji: "🦚", label: "טווס",      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Pavo_cristatus_Luc_Viatour.jpg" },
+  { id: "bird-hummingbird", emoji: "🐦", label: "יונת דבש", image: "https://commons.wikimedia.org/wiki/Special:FilePath/Rufous_hummingbird.jpg" },
+  { id: "bird-robin",       emoji: "🐦", label: "רובין",     image: "https://commons.wikimedia.org/wiki/Special:FilePath/Erithacus_rubecula_with_cocked_head.jpg" },
+  { id: "bird-swan",        emoji: "🦢", label: "ברבור",     image: "https://commons.wikimedia.org/wiki/Special:FilePath/Cygnus_olor.jpg" },
+  { id: "bird-hawk",        emoji: "🦅", label: "נץ",        image: "https://commons.wikimedia.org/wiki/Special:FilePath/Buteo_buteo.jpg" },
+  { id: "bird-pigeon",      emoji: "🕊️", label: "יונה",     image: "https://commons.wikimedia.org/wiki/Special:FilePath/Rock_dove.jpg" },
+  { id: "bird-sparrow",     emoji: "🐦", label: "דרור",      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Passer_domesticus_male.jpg" },
+  { id: "bird-crow",        emoji: "🐦", label: "עורב",      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Corvus_cornix.jpg" },
+  { id: "bird-woodpecker",  emoji: "🐦", label: "נקר",       image: "https://commons.wikimedia.org/wiki/Special:FilePath/Dendrocopos_major.jpg" },
+  { id: "bird-pelican",     emoji: "🐦", label: "פליקן",     image: "https://commons.wikimedia.org/wiki/Special:FilePath/Pelecanus_onocrotalus.jpg" },
+];
+
 export function getCardSets(theme: ThemeType): CardSetInfo[] {
   return [
     {
@@ -404,6 +540,41 @@ export function getCardSets(theme: ThemeType): CardSetInfo[] {
       type: "hebrew", emoji: "א", label: "אותיות",
       color: "from-accent to-emerald-500",
       cards: HEBREW_LETTERS,
+    },
+    {
+      type: "sea", emoji: "🐠", label: "עולם הים",
+      color: "from-cyan-400 to-blue-500",
+      cards: SEA_CREATURES,
+    },
+    {
+      type: "space", emoji: "🚀", label: "חלל",
+      color: "from-indigo-500 to-purple-700",
+      cards: SPACE,
+    },
+    {
+      type: "food", emoji: "🍕", label: "אוכל ומתוקים",
+      color: "from-amber-400 to-orange-500",
+      cards: FOOD,
+    },
+    {
+      type: "sports", emoji: "⚽", label: "ספורט",
+      color: "from-green-400 to-emerald-600",
+      cards: SPORTS,
+    },
+    {
+      type: "music", emoji: "🎸", label: "מוזיקה",
+      color: "from-violet-400 to-fuchsia-500",
+      cards: MUSIC_INSTRUMENTS,
+    },
+    {
+      type: "flags", emoji: "🇮🇱", label: "דגלים",
+      color: "from-sky-400 to-blue-600",
+      cards: FLAGS,
+    },
+    {
+      type: "nature", emoji: "🌿", label: "טבע",
+      color: "from-lime-400 to-green-500",
+      cards: NATURE,
     },
     {
       type: "real-animals", emoji: "📸", label: "חיות אמיתיות",
@@ -441,39 +612,39 @@ export function getCardSets(theme: ThemeType): CardSetInfo[] {
       cards: SHAPES,
     },
     {
-      type: "sea", emoji: "🐠", label: "עולם הים",
-      color: "from-cyan-400 to-blue-500",
-      cards: SEA_CREATURES,
+      type: "pokemon", emoji: "⚡", label: "פוקימון",
+      color: "from-yellow-400 to-red-500",
+      cards: POKEMON,
     },
     {
-      type: "space", emoji: "🚀", label: "חלל",
-      color: "from-indigo-500 to-purple-700",
-      cards: SPACE,
+      type: "firesam", emoji: "🚒", label: "כבאים",
+      color: "from-red-500 to-orange-500",
+      cards: FIRE_STATION,
     },
     {
-      type: "food", emoji: "🍕", label: "אוכל ומתוקים",
-      color: "from-amber-400 to-orange-500",
-      cards: FOOD,
+      type: "jungle", emoji: "🦁", label: "ג'ונגל",
+      color: "from-green-500 to-lime-600",
+      cards: JUNGLE_ANIMALS,
     },
     {
-      type: "sports", emoji: "⚽", label: "ספורט",
-      color: "from-green-400 to-emerald-600",
-      cards: SPORTS,
+      type: "bugs", emoji: "🦋", label: "חרקים",
+      color: "from-amber-500 to-yellow-600",
+      cards: BUGS,
     },
     {
-      type: "music", emoji: "🎸", label: "מוזיקה",
-      color: "from-violet-400 to-fuchsia-500",
-      cards: MUSIC_INSTRUMENTS,
+      type: "holidays", emoji: "🕎", label: "חגים",
+      color: "from-blue-500 to-indigo-600",
+      cards: JEWISH_HOLIDAYS,
     },
     {
-      type: "flags", emoji: "🇮🇱", label: "דגלים",
-      color: "from-sky-400 to-blue-600",
-      cards: FLAGS,
+      type: "flowers", emoji: "🌸", label: "פרחים",
+      color: "from-pink-400 to-rose-500",
+      cards: REAL_FLOWERS,
     },
     {
-      type: "nature", emoji: "🌿", label: "טבע",
-      color: "from-lime-400 to-green-500",
-      cards: NATURE,
+      type: "birds", emoji: "🦅", label: "ציפורים",
+      color: "from-sky-400 to-cyan-500",
+      cards: REAL_BIRDS,
     },
     {
       type: "abc", emoji: "🔤", label: "ABC אותיות",

@@ -14,10 +14,12 @@ interface MemoryCardProps {
   theme: ThemeType;
   emojiScale: number;
   cardStyle: CardStyle;
+  extraMatchClass?: string;
+  sparkleEmojis?: string[];
   onClick: () => void;
 }
 
-export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, theme, emojiScale, cardStyle, onClick }: MemoryCardProps) {
+export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, theme, emojiScale, cardStyle, extraMatchClass, sparkleEmojis, onClick }: MemoryCardProps) {
   const [justMatched, setJustMatched] = useState(false);
 
   // Detect match transition
@@ -105,12 +107,12 @@ export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, 
         </div>
         {/* Back (card face with emoji) */}
         <div
-          className={`card-face card-face-back bg-card flex flex-col items-center justify-center shadow-lg transition-colors duration-300 ${isMatched ? "bg-accent/5 matched-glow" : ""}`}
+          className={`card-face card-face-back bg-card flex flex-col items-center justify-center shadow-lg transition-colors duration-300 ${isMatched ? "bg-accent/5 matched-glow" : ""} ${isMatched && extraMatchClass ? extraMatchClass : ""}`}
           style={borderStyle}
         >
           {image ? (
             <div className={`w-full h-full relative overflow-hidden ${isFlipped && !isMatched ? "image-reveal" : ""} ${isMatched ? "image-matched" : ""}`} style={{ borderRadius: `${Math.max(0, cardStyle.borderRadius - cardStyle.borderWidth)}px` }}>
-              <img src={image} alt={label || ""} className="w-full h-full object-cover" loading="lazy" />
+              <img src={image} alt={label || ""} className="w-full h-full object-contain p-1" loading="eager" />
               {isMatched && <div className="gold-frame-overlay" style={{ borderRadius: `${Math.max(0, cardStyle.borderRadius - cardStyle.borderWidth)}px` }} />}
             </div>
           ) : isAbcLetter ? (
@@ -152,7 +154,7 @@ export default function MemoryCard({ emoji, label, image, isFlipped, isMatched, 
                     fontSize: `${10 + (i % 3) * 4}px`,
                   }}
                 >
-                  {["✨", "⭐", "💫", "🌟"][i % 4]}
+                  {(sparkleEmojis ?? ["✨", "⭐", "💫", "🌟"])[i % (sparkleEmojis ?? ["✨", "⭐", "💫", "🌟"]).length]}
                 </span>
               ))}
             </div>

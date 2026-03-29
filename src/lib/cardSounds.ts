@@ -1,32 +1,25 @@
 // Card-specific sound effects synthesized via Web Audio API
 // Enhanced with noise, filters, and modulation for realistic sounds
 
-interface GameAudioWindow extends Window {
-  __gameAudioCtx?: AudioContext;
-  __cardMasterGain?: GainNode;
-}
-
 const audioCtx = () => {
-  const w = window as GameAudioWindow;
-  if (!w.__gameAudioCtx) {
-    w.__gameAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  if (!(window as any).__gameAudioCtx) {
+    (window as any).__gameAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
   }
-  const ctx = w.__gameAudioCtx;
+  const ctx = (window as any).__gameAudioCtx as AudioContext;
   if (ctx.state === "suspended") ctx.resume();
   return ctx;
 };
 
 // Master gain for all card sounds - boost volume
 const getMasterGain = () => {
-  const w = window as GameAudioWindow;
   const ctx = audioCtx();
-  if (!w.__cardMasterGain) {
+  if (!(window as any).__cardMasterGain) {
     const master = ctx.createGain();
     master.gain.value = 2.5;
     master.connect(ctx.destination);
-    w.__cardMasterGain = master;
+    (window as any).__cardMasterGain = master;
   }
-  return w.__cardMasterGain;
+  return (window as any).__cardMasterGain as GainNode;
 };
 
 // Create white noise buffer for animal/vehicle sounds
@@ -1029,6 +1022,7 @@ export function playCardSound(cardId: string) {
   boostGain.connect(ctx.destination);
 
   // Temporarily swap destination for the sound function
+  const origDest = ctx.destination;
   const proxyCtx = Object.create(ctx, {
     destination: { get: () => boostGain }
   });

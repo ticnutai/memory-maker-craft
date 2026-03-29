@@ -162,9 +162,7 @@ export default function TreasureHuntGame({ onHome }: { onHome: () => void }) {
         osc.frequency.linearRampToValueAtTime(1200, ctx.currentTime + 0.15);
         gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
         osc.stop(ctx.currentTime + 0.3);
-      } catch {
-        // Ignore audio failures on restricted browsers.
-      }
+      } catch {}
 
       speakHebrew("כל הכבוד!");
 
@@ -194,9 +192,7 @@ export default function TreasureHuntGame({ onHome }: { onHome: () => void }) {
         osc.start();
         gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
         osc.stop(ctx.currentTime + 0.2);
-      } catch {
-        // Ignore audio failures on restricted browsers.
-      }
+      } catch {}
       setTimeout(() => setWrongTap(null), 400);
     }
   };
