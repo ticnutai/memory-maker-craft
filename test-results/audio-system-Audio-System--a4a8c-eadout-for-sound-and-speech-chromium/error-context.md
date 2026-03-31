@@ -1,0 +1,81 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - generic [ref=e3]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - button [ref=e9] [cursor=pointer]:
+            - img
+          - button "השתק הכל" [ref=e10] [cursor=pointer]:
+            - img
+          - 'button "לחיצה: הפעל/כבה | לחיצה כפולה: עוצמה" [ref=e12] [cursor=pointer]':
+            - img
+          - button "🔊" [ref=e14] [cursor=pointer]:
+            - img
+            - generic [ref=e15]: 🔊
+          - 'button "לחיצה: הפעל/כבה | לחיצה כפולה: עוצמה" [ref=e17] [cursor=pointer]':
+            - img
+        - generic [ref=e18]:
+          - generic [ref=e19]: ⏱️ 0:00
+          - generic [ref=e20]: 🎯 0/4
+          - generic [ref=e21]: 🔄 0
+        - generic [ref=e22]:
+          - button "3" [ref=e23] [cursor=pointer]:
+            - img
+            - generic [ref=e24]: "3"
+          - button "מצב אימון — חשפו את כל הקלפים" [ref=e25] [cursor=pointer]:
+            - img
+          - button "מצב שני שחקנים" [ref=e26] [cursor=pointer]:
+            - img
+          - button "השהה" [disabled]:
+            - img
+          - button [ref=e27] [cursor=pointer]:
+            - img
+      - generic [ref=e29]:
+        - button "קלף הפוך" [ref=e31] [cursor=pointer]:
+          - generic [ref=e32]:
+            - generic [ref=e34]: ⭐
+            - generic [ref=e36]: 🐬
+        - button "קלף הפוך" [ref=e38] [cursor=pointer]:
+          - generic [ref=e39]:
+            - generic [ref=e41]: ⭐
+            - generic [ref=e43]: 🐌
+        - button "קלף הפוך" [ref=e45] [cursor=pointer]:
+          - generic [ref=e46]:
+            - generic [ref=e48]: ⭐
+            - generic [ref=e50]: 🦋
+        - button "קלף הפוך" [ref=e52] [cursor=pointer]:
+          - generic [ref=e53]:
+            - generic [ref=e55]: ⭐
+            - generic [ref=e57]: 🦜
+        - button "קלף הפוך" [ref=e59] [cursor=pointer]:
+          - generic [ref=e60]:
+            - generic [ref=e62]: ⭐
+            - generic [ref=e64]: 🦋
+        - button "קלף הפוך" [ref=e66] [cursor=pointer]:
+          - generic [ref=e67]:
+            - generic [ref=e69]: ⭐
+            - generic [ref=e71]: 🐌
+        - button "קלף הפוך" [ref=e73] [cursor=pointer]:
+          - generic [ref=e74]:
+            - generic [ref=e76]: ⭐
+            - generic [ref=e78]: 🦜
+        - button "קלף הפוך" [ref=e80] [cursor=pointer]:
+          - generic [ref=e81]:
+            - generic [ref=e83]: ⭐
+            - generic [ref=e85]: 🐬
+    - button [ref=e86] [cursor=pointer]:
+      - img [ref=e87]
+    - generic [ref=e90]:
+      - button [ref=e91] [cursor=pointer]:
+        - img [ref=e92]
+      - button [ref=e94] [cursor=pointer]:
+        - img [ref=e95]
+      - button [ref=e97] [cursor=pointer]:
+        - img [ref=e98]
+```

@@ -1,0 +1,208 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - generic [ref=e3]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - button [ref=e9] [cursor=pointer]:
+            - img
+          - button "השתק הכל" [ref=e10] [cursor=pointer]:
+            - img
+          - 'button "לחיצה: הפעל/כבה | לחיצה כפולה: עוצמה" [ref=e12] [cursor=pointer]':
+            - img
+          - button "🔊" [ref=e14] [cursor=pointer]:
+            - img
+            - generic [ref=e15]: 🔊
+          - 'button "לחיצה: הפעל/כבה | לחיצה כפולה: עוצמה" [ref=e17] [cursor=pointer]':
+            - img
+        - generic [ref=e18]:
+          - generic [ref=e19]: ⏱️ 0:00
+          - generic [ref=e20]: 🎯 0/4
+          - generic [ref=e21]: 🔄 0
+        - generic [ref=e22]:
+          - button "3" [ref=e23] [cursor=pointer]:
+            - img
+            - generic [ref=e24]: "3"
+          - button "מצב אימון — חשפו את כל הקלפים" [ref=e25] [cursor=pointer]:
+            - img
+          - button "מצב שני שחקנים" [ref=e26] [cursor=pointer]:
+            - img
+          - button "השהה" [disabled]:
+            - img
+          - button [ref=e27] [cursor=pointer]:
+            - img
+      - generic [ref=e29]:
+        - button "קלף הפוך" [ref=e31] [cursor=pointer]:
+          - generic [ref=e32]:
+            - generic [ref=e34]: ⭐
+            - generic [ref=e36]: 🎷
+        - button "קלף הפוך" [ref=e38] [cursor=pointer]:
+          - generic [ref=e39]:
+            - generic [ref=e41]: ⭐
+            - generic [ref=e43]: 🪗
+        - button "קלף הפוך" [ref=e45] [cursor=pointer]:
+          - generic [ref=e46]:
+            - generic [ref=e48]: ⭐
+            - generic [ref=e50]: 🎶
+        - button "קלף הפוך" [ref=e52] [cursor=pointer]:
+          - generic [ref=e53]:
+            - generic [ref=e55]: ⭐
+            - generic [ref=e57]: 🎷
+        - button "קלף הפוך" [ref=e59] [cursor=pointer]:
+          - generic [ref=e60]:
+            - generic [ref=e62]: ⭐
+            - generic [ref=e64]: 🎶
+        - button "קלף הפוך" [ref=e66] [cursor=pointer]:
+          - generic [ref=e67]:
+            - generic [ref=e69]: ⭐
+            - generic [ref=e71]: 🎻
+        - button "קלף הפוך" [ref=e73] [cursor=pointer]:
+          - generic [ref=e74]:
+            - generic [ref=e76]: ⭐
+            - generic [ref=e78]: 🎻
+        - button "קלף הפוך" [ref=e80] [cursor=pointer]:
+          - generic [ref=e81]:
+            - generic [ref=e83]: ⭐
+            - generic [ref=e85]: 🪗
+    - button [ref=e86] [cursor=pointer]:
+      - img [ref=e87]
+    - generic [ref=e90]:
+      - button [ref=e91] [cursor=pointer]:
+        - img [ref=e92]
+      - button [ref=e94] [cursor=pointer]:
+        - img [ref=e95]
+      - button [ref=e97] [cursor=pointer]:
+        - img [ref=e98]
+    - generic [ref=e102]:
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - img [ref=e105]
+          - heading "⚙️ הגדרות" [level=3] [ref=e112]:
+            - img [ref=e113]
+            - text: ⚙️ הגדרות
+        - generic [ref=e116]:
+          - button "אישור ושמירה" [ref=e117] [cursor=pointer]:
+            - img [ref=e118]
+          - button [ref=e120] [cursor=pointer]:
+            - img [ref=e121]
+          - button [ref=e126] [cursor=pointer]:
+            - img [ref=e127]
+      - generic [ref=e130]:
+        - generic [ref=e131]:
+          - button "כללי" [ref=e132] [cursor=pointer]:
+            - img [ref=e133]
+            - text: כללי
+          - button "קלפים" [ref=e138] [cursor=pointer]:
+            - img [ref=e139]
+            - text: קלפים
+          - button "ערכות נושא" [ref=e145] [cursor=pointer]:
+            - img [ref=e146]
+            - text: ערכות נושא
+          - button "מוזיקה" [ref=e150] [cursor=pointer]:
+            - img [ref=e151]
+            - text: מוזיקה
+          - button "ערכות" [ref=e155] [cursor=pointer]:
+            - img [ref=e156]
+            - text: ערכות
+          - button "גלריה" [ref=e160] [cursor=pointer]:
+            - img [ref=e161]
+            - text: גלריה
+          - button "ימי הולדת" [ref=e165] [cursor=pointer]:
+            - img [ref=e166]
+            - text: ימי הולדת
+          - button "הקלטות" [ref=e169] [cursor=pointer]:
+            - img [ref=e170]
+            - text: הקלטות
+          - button "מפתחות" [ref=e173] [cursor=pointer]:
+            - img [ref=e174]
+            - text: מפתחות
+          - button "פיתוח" [ref=e178] [cursor=pointer]:
+            - img [ref=e179]
+            - text: פיתוח
+        - generic [ref=e184]:
+          - generic [ref=e185]:
+            - generic [ref=e186]:
+              - paragraph [ref=e187]: 🎯 מספר זוגות
+              - generic [ref=e188]: 4 זוגות
+            - slider [ref=e189] [cursor=pointer]: "4"
+            - generic [ref=e190]:
+              - generic [ref=e191]: 2 קל 😊
+              - generic [ref=e192]: 8 בינוני 🤔
+              - generic [ref=e193]: 16 קשה 🔥
+          - generic [ref=e194]:
+            - generic [ref=e195]:
+              - paragraph [ref=e196]: 📐 גודל קלפים
+              - generic [ref=e197]: 480px
+            - slider [ref=e198] [cursor=pointer]: "480"
+            - generic [ref=e199]:
+              - generic [ref=e200]: קטן
+              - generic [ref=e201]: גדול
+          - generic [ref=e202]:
+            - generic [ref=e203]:
+              - paragraph [ref=e204]: 🔤 גודל אלמנט
+              - generic [ref=e205]: ×1.0
+            - slider [ref=e206] [cursor=pointer]: "1"
+            - generic [ref=e207]:
+              - generic [ref=e208]: קטן
+              - generic [ref=e209]: גדול
+          - generic [ref=e210]:
+            - paragraph [ref=e211]: ⏱️ זמן תצוגת קלפים
+            - generic [ref=e212]:
+              - button "חצי שנייה" [ref=e213] [cursor=pointer]
+              - button "שנייה" [ref=e214] [cursor=pointer]
+              - button "2 שניות" [ref=e215] [cursor=pointer]
+              - button "3 שניות" [ref=e216] [cursor=pointer]
+          - generic [ref=e217]:
+            - button "🔊 צלילים" [ref=e218] [cursor=pointer]:
+              - img [ref=e219]
+              - text: 🔊 צלילים
+            - button "🗣️ הכרזה" [ref=e223] [cursor=pointer]
+          - generic [ref=e224]:
+            - paragraph [ref=e225]: 🎚️ עוצמת שמע
+            - generic [ref=e226]:
+              - generic [ref=e227]:
+                - generic [ref=e228]: 🔊 צלילים
+                - generic [ref=e236]: 50%
+              - slider [ref=e237] [cursor=pointer]: "50"
+              - generic [ref=e238]:
+                - generic [ref=e239]: 🔇 שקט
+                - generic [ref=e240]: 🔊 חזק
+            - generic [ref=e241]:
+              - generic [ref=e242]:
+                - generic [ref=e243]: 🗣️ הכרזה
+                - generic [ref=e251]: 50%
+              - slider [ref=e252] [cursor=pointer]: "50"
+              - generic [ref=e253]:
+                - generic [ref=e254]: 🔇 שקט
+                - generic [ref=e255]: 🔊 חזק
+          - generic [ref=e256]:
+            - generic [ref=e257]:
+              - paragraph [ref=e258]: 🗣️ מהירות הקריין
+              - generic [ref=e259]: ×0.9
+            - slider [ref=e260] [cursor=pointer]: "0.9"
+            - generic [ref=e261]:
+              - generic [ref=e262]: איטי
+              - generic [ref=e263]: רגיל
+              - generic [ref=e264]: מהיר
+          - generic [ref=e265]:
+            - paragraph [ref=e266]: 📐 מיקום קלפים
+            - generic [ref=e267]:
+              - button "גריד אוטומטי" [ref=e268] [cursor=pointer]:
+                - img [ref=e269]
+                - text: גריד אוטומטי
+              - button "חופשי (גרירה)" [ref=e274] [cursor=pointer]:
+                - img [ref=e275]
+                - text: חופשי (גרירה)
+          - generic [ref=e280]:
+            - generic [ref=e281]:
+              - paragraph [ref=e282]: ✨ אנימציות ואפקטים
+              - paragraph [ref=e283]: הפעלה/כיבוי של כל האנימציות, אפקטים חזותיים וקונפטי
+            - button [ref=e284] [cursor=pointer]
+      - generic:
+        - img
+```

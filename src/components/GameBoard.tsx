@@ -9,6 +9,7 @@ import Confetti from "@/components/Confetti";
 import ThemeBackground from "@/components/ThemeBackground";
 import { BgThemeId } from "@/components/ThemeBackground";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, Lightbulb, Timer, Eye, Users, Pause, Play, Trophy, Zap, BarChart3, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,10 +40,29 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
     ? BUILT_IN_MELODIES.find((m) => m.id === liveSettings.builtinMelodyId)
     : undefined;
   const customUrl = (liveSettings.musicType === "custom" || liveSettings.musicType === "cloud") ? liveSettings.customMusic : undefined;
+  // Volume values from cloud (0-100)
+  const cloudMusicVolume = liveCloud.musicVolume ?? 50;
+  const cloudSoundVolume = liveCloud.soundVolume ?? 50;
+  const cloudSpeechVolume = liveCloud.speechVolume ?? 50;
+
+  // Local UI volume state for immediate slider response
+  const [uiMusicVolume, setUiMusicVolume] = useState(cloudMusicVolume);
+  const [uiSoundVolume, setUiSoundVolume] = useState(cloudSoundVolume);
+  const [uiSpeechVolume, setUiSpeechVolume] = useState(cloudSpeechVolume);
+  const [lastMixerEvent, setLastMixerEvent] = useState("idle");
+
+  useEffect(() => {
+    setSpeechOn(liveSettings.speechEnabled);
+  }, [liveSettings.speechEnabled]);
+
+  useEffect(() => { setUiMusicVolume(cloudMusicVolume); }, [cloudMusicVolume]);
+  useEffect(() => { setUiSoundVolume(cloudSoundVolume); }, [cloudSoundVolume]);
+  useEffect(() => { setUiSpeechVolume(cloudSpeechVolume); }, [cloudSpeechVolume]);
+
   const { isPlaying: musicPlaying, toggle: toggleMusic, stop: stopMusic } = useBackgroundMusic(
     globalMute ? undefined : activeMelody,
     globalMute ? undefined : customUrl,
-    (liveCloud.musicVolume ?? 70) / 100
+    uiMusicVolume / 100
   );
 
   const isFreeLayout = liveSettings.layoutMode === "free";
@@ -92,17 +112,28 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   // ── Streak display ──
   const [streakFlash, setStreakFlash] = useState(0);
 
-  // ── Volume slider popup ──
-  const volumePopupTimer = useRef<ReturnType<typeof setTimeout>>();
-
-  // Volume values from cloud (0-100)
-  const musicVolume = liveCloud.musicVolume ?? 50;
-  const soundVolume = liveCloud.soundVolume ?? 50;
-  const speechVolume = liveCloud.speechVolume ?? 50;
-
   // Sync volume multipliers to sound engines
-  useEffect(() => { setSoundVolumeMultiplier(soundVolume / 100); }, [soundVolume]);
-  useEffect(() => { setSpeechVolumeMultiplier(speechVolume / 100); }, [speechVolume]);
+  useEffect(() => {
+    setSoundVolumeMultiplier(effectiveSoundOn ? uiSoundVolume / 100 : 0);
+  }, [uiSoundVolume, effectiveSoundOn]);
+  useEffect(() => {
+    setSpeechVolumeMultiplier(effectiveSpeechOn ? uiSpeechVolume / 100 : 0);
+  }, [uiSpeechVolume, effectiveSpeechOn]);
+
+  const applyMixerVolume = (kind: "music" | "sound" | "speech", rawValue: number) => {
+    const value = Math.max(0, Math.min(100, Math.round(rawValue)));
+    if (kind === "music") {
+      setUiMusicVolume(value);
+      updateSetting("musicVolume", value);
+    } else if (kind === "sound") {
+      setUiSoundVolume(value);
+      updateSetting("soundVolume", value);
+    } else {
+      setUiSpeechVolume(value);
+      updateSetting("speechVolume", value);
+    }
+    setLastMixerEvent(`${kind}:${value}`);
+  };
 
   // Sync ElevenLabs TTS flag with current sfxMode setting
   useEffect(() => {
@@ -248,8 +279,8 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
 
   // ── Fireman Sam: fire sounds on match ──
   useEffect(() => {
-    if (cardSetType === "firesam" && matchedCount > 0) playSirenMatch();
-  }, [matchedCount, cardSetType]);
+    if (cardSetType === "firesam" && matchedCount > 0 && effectiveSoundOn) playSirenMatch();
+  }, [matchedCount, cardSetType, effectiveSoundOn]);
 
   // ── Challenge mode: lives deduction on mismatch ──
   useEffect(() => {
@@ -447,14 +478,6 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   // ── Audio mixer panel ──
   const [showMixer, setShowMixer] = useState(false);
 
-  // Close mixer on outside click
-  useEffect(() => {
-    if (!showMixer) return;
-    const close = () => setShowMixer(false);
-    const timer = setTimeout(() => document.addEventListener("click", close), 100);
-    return () => { clearTimeout(timer); document.removeEventListener("click", close); };
-  }, [showMixer]);
-
   const animationsOff = liveSettings.animationsEnabled === false;
 
   return (
@@ -463,7 +486,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
         <Confetti active={isGameOver && !animationsOff} />
 
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between px-2 sm:px-4 py-2 sm:py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm relative gap-y-1">
+        <div className="flex flex-wrap items-center justify-between px-2 sm:px-4 py-2 sm:py-3 bg-card/80 backdrop-blur-sm border-b border-muted shadow-sm relative z-[80] gap-y-1">
           <div className="flex items-center gap-0.5 sm:gap-1 flex-wrap">
             <Button variant="ghost" size="sm" onClick={() => { stopMusic(); onHome(); }}>
               <Home className="w-5 h-5" />
@@ -475,12 +498,21 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             </Button>
             {/* Audio mixer toggle */}
             <div className="relative">
-              <Button variant="ghost" size="sm" onClick={() => setShowMixer(!showMixer)}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMixer((prev) => !prev);
+                }}
                 className={showMixer ? "text-yellow-500" : "text-muted-foreground"} title="מיקסר שמע">
                 <span className="text-base">🎛️</span>
               </Button>
               {showMixer && (
-                <div className="absolute top-full right-0 mt-1 z-50 bg-card/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl p-4 w-72 space-y-4" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="absolute top-full right-0 mt-1 z-[120] bg-card/95 backdrop-blur-md border border-border rounded-2xl shadow-2xl p-4 w-72 space-y-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-black">🎛️ מיקסר שמע סטריאו</span>
                     <button onClick={() => setShowMixer(false)} className="text-muted-foreground hover:text-foreground text-lg leading-none">✕</button>
@@ -493,11 +525,16 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                         {musicPlaying && !globalMute ? <Music className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                         <span>🎵 מוזיקה</span>
                       </button>
-                      <span className="text-xs text-muted-foreground font-mono w-10 text-left">{musicVolume}%</span>
+                      <span className="text-xs text-muted-foreground font-mono w-10 text-left">{uiMusicVolume}%</span>
                     </div>
-                    <input type="range" min={0} max={100} step={1} value={musicVolume}
-                      onChange={(e) => updateSetting("musicVolume" as any, Number(e.target.value))}
-                      className="w-full h-2.5 rounded-full cursor-pointer appearance-none bg-gradient-to-r from-pink-500/20 via-pink-500/50 to-pink-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-pink-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-pink-500/40 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white/80 [&::-webkit-slider-thumb]:cursor-pointer" />
+                    <Slider
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={[uiMusicVolume]}
+                      onValueChange={(v) => applyMixerVolume("music", v[0] ?? 0)}
+                      className="w-full"
+                    />
                   </div>
 
                   {/* Sound effects volume */}
@@ -507,29 +544,47 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                         {liveSettings.soundEnabled && !globalMute ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                         <span>🔊 צלילים</span>
                       </button>
-                      <span className="text-xs text-muted-foreground font-mono w-10 text-left">{soundVolume}%</span>
+                      <span className="text-xs text-muted-foreground font-mono w-10 text-left">{uiSoundVolume}%</span>
                     </div>
-                    <input type="range" min={0} max={100} step={1} value={soundVolume}
-                      onChange={(e) => updateSetting("soundVolume" as any, Number(e.target.value))}
-                      className="w-full h-2.5 rounded-full cursor-pointer appearance-none bg-gradient-to-r from-blue-500/20 via-blue-500/50 to-blue-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-blue-500/40 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white/80 [&::-webkit-slider-thumb]:cursor-pointer" />
+                    <Slider
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={[uiSoundVolume]}
+                      onValueChange={(v) => applyMixerVolume("sound", v[0] ?? 0)}
+                      className="w-full"
+                    />
                   </div>
 
                   {/* Speech volume */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <button onClick={() => setSpeechOn(!speechOn)} className={`flex items-center gap-1.5 text-xs font-bold ${speechOn && !globalMute ? "text-green-400" : "text-muted-foreground"}`}>
+                      <button
+                        onClick={() => {
+                          const next = !speechOn;
+                          setSpeechOn(next);
+                          updateSetting("speechEnabled", next);
+                        }}
+                        className={`flex items-center gap-1.5 text-xs font-bold ${speechOn && !globalMute ? "text-green-400" : "text-muted-foreground"}`}
+                      >
                         {speechOn && !globalMute ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
                         <span>🗣️ הכרזה</span>
                       </button>
-                      <span className="text-xs text-muted-foreground font-mono w-10 text-left">{speechVolume}%</span>
+                      <span className="text-xs text-muted-foreground font-mono w-10 text-left">{uiSpeechVolume}%</span>
                     </div>
-                    <input type="range" min={0} max={100} step={1} value={speechVolume}
-                      onChange={(e) => updateSetting("speechVolume" as any, Number(e.target.value))}
-                      className="w-full h-2.5 rounded-full cursor-pointer appearance-none bg-gradient-to-r from-green-500/20 via-green-500/50 to-green-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-green-500/40 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white/80 [&::-webkit-slider-thumb]:cursor-pointer" />
+                    <Slider
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={[uiSpeechVolume]}
+                      onValueChange={(v) => applyMixerVolume("speech", v[0] ?? 0)}
+                      className="w-full"
+                    />
                   </div>
 
-                  <div className="text-[10px] text-muted-foreground text-center pt-1 border-t border-border/30">
+                  <div className="text-[10px] text-muted-foreground text-center pt-1 border-t border-border/30 space-y-1">
                     🎧 שמע סטריאו עם אפקטים מרחביים
+                    <div className="font-mono opacity-80">dbg: {lastMixerEvent} | m:{uiMusicVolume} s:{uiSoundVolume} v:{uiSpeechVolume}</div>
                   </div>
                 </div>
               )}
@@ -643,7 +698,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
         )}
 
         {/* Game area */}
-        <div className="flex-1 flex items-center justify-center p-4 relative">
+        <div className="flex-1 flex items-center justify-center p-4 relative z-0">
           {isFreeLayout ? (
             /* ──── FREE LAYOUT ──── */
             <div
@@ -701,7 +756,12 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                       theme={theme}
                       emojiScale={liveSettings.emojiScale}
                       cardStyle={liveSettings.cardStyle}
-                      onClick={() => { if (!editMode && !trainingMode && !isPaused) { flipCard(card.uniqueId); if (cardSetType === "firesam") playFireCrackle(); } }}
+                      onClick={() => {
+                        if (!editMode && !trainingMode && !isPaused) {
+                          flipCard(card.uniqueId);
+                          if (cardSetType === "firesam" && effectiveSoundOn) playFireCrackle();
+                        }
+                      }}
                       extraMatchClass={cardSetType === "firesam" ? "fire-matched-glow" : undefined}
                       sparkleEmojis={cardSetType === "firesam" ? ["🔥", "💧", "🚒", "⛑️"] : undefined}
                     />
@@ -726,7 +786,12 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
                       theme={theme}
                       emojiScale={liveSettings.emojiScale}
                       cardStyle={liveSettings.cardStyle}
-                      onClick={() => { if (!trainingMode && !isPaused) { flipCard(card.uniqueId); if (cardSetType === "firesam") playFireCrackle(); } }}
+                      onClick={() => {
+                        if (!trainingMode && !isPaused) {
+                          flipCard(card.uniqueId);
+                          if (cardSetType === "firesam" && effectiveSoundOn) playFireCrackle();
+                        }
+                      }}
                       extraMatchClass={cardSetType === "firesam" ? "fire-matched-glow" : undefined}
                       sparkleEmojis={cardSetType === "firesam" ? ["🔥", "💧", "🚒", "⛑️"] : undefined}
                     />

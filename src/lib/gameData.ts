@@ -664,9 +664,14 @@ export function shuffleArray<T>(array: T[]): T[] {
 }
 
 export function createGameCards(cards: CardData[], pairCount: number = 4): GameCard[] {
+  const safePairCount = Math.min(cards.length, Math.max(0, Math.floor(pairCount)));
+  if (safePairCount === 0) {
+    return [];
+  }
+
   // Shuffle source cards first so each game gets different ones
   const shuffledSource = shuffleArray([...cards]);
-  const selected = shuffledSource.slice(0, pairCount);
+  const selected = shuffledSource.slice(0, safePairCount);
   const pairs = selected.flatMap((card) => [
     { ...card, uniqueId: `${card.id}-a`, isFlipped: false, isMatched: false },
     { ...card, uniqueId: `${card.id}-b`, isFlipped: false, isMatched: false },
