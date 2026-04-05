@@ -149,8 +149,9 @@ export function useCloudSettings(initialTheme: string) {
     window.addEventListener(SETTINGS_SYNC_EVENT, syncHandler);
 
     // Real-time subscription — כל שינוי ב-Supabase מתפשט מיד לכל המופעים
+    const channelName = `settings-${deviceId.current}-${Date.now()}`;
     const channel = supabase
-      .channel(`settings-${deviceId.current}`)
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
