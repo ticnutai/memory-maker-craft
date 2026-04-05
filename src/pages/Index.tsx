@@ -51,45 +51,44 @@ const Index = () => {
         )}
       </div>
 
-      {/* Global Settings FAB — always visible */}
-      <button
-        onClick={() => setShowSettings(true)}
-        className="fixed bottom-[max(1.5rem,calc(env(safe-area-inset-bottom)+0.5rem))] right-[max(1rem,calc(env(safe-area-inset-right)+0.5rem))] z-40 w-12 h-12 rounded-full bg-game-pink text-primary-foreground shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
-      >
-        <Settings className="w-6 h-6" />
-      </button>
-
-      {/* Bottom tab icons — floating, no bar */}
-      <div className="fixed bottom-[max(1.5rem,calc(env(safe-area-inset-bottom)+0.5rem))] left-[max(1rem,calc(env(safe-area-inset-left)+0.5rem))] z-50 flex items-center gap-3" dir="rtl">
+      {/* Top navigation bar — compact, elegant */}
+      <div className="fixed top-[max(0.5rem,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 bg-white/90 backdrop-blur-md rounded-full px-2 py-1 shadow-md border border-border/30" dir="rtl">
         <button
           onClick={() => { setTab("memory"); setScreen("home"); }}
-          className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 ${
             tab === "memory"
-              ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
-              : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
+              ? "bg-game-pink text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:bg-muted"
           }`}
         >
-          <Gamepad2 className="w-5 h-5" />
+          <Gamepad2 className="w-4 h-4" />
         </button>
         <button
           onClick={() => { setTab("treasure"); setScreen("home"); }}
-          className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 ${
             tab === "treasure"
-              ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
-              : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
+              ? "bg-game-pink text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:bg-muted"
           }`}
         >
-          <Map className="w-5 h-5" />
+          <Map className="w-4 h-4" />
         </button>
         <button
           onClick={() => { setTab("train"); setScreen("home"); }}
-          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90 ${
+          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 ${
             tab === "train"
-              ? "bg-game-pink text-primary-foreground scale-110 shadow-xl"
-              : "bg-white/80 backdrop-blur text-muted-foreground hover:bg-white"
+              ? "bg-game-pink text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:bg-muted"
           }`}
         >
-          <Train className="w-4 h-4 sm:w-5 sm:h-5" />
+          <Train className="w-3.5 h-3.5" />
+        </button>
+        <div className="w-px h-5 bg-border/40 mx-0.5" />
+        <button
+          onClick={() => setShowSettings(true)}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-all active:scale-90"
+        >
+          <Settings className="w-4 h-4" />
         </button>
       </div>
 
