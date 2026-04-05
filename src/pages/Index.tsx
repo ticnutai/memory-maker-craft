@@ -51,39 +51,45 @@ const Index = () => {
         )}
       </div>
 
-      {/* Top-left nav icons — no background, directly on page */}
-      <div className="fixed top-[max(0.75rem,env(safe-area-inset-top))] left-[max(0.75rem,env(safe-area-inset-left))] z-50 flex items-center gap-2">
-        <button
-          onClick={() => setShowSettings(true)}
-          className="w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90 text-foreground/50 hover:text-foreground/80"
-        >
-          <Settings className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => { setTab("train"); setScreen("home"); }}
-          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-            tab === "train" ? "text-game-pink" : "text-foreground/50 hover:text-foreground/80"
-          }`}
-        >
-          <Train className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => { setTab("treasure"); setScreen("home"); }}
-          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-            tab === "treasure" ? "text-game-pink" : "text-foreground/50 hover:text-foreground/80"
-          }`}
-        >
-          <Map className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => { setTab("memory"); setScreen("home"); }}
-          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-            tab === "memory" ? "text-game-pink" : "text-foreground/50 hover:text-foreground/80"
-          }`}
-        >
-          <Gamepad2 className="w-4 h-4" />
-        </button>
-      </div>
+      {/* Top-left nav icons — only show when NOT in game screen (GameBoard has its own header) */}
+      {!(tab === "memory" && screen === "game") && (
+        <div className="fixed top-[max(0.5rem,env(safe-area-inset-top))] left-[max(0.5rem,env(safe-area-inset-left))] z-[90] flex items-center gap-1">
+          <button
+            onClick={() => setShowSettings(true)}
+            className="w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 text-foreground/40 hover:text-foreground/70"
+            title="הגדרות"
+          >
+            <Settings className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => { setTab("memory"); setScreen("home"); }}
+            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+              tab === "memory" ? "text-game-pink" : "text-foreground/40 hover:text-foreground/70"
+            }`}
+            title="זיכרון"
+          >
+            <Gamepad2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => { setTab("train"); setScreen("home"); }}
+            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+              tab === "train" ? "text-game-pink" : "text-foreground/40 hover:text-foreground/70"
+            }`}
+            title="רכבת"
+          >
+            <Train className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => { setTab("treasure"); setScreen("home"); }}
+            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+              tab === "treasure" ? "text-game-pink" : "text-foreground/40 hover:text-foreground/70"
+            }`}
+            title="מטמון"
+          >
+            <Map className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Settings panel — always available */}
       <CardSetSelect
