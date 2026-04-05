@@ -85,15 +85,13 @@ const Index = () => {
         </button>
       </div>
 
-      {/* Settings panel for non-home pages */}
-      {(tab !== "memory" || screen !== "home") && (
-        <CardSetSelect
-          onSelectSet={handleCardSet}
-          settingsOpen={showSettings}
-          onSettingsToggle={setShowSettings}
-          settingsOnly
-        />
-      )}
+      {/* Settings panel — always available */}
+      <CardSetSelect
+        onSelectSet={handleCardSet}
+        settingsOpen={showSettings}
+        onSettingsToggle={setShowSettings}
+        settingsOnly={tab !== "memory" || screen !== "home"}
+      />
     </div>
   );
 };
