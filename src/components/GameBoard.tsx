@@ -324,7 +324,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
 
   useEffect(() => {
     startGame(cardData);
-  }, []);
+  }, [pairCount]);
 
   // Initialize positions when cards change in free mode
   useEffect(() => {
