@@ -39,6 +39,10 @@ export interface GameSettings {
   speechVolume?: number;
   layoutPreset?: string;
   customVoiceEnabled?: boolean;
+  sfxMode?: "builtin" | "elevenlabs" | "both";
+  elevenLabsVoiceId?: string;
+  elevenLabsEffectsEnabled?: boolean;
+  speechLang?: "he" | "en" | "de";
 }
 
 export interface CardData {
