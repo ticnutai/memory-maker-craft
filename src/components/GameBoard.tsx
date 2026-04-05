@@ -34,7 +34,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
   const pairCount = Math.min(liveSettings.pairCount, cardData.length);
   const effectiveSoundOn = liveSettings.soundEnabled && !globalMute;
   const effectiveSpeechOn = speechOn && !globalMute;
-  const { cards, moves, matchedCount, isGameOver, flipCard, startGame, currentStreak, maxStreak } = useMemoryGame(pairCount, effectiveSoundOn, effectiveSpeechOn, liveSettings.flipDuration, liveSettings.speechRate, liveSettings.customVoiceEnabled !== false, (liveSettings.sfxMode as any) || "builtin", liveSettings.elevenLabsEffectsEnabled === true, (liveSettings.speechLang as any) || "he");
+  const { cards, moves, matchedCount, isGameOver, flipCard, startGame, currentStreak, maxStreak } = useMemoryGame(pairCount, effectiveSoundOn, effectiveSpeechOn, liveSettings.flipDuration, liveSettings.speechRate, liveSettings.customVoiceEnabled !== false, liveSettings.sfxMode || "builtin", liveSettings.elevenLabsEffectsEnabled === true, liveSettings.speechLang || "he");
   const { stats, unlockedIds, newAchievement, recordGame, getSetStats, dismissAchievement, allAchievements } = useGameStats();
   const activeMelody = liveSettings.musicType === "builtin"
     ? BUILT_IN_MELODIES.find((m) => m.id === liveSettings.builtinMelodyId)
@@ -137,7 +137,7 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
 
   // Sync ElevenLabs TTS flag with current sfxMode setting
   useEffect(() => {
-    const mode = (liveSettings.sfxMode as string) || "builtin";
+    const mode = liveSettings.sfxMode || "builtin";
     setElevenLabsTTS(mode === "elevenlabs" || mode === "both");
   }, [liveSettings.sfxMode]);
 
