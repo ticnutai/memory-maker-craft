@@ -51,44 +51,37 @@ const Index = () => {
         )}
       </div>
 
-      {/* Top navigation bar — compact, elegant */}
-      <div className="fixed top-[max(0.5rem,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 bg-white/90 backdrop-blur-md rounded-full px-2 py-1 shadow-md border border-border/30" dir="rtl">
+      {/* Top-left nav icons — no background, directly on page */}
+      <div className="fixed top-[max(0.75rem,env(safe-area-inset-top))] left-[max(0.75rem,env(safe-area-inset-left))] z-50 flex items-center gap-2">
         <button
-          onClick={() => { setTab("memory"); setScreen("home"); }}
-          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-            tab === "memory"
-              ? "bg-game-pink text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-muted"
+          onClick={() => setShowSettings(true)}
+          className="w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90 text-foreground/50 hover:text-foreground/80"
+        >
+          <Settings className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => { setTab("train"); setScreen("home"); }}
+          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+            tab === "train" ? "text-game-pink" : "text-foreground/50 hover:text-foreground/80"
           }`}
         >
-          <Gamepad2 className="w-4 h-4" />
+          <Train className="w-4 h-4" />
         </button>
         <button
           onClick={() => { setTab("treasure"); setScreen("home"); }}
-          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-            tab === "treasure"
-              ? "bg-game-pink text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-muted"
+          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+            tab === "treasure" ? "text-game-pink" : "text-foreground/50 hover:text-foreground/80"
           }`}
         >
           <Map className="w-4 h-4" />
         </button>
         <button
-          onClick={() => { setTab("train"); setScreen("home"); }}
-          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-            tab === "train"
-              ? "bg-game-pink text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-muted"
+          onClick={() => { setTab("memory"); setScreen("home"); }}
+          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+            tab === "memory" ? "text-game-pink" : "text-foreground/50 hover:text-foreground/80"
           }`}
         >
-          <Train className="w-3.5 h-3.5" />
-        </button>
-        <div className="w-px h-5 bg-border/40 mx-0.5" />
-        <button
-          onClick={() => setShowSettings(true)}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-all active:scale-90"
-        >
-          <Settings className="w-4 h-4" />
+          <Gamepad2 className="w-4 h-4" />
         </button>
       </div>
 
