@@ -11,7 +11,7 @@ import { BgThemeId } from "@/components/ThemeBackground";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, Lightbulb, Timer, Eye, Users, Pause, Play, Trophy, Zap, BarChart3, Target } from "lucide-react";
+import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, Lightbulb, Timer, Eye, Users, Pause, Play, Trophy, Zap, BarChart3, Target, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { setSoundVolumeMultiplier, playSirenMatch, playFireCrackle } from "@/lib/sounds";
 import { setSpeechVolumeMultiplier, setElevenLabsTTS } from "@/lib/cardSpeech";
@@ -22,9 +22,10 @@ interface GameBoardProps {
   cardSetType: CardSetType;
   customCards?: CardData[];
   onHome: () => void;
+  onSettingsOpen?: () => void;
 }
 
-export default function GameBoard({ theme, settings, cardSetType, customCards, onHome }: GameBoardProps) {
+export default function GameBoard({ theme, settings, cardSetType, customCards, onHome, onSettingsOpen }: GameBoardProps) {
   const { settings: liveCloud, toGameSettings, updateSetting } = useCloudSettings("girl");
   const liveSettings = { ...settings, ...toGameSettings() };
   const [speechOn, setSpeechOn] = useState(settings.speechEnabled);
@@ -491,6 +492,11 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             <Button variant="ghost" size="sm" onClick={() => { stopMusic(); onHome(); }}>
               <Home className="w-5 h-5" />
             </Button>
+            {onSettingsOpen && (
+              <Button variant="ghost" size="sm" onClick={onSettingsOpen} title="הגדרות">
+                <Settings className="w-4 h-4" />
+              </Button>
+            )}
             {/* Global mute */}
             <Button variant="ghost" size="sm" onClick={() => { setGlobalMute(!globalMute); if (!globalMute) stopMusic(); }}
               className={globalMute ? "text-destructive" : "text-green-500"} title={globalMute ? "הפעל הכל" : "השתק הכל"}>
