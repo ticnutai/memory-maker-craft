@@ -22,9 +22,10 @@ interface GameBoardProps {
   cardSetType: CardSetType;
   customCards?: CardData[];
   onHome: () => void;
+  onSettingsOpen?: () => void;
 }
 
-export default function GameBoard({ theme, settings, cardSetType, customCards, onHome }: GameBoardProps) {
+export default function GameBoard({ theme, settings, cardSetType, customCards, onHome, onSettingsOpen }: GameBoardProps) {
   const { settings: liveCloud, toGameSettings, updateSetting } = useCloudSettings("girl");
   const liveSettings = { ...settings, ...toGameSettings() };
   const [speechOn, setSpeechOn] = useState(settings.speechEnabled);
