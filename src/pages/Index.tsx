@@ -37,7 +37,7 @@ const Index = () => {
       {/* Main content */}
       <div className="flex-1">
         {tab === "memory" && screen === "game" ? (
-          <GameBoard theme="girl" settings={settings} cardSetType={cardSetType} customCards={customCards} onHome={goHome} />
+          <GameBoard theme="girl" settings={settings} cardSetType={cardSetType} customCards={customCards} onHome={goHome} onSettingsOpen={() => setShowSettings(true)} />
         ) : tab === "memory" ? (
           <CardSetSelect
             onSelectSet={handleCardSet}

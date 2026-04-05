@@ -492,6 +492,11 @@ export default function GameBoard({ theme, settings, cardSetType, customCards, o
             <Button variant="ghost" size="sm" onClick={() => { stopMusic(); onHome(); }}>
               <Home className="w-5 h-5" />
             </Button>
+            {onSettingsOpen && (
+              <Button variant="ghost" size="sm" onClick={onSettingsOpen} title="הגדרות">
+                <Settings className="w-4 h-4" />
+              </Button>
+            )}
             {/* Global mute */}
             <Button variant="ghost" size="sm" onClick={() => { setGlobalMute(!globalMute); if (!globalMute) stopMusic(); }}
               className={globalMute ? "text-destructive" : "text-green-500"} title={globalMute ? "הפעל הכל" : "השתק הכל"}>
