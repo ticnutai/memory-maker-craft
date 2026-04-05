@@ -11,7 +11,7 @@ import { BgThemeId } from "@/components/ThemeBackground";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, Lightbulb, Timer, Eye, Users, Pause, Play, Trophy, Zap, BarChart3, Target } from "lucide-react";
+import { RotateCcw, Home, Music, VolumeX, Volume2, Mic, MicOff, Grid3X3, Move, Lock, Unlock, Save, Copy, Lightbulb, Timer, Eye, Users, Pause, Play, Trophy, Zap, BarChart3, Target, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { setSoundVolumeMultiplier, playSirenMatch, playFireCrackle } from "@/lib/sounds";
 import { setSpeechVolumeMultiplier, setElevenLabsTTS } from "@/lib/cardSpeech";
