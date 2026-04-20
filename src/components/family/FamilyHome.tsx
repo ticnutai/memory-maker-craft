@@ -182,16 +182,22 @@ export default function FamilyHome() {
               </Button>
             </div>
 
-            {/* Photos preview grid */}
-            {homePreviewPhotos.length > 0 ? (
+            {/* Slideshow OR Photos preview grid */}
+            {slideshow.enabled && homePreviewPhotos.length > 0 ? (
+              <FamilySlideshow
+                photos={homePreviewPhotos}
+                config={slideshow}
+                onOpenCollage={() => setActiveId(homeCollage.id)}
+              />
+            ) : homePreviewPhotos.length > 0 ? (
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                {homePreviewPhotos.map((url, i) => (
+                {homePreviewPhotos.slice(0, 9).map((p, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveId(homeCollage.id)}
                     className="aspect-square rounded-xl overflow-hidden bg-white/50 hover:scale-[1.03] transition-transform shadow-md"
                   >
-                    <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    <img src={p.url} alt={p.caption ?? ""} className="w-full h-full object-cover" loading="lazy" />
                   </button>
                 ))}
               </div>
