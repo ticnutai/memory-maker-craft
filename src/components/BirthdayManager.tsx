@@ -411,46 +411,16 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
         </div>
       )}
 
-      {/* ═══ CALENDAR VIEW ═══ */}
+      {/* ═══ CALENDAR VIEW (interactive grid) ═══ */}
       {viewMode === "calendar" && (
-        <div className="space-y-3">
-          {monthGroups.map(mg => (
-            <div key={mg.month} className={`rounded-2xl overflow-hidden border-2 border-muted ${mg.birthdays.length > 0 ? "" : "opacity-50"}`}>
-              <div className={`px-4 py-2 ${accent} text-primary-foreground font-bold text-sm flex items-center gap-2`}>
-                <Calendar className="w-4 h-4" />
-                {mg.label}
-                {mg.birthdays.length > 0 && (
-                  <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">{mg.birthdays.length}</span>
-                )}
-              </div>
-              {mg.birthdays.length > 0 ? (
-                <div className="divide-y divide-muted">
-                  {mg.birthdays.map(b => {
-                    const days = getDaysUntilBirthday(b.birth_date);
-                    const hebrewDate = getHebrewDateShort(parseISO(b.birth_date));
-                    return (
-                      <div key={b.id} className="flex items-center gap-3 px-4 py-3 bg-card hover:bg-muted/30 transition-colors">
-                        <span className="text-lg">{b.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <span className="font-bold text-sm">{b.name}</span>
-                          <span className="text-xs text-muted-foreground mr-2">
-                            {format(parseISO(b.birth_date), "d/M")} • {b.relation}
-                          </span>
-                          {hebrewDate && <span className="text-[10px] text-purple-500 mr-1">({hebrewDate})</span>}
-                        </div>
-                        <span className="text-xs font-bold shrink-0" style={{ color: b.color }}>
-                          {days === 0 ? "🎂 היום!" : `${days} ימים`}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="px-4 py-3 bg-card text-xs text-muted-foreground text-center">אין ימי הולדת בחודש זה</div>
-              )}
-            </div>
-          ))}
-        </div>
+        <BirthdayCalendarView
+          birthdays={birthdays}
+          holidays={JEWISH_HOLIDAYS}
+          accent={accent}
+          onAddOnDate={handleAddOnDate}
+          onSendInvite={(b) => setInviteFor(b)}
+          onEdit={editBirthday}
+        />
       )}
 
       {/* ═══ TIMELINE VIEW ═══ */}
