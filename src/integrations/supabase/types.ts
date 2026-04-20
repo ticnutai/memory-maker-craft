@@ -253,6 +253,33 @@ export type Database = {
         }
         Relationships: []
       }
+      families: {
+        Row: {
+          admin_device_id: string
+          code: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          admin_device_id: string
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_device_id?: string
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       family_collages: {
         Row: {
           background: string | null
@@ -368,6 +395,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      family_members: {
+        Row: {
+          device_id: string
+          family_id: string
+          id: string
+          joined_at: string
+          nickname: string | null
+        }
+        Insert: {
+          device_id: string
+          family_id: string
+          id?: string
+          joined_at?: string
+          nickname?: string | null
+        }
+        Update: {
+          device_id?: string
+          family_id?: string
+          id?: string
+          joined_at?: string
+          nickname?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       family_photos: {
         Row: {
