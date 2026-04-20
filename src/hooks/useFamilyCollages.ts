@@ -232,5 +232,5 @@ export function useFamilyPhotos(collageId: string | null) {
     await refresh();
   }, [refresh]);
 
-  return { photos, loading, uploadFiles, updatePhoto, deletePhoto, reorderPhotos, refresh };
+  return { photos, loading, uploadFiles, addFromUrls, updatePhoto, deletePhoto, reorderPhotos, refresh };
 }
