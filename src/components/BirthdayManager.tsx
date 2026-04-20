@@ -6,7 +6,7 @@ import { format, differenceInDays, addYears, isBefore, parseISO, getMonth, getDa
 import { he } from "date-fns/locale";
 import BirthdayCalendarView from "./BirthdayCalendarView";
 import BirthdayInviteDialog from "./BirthdayInviteDialog";
-import { getHebMonthsForYear, hebrewToGregorian, gregorianToHebrew, getCurrentHebYear, daysInHebMonth } from "@/lib/hebrewCalendar";
+import { getHebMonthsForYear, hebrewToGregorian, gregorianToHebrew, getCurrentHebYear, daysInHebMonth, toHebrewNumeral, toHebrewYear } from "@/lib/hebrewCalendar";
 
 interface Birthday {
   id: string;
@@ -56,15 +56,13 @@ interface FamilyEvent {
 
 const COLORS = ["#f472b6", "#fb923c", "#facc15", "#4ade80", "#60a5fa", "#a78bfa", "#f87171", "#38bdf8"];
 
-// ─── Hebrew date helpers ───
+// ─── Hebrew date helpers (using proper gematria) ───
 function getHebrewDate(date: Date): string {
   try {
-    const formatter = new Intl.DateTimeFormat("he-IL-u-ca-hebrew", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-    return formatter.format(date);
+    const h = gregorianToHebrew(date);
+    const months = getHebMonthsForYear(h.hyear);
+    const monthName = months.find(m => m.index === h.hmonth)?.name ?? "";
+    return `${toHebrewNumeral(h.hday)} ${monthName} ${toHebrewYear(h.hyear)}`;
   } catch {
     return "";
   }
@@ -72,11 +70,10 @@ function getHebrewDate(date: Date): string {
 
 function getHebrewDateShort(date: Date): string {
   try {
-    const formatter = new Intl.DateTimeFormat("he-IL-u-ca-hebrew", {
-      day: "numeric",
-      month: "short",
-    });
-    return formatter.format(date);
+    const h = gregorianToHebrew(date);
+    const months = getHebMonthsForYear(h.hyear);
+    const monthName = months.find(m => m.index === h.hmonth)?.name ?? "";
+    return `${toHebrewNumeral(h.hday)} ${monthName}`;
   } catch {
     return "";
   }
@@ -430,7 +427,7 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
                   <select value={hebDay} onChange={e => setHebDay(Number(e.target.value))}
                     className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink">
                     {Array.from({ length: daysInHebMonth(hebYear, hebMonth) }, (_, i) => i + 1).map(d => (
-                      <option key={d} value={d}>{d}</option>
+                      <option key={d} value={d}>{toHebrewNumeral(d)}</option>
                     ))}
                   </select>
                   <select value={hebMonth} onChange={e => setHebMonth(Number(e.target.value))}
@@ -439,9 +436,14 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
                       <option key={m.index} value={m.index}>{m.name}</option>
                     ))}
                   </select>
-                  <input type="number" min={5700} max={5900} value={hebYear}
-                    onChange={e => setHebYear(Number(e.target.value) || getCurrentHebYear())}
-                    className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink text-center" />
+                  <div className="relative">
+                    <input type="number" min={5700} max={5900} value={hebYear}
+                      onChange={e => setHebYear(Number(e.target.value) || getCurrentHebYear())}
+                      className="h-10 w-full rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink text-center opacity-0 absolute inset-0 z-10" />
+                    <div className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card flex items-center justify-center font-bold text-purple-700">
+                      {toHebrewYear(hebYear)}
+                    </div>
+                  </div>
                 </div>
               )}
 

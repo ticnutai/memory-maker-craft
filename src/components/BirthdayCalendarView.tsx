@@ -9,7 +9,8 @@ import {
   ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft,
   CalendarDays, LayoutGrid, Plus, Send, Moon, BookOpen, Calendar, Rows3,
 } from "lucide-react";
-import { getHebDayInfo, getHebMonthLabel } from "@/lib/hebrewCalendar";
+import { getHebDayInfo, getHebMonthLabel, toHebrewYear, toHebrewNumeral } from "@/lib/hebrewCalendar";
+import { HDate } from "@hebcal/core";
 
 interface Birthday {
   id: string;
@@ -129,21 +130,21 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
           isToday ? "ring-2 ring-yellow-400 ring-inset bg-yellow-50/70 z-10" : ""
         }`}
       >
-        {/* Top: dates */}
+        {/* Top: dates — Hebrew dominant */}
         <div className="flex items-start justify-between leading-tight">
-          <div className="flex flex-col items-start">
-            <span className={`text-[10px] font-bold ${isToday ? "text-yellow-700" : "text-purple-500"}`}>
+          <span className={`text-[9px] ${isToday ? "text-yellow-700" : "text-muted-foreground"}`}>
+            {format(day, "d")}
+          </span>
+          <div className="flex flex-col items-end">
+            <span className={`text-sm font-black ${isToday ? "text-yellow-700" : "text-purple-700"}`}>
               {heb.hebDay}
             </span>
             {heb.isRoshChodesh && (
               <span className="text-[8px] text-blue-600 flex items-center gap-0.5 font-bold">
-                <Moon className="w-2 h-2" /> ר״ח
+                <Moon className="w-2 h-2" /> ר״ח {heb.roshChodeshOf}
               </span>
             )}
           </div>
-          <span className={`text-sm font-black ${isToday ? "text-yellow-700" : "text-foreground"}`}>
-            {format(day, "d")}
-          </span>
         </div>
 
         {/* Holidays */}
@@ -235,7 +236,10 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
                 <div className={`text-[10px] font-bold ${i === 6 ? "text-blue-600" : "text-muted-foreground"}`}>
                   {HEBREW_DAYS[i]}
                 </div>
-                <div className={`text-xs font-black ${isToday ? "text-yellow-700" : "text-foreground/70"}`}>
+                <div className={`text-sm font-black ${isToday ? "text-yellow-700" : "text-purple-700"}`}>
+                  {getHebDayInfo(day).hebDay}
+                </div>
+                <div className={`text-[9px] ${isToday ? "text-yellow-600" : "text-muted-foreground"}`}>
                   {format(day, "d/M")}
                 </div>
               </div>
@@ -302,8 +306,8 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
               <div className={`text-xs font-bold mb-1 px-2 py-1 rounded ${accent} text-primary-foreground flex items-center justify-between`}>
                 <span className="text-[10px] bg-white/20 px-1.5 rounded-full">{monthBirthdays.length}</span>
                 <div className="flex flex-col items-end leading-tight">
-                  <span>{format(monthDate, "MMMM", { locale: he })}</span>
-                  <span className="text-[9px] opacity-80">{hebMonthMid}</span>
+                  <span>{hebMonthMid}</span>
+                  <span className="text-[9px] opacity-70">{format(monthDate, "MMMM", { locale: he })}</span>
                 </div>
               </div>
               <div className="grid grid-cols-7 gap-0">
@@ -324,7 +328,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
                         !inMonth ? "opacity-20" : ""
                       } ${isToday ? "bg-yellow-300 text-yellow-900 font-bold" : ""}`}
                     >
-                      {format(day, "d")}
+                      {heb.hebDay}
                       {hasB && inMonth && (
                         <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full" style={{ background: dayBirthdays[0].color }} />
                       )}
@@ -342,34 +346,49 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
     );
   };
 
-  // ─── Toolbar title ───
+  // ─── Toolbar title — Hebrew dominant ───
   const getTitle = () => {
+    const getHebYearLabel = (d: Date) => toHebrewYear(new HDate(d).getFullYear());
     if (mode === "week") {
       const ws = startOfWeek(cursor, { weekStartsOn: 0 });
       const we = endOfWeek(cursor, { weekStartsOn: 0 });
+      const hebStart = getHebDayInfo(ws);
+      const hebEnd = getHebDayInfo(we);
       return (
         <>
-          <span>{format(ws, "d MMM", { locale: he })} — {format(we, "d MMM yyyy", { locale: he })}</span>
-          <span className="text-[11px] text-blue-700 font-bold">
-            {getHebMonthLabel(ws)}
-            {getHebMonthLabel(ws) !== getHebMonthLabel(we) ? ` - ${getHebMonthLabel(we)}` : ""}
+          <span className="text-purple-800 font-black">
+            {hebStart.hebDay} {hebStart.hebMonth}
+            {hebStart.hebMonth !== hebEnd.hebMonth ? ` — ${hebEnd.hebDay} ${hebEnd.hebMonth}` : ` — ${hebEnd.hebDay}`}
+            {" "}{getHebYearLabel(ws)}
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            {format(ws, "d MMM", { locale: he })} — {format(we, "d MMM yyyy", { locale: he })}
           </span>
         </>
       );
     }
     if (mode === "month") {
+      const hebMonthStart = getHebMonthLabel(new Date(cursor.getFullYear(), cursor.getMonth(), 1));
+      const hebMonthEnd = getHebMonthLabel(endOfMonth(cursor));
+      const hebYr = getHebYearLabel(new Date(cursor.getFullYear(), cursor.getMonth(), 15));
       return (
         <>
-          <span>{format(cursor, "MMMM yyyy", { locale: he })}</span>
-          <span className="text-[11px] text-blue-700 font-bold">
-            {getHebMonthLabel(new Date(cursor.getFullYear(), cursor.getMonth(), 1))}
-            {" - "}
-            {getHebMonthLabel(endOfMonth(cursor))}
+          <span className="text-purple-800 font-black">
+            {hebMonthStart}{hebMonthStart !== hebMonthEnd ? ` - ${hebMonthEnd}` : ""} {hebYr}
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            {format(cursor, "MMMM yyyy", { locale: he })}
           </span>
         </>
       );
     }
-    return <span>{cursor.getFullYear()}</span>;
+    const hebYr = getHebYearLabel(new Date(cursor.getFullYear(), 6, 1));
+    return (
+      <>
+        <span className="text-purple-800 font-black">{hebYr}</span>
+        <span className="text-[10px] text-muted-foreground">{cursor.getFullYear()}</span>
+      </>
+    );
   };
 
   // ─── Today's full info banner ───
@@ -381,15 +400,17 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
       {/* Today banner */}
       <div className="bg-gradient-to-l from-purple-100 via-pink-50 to-yellow-50 rounded-2xl p-3 border-2 border-purple-200 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <div className="bg-white/80 rounded-xl px-3 py-2 text-center shadow-sm">
-            <div className="text-[10px] text-muted-foreground leading-none">היום</div>
-            <div className="text-2xl font-black text-purple-700 leading-tight">{format(today, "d")}</div>
-            <div className="text-[10px] font-bold text-purple-600">{format(today, "MMMM", { locale: he })}</div>
-          </div>
-          <div className="bg-white/80 rounded-xl px-3 py-2 text-center shadow-sm">
+          {/* Hebrew — dominant */}
+          <div className="bg-white/80 rounded-xl px-4 py-2 text-center shadow-sm">
             <div className="text-[10px] text-muted-foreground leading-none">תאריך עברי</div>
-            <div className="text-xl font-black text-blue-700 leading-tight">{todayInfo.hebDay}</div>
-            <div className="text-[10px] font-bold text-blue-600">{todayInfo.hebMonth}</div>
+            <div className="text-2xl font-black text-purple-700 leading-tight">{todayInfo.hebDay}</div>
+            <div className="text-[10px] font-bold text-purple-600">{todayInfo.hebMonth} {toHebrewYear(new HDate(today).getFullYear())}</div>
+          </div>
+          {/* Gregorian — secondary */}
+          <div className="bg-white/60 rounded-xl px-3 py-2 text-center shadow-sm">
+            <div className="text-[10px] text-muted-foreground leading-none">לועזי</div>
+            <div className="text-lg font-bold text-foreground/70 leading-tight">{format(today, "d")}</div>
+            <div className="text-[10px] text-muted-foreground">{format(today, "MMM yyyy", { locale: he })}</div>
           </div>
         </div>
         <div className="flex flex-col items-end gap-1 text-xs">

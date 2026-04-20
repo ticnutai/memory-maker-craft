@@ -72,16 +72,46 @@ function getHolidayEmoji(en: string): string {
 }
 
 // ── Hebrew numerals (gematria) ──
-const GEMATRIA_LETTERS = [
-  "", "א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט",
-  "י", "יא", "יב", "יג", "יד", "טו", "טז", "יז", "יח", "יט",
-  "כ", "כא", "כב", "כג", "כד", "כה", "כו", "כז", "כח", "כט", "ל",
-];
-function toHebrewNumeral(n: number): string {
-  if (n < 1 || n > 30) return String(n);
-  const s = GEMATRIA_LETTERS[n];
+const ONES = ["", "א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט"];
+const TENS = ["", "י", "כ", "ל", "מ", "נ", "ס", "ע", "פ", "צ"];
+const HUNDREDS = ["", "ק", "ר", "ש", "ת", "תק", "תר", "תש", "תת", "תתק"];
+
+function toGematria(n: number): string {
+  if (n <= 0) return String(n);
+  // Special cases
+  if (n === 15) return "טו";
+  if (n === 16) return "טז";
+  
+  let result = "";
+  if (n >= 100) {
+    result += HUNDREDS[Math.floor(n / 100)];
+    n %= 100;
+  }
+  if (n >= 10) {
+    result += TENS[Math.floor(n / 10)];
+    n %= 10;
+  }
+  if (n > 0) {
+    result += ONES[n];
+  }
+  return result;
+}
+
+function addGeresh(s: string): string {
+  if (s.length === 0) return s;
   if (s.length === 1) return s + "׳";
   return s.slice(0, -1) + "״" + s.slice(-1);
+}
+
+export function toHebrewNumeral(n: number): string {
+  return addGeresh(toGematria(n));
+}
+
+// Convert Hebrew year number to gematria (5786 → תשפ״ו)
+// Convention: drop the thousands digit (ה׳)
+export function toHebrewYear(year: number): string {
+  const mod = year % 1000; // e.g. 5786 → 786
+  return addGeresh(toGematria(mod));
 }
 
 // ── Parsha translations (basic, common ones) ──
