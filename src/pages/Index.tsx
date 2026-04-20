@@ -91,6 +91,15 @@ const Index = () => {
           >
             <Map className="w-3.5 h-3.5" />
           </button>
+          <button
+            onClick={() => { setTab("family"); setScreen("home"); }}
+            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+              tab === "family" ? "text-game-pink" : "text-foreground/40 hover:text-foreground/70"
+            }`}
+            title="בית משפחה טננבאום"
+          >
+            <Home className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
