@@ -306,8 +306,8 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
               <div className={`text-xs font-bold mb-1 px-2 py-1 rounded ${accent} text-primary-foreground flex items-center justify-between`}>
                 <span className="text-[10px] bg-white/20 px-1.5 rounded-full">{monthBirthdays.length}</span>
                 <div className="flex flex-col items-end leading-tight">
-                  <span>{format(monthDate, "MMMM", { locale: he })}</span>
-                  <span className="text-[9px] opacity-80">{hebMonthMid}</span>
+                  <span>{hebMonthMid}</span>
+                  <span className="text-[9px] opacity-70">{format(monthDate, "MMMM", { locale: he })}</span>
                 </div>
               </div>
               <div className="grid grid-cols-7 gap-0">
