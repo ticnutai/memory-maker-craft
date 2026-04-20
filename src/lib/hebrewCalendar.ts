@@ -1,4 +1,4 @@
-import { HDate, HebrewCalendar, Location, Event, flags, parshiot, Sedra, months } from "@hebcal/core";
+import { HDate, HebrewCalendar, flags, Sedra } from "@hebcal/core";
 
 export interface HebDayInfo {
   hebDay: string;          // "ט״ו"
