@@ -18,7 +18,7 @@ export default function FamilyHome() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [homeCollageId, setHomeCollageId] = useState<string | null>(() => loadHomeCollageId());
   const [theme, setTheme] = useState<FamilyTheme>(() => loadFamilyTheme());
-  const [homePreviewPhotos, setHomePreviewPhotos] = useState<{ url: string; caption: string | null }[]>([]);
+  const [homePreviewPhotos, setHomePreviewPhotos] = useState<{ url: string; caption: string | null; media_type: string }[]>([]);
   const [slideshow, setSlideshow] = useState<SlideshowConfig>(() => loadSlideshowConfig());
 
   // Apply theme to body so it covers the entire page (under the icons too)
@@ -56,12 +56,12 @@ export default function FamilyHome() {
       const limit = slideshow.enabled ? 50 : 9;
       const { data } = await supabase
         .from("family_photos")
-        .select("image_url, caption")
+        .select("image_url, caption, media_type")
         .eq("collage_id", displayCollageId)
         .order("sort_order", { ascending: true })
         .limit(limit);
       if (!cancelled) {
-        setHomePreviewPhotos((data ?? []).map(p => ({ url: p.image_url, caption: p.caption })));
+        setHomePreviewPhotos((data ?? []).map(p => ({ url: p.image_url, caption: p.caption, media_type: p.media_type ?? "image" })));
       }
     })();
     return () => { cancelled = true; };
@@ -174,9 +174,16 @@ export default function FamilyHome() {
                   {homePreviewPhotos.slice(0, 9).map((p, i) => (
                     <div
                       key={i}
-                      className="aspect-square rounded-xl overflow-hidden bg-white/50 shadow-md"
+                      className="aspect-square rounded-xl overflow-hidden bg-white/50 shadow-md relative"
                     >
-                      <img src={p.url} alt={p.caption ?? ""} className="w-full h-full object-cover" loading="lazy" />
+                      {p.media_type === "video" ? (
+                        <>
+                          <video src={p.url} className="w-full h-full object-cover" autoPlay muted loop playsInline preload="metadata" />
+                          <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full backdrop-blur-sm">🎬</div>
+                        </>
+                      ) : (
+                        <img src={p.url} alt={p.caption ?? ""} className="w-full h-full object-cover" loading="lazy" />
+                      )}
                     </div>
                   ))}
                 </div>

@@ -59,6 +59,8 @@ export interface FamilyPhoto {
   height: number | null;
   rotation: number | null;
   created_at: string;
+  media_type: string;          // 'image' | 'video'
+  duration_ms: number | null;
 }
 
 export function useFamilyCollages() {
@@ -180,11 +182,31 @@ export function useFamilyPhotos(collageId: string | null) {
     const startOrder = photos.length;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const ext = file.name.split(".").pop() || "jpg";
+      const isVideo = file.type.startsWith("video/");
+      const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
       const path = `${deviceId}/${collageId}/${Date.now()}-${i}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("family-photos").upload(path, file, { upsert: false });
+      const { error: upErr } = await supabase.storage.from("family-photos").upload(path, file, {
+        upsert: false,
+        contentType: file.type || undefined,
+      });
       if (upErr) { console.warn("upload error:", upErr); continue; }
       const { data: pub } = supabase.storage.from("family-photos").getPublicUrl(path);
+
+      // Try to read video duration (best effort)
+      let durationMs: number | null = null;
+      if (isVideo) {
+        try {
+          durationMs = await new Promise<number | null>((resolve) => {
+            const v = document.createElement("video");
+            v.preload = "metadata";
+            v.onloadedmetadata = () => resolve(Math.round((v.duration || 0) * 1000) || null);
+            v.onerror = () => resolve(null);
+            v.src = URL.createObjectURL(file);
+            setTimeout(() => resolve(null), 4000);
+          });
+        } catch { durationMs = null; }
+      }
+
       const { data, error } = await supabase
         .from("family_photos")
         .insert({
@@ -192,6 +214,8 @@ export function useFamilyPhotos(collageId: string | null) {
           device_id: deviceId,
           image_url: pub.publicUrl,
           sort_order: startOrder + i,
+          media_type: isVideo ? "video" : "image",
+          duration_ms: durationMs,
         })
         .select()
         .single();

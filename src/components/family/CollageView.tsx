@@ -59,7 +59,12 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
     setUploading(true);
     try {
       await uploadFiles(Array.from(files));
-      toast.success(`הועלו ${files.length} תמונות`);
+      const vids = Array.from(files).filter(f => f.type.startsWith("video/")).length;
+      const imgs = files.length - vids;
+      const parts: string[] = [];
+      if (imgs > 0) parts.push(`${imgs} תמונות`);
+      if (vids > 0) parts.push(`${vids} סרטונים`);
+      toast.success(`הועלו ${parts.join(" + ")}`);
     } catch (e) {
       toast.error("שגיאה בהעלאה");
     } finally {
@@ -111,6 +116,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
   const renderPhoto = (p: FamilyPhoto, extraClass = "") => {
     const filter = FILTERS.find(f => f.id === p.filter_style)?.css ?? "";
     const frame = FRAMES.find(f => f.id === p.frame_style) ?? FRAMES[0];
+    const isVideo = p.media_type === "video";
     return (
       <div
         key={p.id}
@@ -120,9 +126,27 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         onDrop={() => onDropOn(p.id)}
         className={`group relative ${frame.className} ${extraClass}`}
       >
-        <img src={p.image_url} alt={p.caption ?? ""} style={{ filter }} className="w-full h-full object-cover block" loading="lazy" />
+        {isVideo ? (
+          <video
+            src={p.image_url}
+            style={{ filter }}
+            className="w-full h-full object-cover block"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+          />
+        ) : (
+          <img src={p.image_url} alt={p.caption ?? ""} style={{ filter }} className="w-full h-full object-cover block" loading="lazy" />
+        )}
         {p.caption && <div className="text-xs text-center mt-1 px-1 truncate">{p.caption}</div>}
         {p.photo_date && <div className="text-[10px] text-center text-foreground/60 px-1">{p.photo_date}</div>}
+        {isVideo && (
+          <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+            🎬 וידאו
+          </div>
+        )}
         <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
           <button onClick={() => setEditingPhoto(p)} className="bg-background/90 rounded-full p-1 shadow"><Pencil className="w-3 h-3" /></button>
           <button onClick={() => deletePhoto(p.id)} className="bg-destructive/90 text-destructive-foreground rounded-full p-1 shadow"><Trash2 className="w-3 h-3" /></button>
@@ -172,7 +196,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         multiple
         className="hidden"
         onChange={(e) => { handleFiles(e.target.files); if (fileInputRef.current) fileInputRef.current.value = ""; }}
@@ -203,7 +227,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
           onClick={() => fileInputRef.current?.click()}
         >
           <Upload className="w-12 h-12 mx-auto mb-3 text-foreground/40" />
-          <div className="font-bold mb-1">גרור תמונות לכאן</div>
+          <div className="font-bold mb-1">גרור תמונות או סרטונים לכאן 📸 🎬</div>
           <div className="text-sm text-foreground/60">או לחץ להעלאה מהמכשיר</div>
         </div>
       )}
@@ -279,7 +303,11 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
           <DialogHeader><DialogTitle>עריכת תמונה</DialogTitle></DialogHeader>
           {editingPhoto && (
             <div className="space-y-4">
-              <img src={editingPhoto.image_url} alt="" style={{ filter: FILTERS.find(f => f.id === editingPhoto.filter_style)?.css ?? "" }} className="w-full max-h-60 object-contain rounded" />
+              {editingPhoto.media_type === "video" ? (
+                <video src={editingPhoto.image_url} controls className="w-full max-h-60 rounded bg-black" style={{ filter: FILTERS.find(f => f.id === editingPhoto.filter_style)?.css ?? "" }} />
+              ) : (
+                <img src={editingPhoto.image_url} alt="" style={{ filter: FILTERS.find(f => f.id === editingPhoto.filter_style)?.css ?? "" }} className="w-full max-h-60 object-contain rounded" />
+              )}
               <div>
                 <Label>כותרת</Label>
                 <Input value={editingPhoto.caption ?? ""} onChange={(e) => setEditingPhoto({ ...editingPhoto, caption: e.target.value })} />
@@ -412,19 +440,34 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         </DialogContent>
       </Dialog>
 
-      {slideshow && photos.length > 0 && (
-        <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center" onClick={() => setSlideshow(false)}>
-          <img src={photos[slideIndex].image_url} alt="" className="max-w-[95vw] max-h-[95vh] object-contain" />
-          <button onClick={(e) => { e.stopPropagation(); setSlideIndex((slideIndex - 1 + photos.length) % photos.length); }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 text-white rounded-full w-12 h-12 text-2xl">‹</button>
-          <button onClick={(e) => { e.stopPropagation(); setSlideIndex((slideIndex + 1) % photos.length); }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 text-white rounded-full w-12 h-12 text-2xl">›</button>
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
-            {slideIndex + 1} / {photos.length}
-            {photos[slideIndex].caption && <span className="mr-2">— {photos[slideIndex].caption}</span>}
+      {slideshow && photos.length > 0 && (() => {
+        const currentItem = photos[slideIndex];
+        const isVid = currentItem.media_type === "video";
+        return (
+          <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center" onClick={() => setSlideshow(false)}>
+            {isVid ? (
+              <video
+                src={currentItem.image_url}
+                className="max-w-[95vw] max-h-[95vh] object-contain"
+                autoPlay
+                controls
+                onClick={(e) => e.stopPropagation()}
+                onEnded={() => setSlideIndex((slideIndex + 1) % photos.length)}
+              />
+            ) : (
+              <img src={currentItem.image_url} alt="" className="max-w-[95vw] max-h-[95vh] object-contain" />
+            )}
+            <button onClick={(e) => { e.stopPropagation(); setSlideIndex((slideIndex - 1 + photos.length) % photos.length); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 text-white rounded-full w-12 h-12 text-2xl">‹</button>
+            <button onClick={(e) => { e.stopPropagation(); setSlideIndex((slideIndex + 1) % photos.length); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 text-white rounded-full w-12 h-12 text-2xl">›</button>
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
+              {slideIndex + 1} / {photos.length}
+              {currentItem.caption && <span className="mr-2">— {currentItem.caption}</span>}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
