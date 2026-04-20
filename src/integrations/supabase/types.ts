@@ -307,11 +307,13 @@ export type Database = {
           collage_id: string
           created_at: string
           device_id: string
+          duration_ms: number | null
           filter_style: string | null
           frame_style: string | null
           height: number | null
           id: string
           image_url: string
+          media_type: string
           photo_date: string | null
           pos_x: number | null
           pos_y: number | null
@@ -324,11 +326,13 @@ export type Database = {
           collage_id: string
           created_at?: string
           device_id: string
+          duration_ms?: number | null
           filter_style?: string | null
           frame_style?: string | null
           height?: number | null
           id?: string
           image_url: string
+          media_type?: string
           photo_date?: string | null
           pos_x?: number | null
           pos_y?: number | null
@@ -341,11 +345,13 @@ export type Database = {
           collage_id?: string
           created_at?: string
           device_id?: string
+          duration_ms?: number | null
           filter_style?: string | null
           frame_style?: string | null
           height?: number | null
           id?: string
           image_url?: string
+          media_type?: string
           photo_date?: string | null
           pos_x?: number | null
           pos_y?: number | null
