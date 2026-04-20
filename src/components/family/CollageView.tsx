@@ -178,6 +178,22 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         onChange={(e) => { handleFiles(e.target.files); if (fileInputRef.current) fileInputRef.current.value = ""; }}
       />
 
+      {/* Cloud gallery picker */}
+      {showCloud && (
+        <div className="fixed inset-0 z-[150] bg-background overflow-auto">
+          <CloudGallery
+            theme="girl"
+            onClose={() => setShowCloud(false)}
+            onSelect={async (urls) => {
+              setShowCloud(false);
+              if (urls.length === 0) return;
+              await addFromUrls(urls);
+              toast.success(`נוספו ${urls.length} תמונות מהענן`);
+            }}
+          />
+        </div>
+      )}
+
       {/* Drop zone for empty state */}
       {photos.length === 0 && (
         <div
