@@ -6,6 +6,7 @@ import CollageView from "./CollageView";
 import FamilyThemePicker from "./FamilyThemePicker";
 import FamilyDecorations from "./FamilyDecorations";
 import FamilySlideshow from "./FamilySlideshow";
+import FamilyQuoteRotator from "./FamilyQuoteRotator";
 import {
   loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
   loadSlideshowConfig, SlideshowConfig,
