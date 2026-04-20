@@ -5,7 +5,11 @@ import { useFamilyCollages } from "@/hooks/useFamilyCollages";
 import CollageView from "./CollageView";
 import FamilyThemePicker from "./FamilyThemePicker";
 import FamilyDecorations from "./FamilyDecorations";
-import { loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId } from "@/lib/familyThemes";
+import FamilySlideshow from "./FamilySlideshow";
+import {
+  loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
+  loadSlideshowConfig, SlideshowConfig,
+} from "@/lib/familyThemes";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
