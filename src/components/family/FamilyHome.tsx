@@ -44,21 +44,28 @@ export default function FamilyHome() {
 
   const homeCollage = collages.find(c => c.id === homeCollageId);
 
-  // Load preview photos for home collage
+  // Determine the source collage for slideshow & preview (slideshow can override)
+  const slideshowCollageId = slideshow.collageId ?? homeCollageId;
+  const displayCollageId = slideshow.enabled ? slideshowCollageId : homeCollageId;
+
+  // Load preview photos for the active display collage
   useEffect(() => {
-    if (!homeCollage) { setHomePreviewPhotos([]); return; }
+    if (!displayCollageId) { setHomePreviewPhotos([]); return; }
     let cancelled = false;
     (async () => {
+      const limit = slideshow.enabled ? 50 : 9;
       const { data } = await supabase
         .from("family_photos")
-        .select("image_url")
-        .eq("collage_id", homeCollage.id)
+        .select("image_url, caption")
+        .eq("collage_id", displayCollageId)
         .order("sort_order", { ascending: true })
-        .limit(9);
-      if (!cancelled) setHomePreviewPhotos((data ?? []).map(p => p.image_url));
+        .limit(limit);
+      if (!cancelled) {
+        setHomePreviewPhotos((data ?? []).map(p => ({ url: p.image_url, caption: p.caption })));
+      }
     })();
     return () => { cancelled = true; };
-  }, [homeCollage?.id]);
+  }, [displayCollageId, slideshow.enabled]);
 
   const active = collages.find(c => c.id === activeId);
   if (active) {
