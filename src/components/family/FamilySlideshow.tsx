@@ -6,6 +6,7 @@ interface SlideItem {
   url: string;
   caption?: string | null;
   media_type?: string; // 'image' | 'video'
+  thumbnail_url?: string | null;
 }
 
 interface SlideshowProps {
