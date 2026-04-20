@@ -59,6 +59,8 @@ export interface FamilyPhoto {
   height: number | null;
   rotation: number | null;
   created_at: string;
+  media_type: string;          // 'image' | 'video'
+  duration_ms: number | null;
 }
 
 export function useFamilyCollages() {
