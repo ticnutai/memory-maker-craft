@@ -6,7 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { supabase } from "@/integrations/supabase/client";
 import { useFamilyPhotos, FamilyPhoto, FamilyCollage } from "@/hooks/useFamilyCollages";
+import { getDeviceId } from "@/lib/deviceId";
 import CloudGallery from "@/components/CloudGallery";
 import * as htmlToImage from "html-to-image";
 import { toast } from "sonner";
@@ -16,6 +18,16 @@ interface CollageViewProps {
   onBack: () => void;
   onUpdateCollage: (id: string, patch: Partial<FamilyCollage>) => Promise<void>;
 }
+
+type ZipImportJobState = {
+  jobId: string;
+  sourceFileName: string;
+  status: "queued" | "processing" | "completed" | "failed";
+  progress: number;
+  extractedCount: number;
+  uploadedCount: number;
+  errorMessage: string | null;
+};
 
 const LAYOUTS = [
   { id: "grid", label: "רשת" },
@@ -42,9 +54,10 @@ const FRAMES = [
 ];
 
 export default function CollageView({ collage, onBack, onUpdateCollage }: CollageViewProps) {
-  const { photos, uploadFiles, addFromUrls, updatePhoto, deletePhoto, reorderPhotos } = useFamilyPhotos(collage.id);
+  const { photos, uploadFiles, addFromUrls, updatePhoto, deletePhoto, reorderPhotos, refresh } = useFamilyPhotos(collage.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const collageRef = useRef<HTMLDivElement>(null);
+  const deviceIdRef = useRef(getDeviceId());
   const [editingPhoto, setEditingPhoto] = useState<FamilyPhoto | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [slideshow, setSlideshow] = useState(false);
@@ -53,6 +66,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const dragCounterRef = useRef(0);
+  const [zipImportJob, setZipImportJob] = useState<ZipImportJobState | null>(null);
   const [showShare, setShowShare] = useState(false);
   const [showCloud, setShowCloud] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -77,6 +91,55 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
     });
   }, [showSettings, collage]);
 
+  useEffect(() => {
+    if (!zipImportJob || zipImportJob.status === "completed" || zipImportJob.status === "failed") return;
+
+    const pollStatus = async () => {
+      const { data, error } = await supabase.functions.invoke("family-zip-import", {
+        body: { action: "status", jobId: zipImportJob.jobId, deviceId: deviceIdRef.current },
+      });
+
+      if (error) throw error;
+
+      const nextJob = {
+        jobId: zipImportJob.jobId,
+        sourceFileName: zipImportJob.sourceFileName,
+        status: data.status,
+        progress: data.progress ?? zipImportJob.progress,
+        extractedCount: data.extracted_count ?? zipImportJob.extractedCount,
+        uploadedCount: data.uploaded_count ?? zipImportJob.uploadedCount,
+        errorMessage: data.error_message ?? null,
+      } as ZipImportJobState;
+
+      setZipImportJob(nextJob);
+
+      if (nextJob.status === "completed") {
+        setUploading(false);
+        await refresh();
+        toast.success(`יובאו ${nextJob.uploadedCount} קבצים מ-${zipImportJob.sourceFileName}`);
+      }
+
+      if (nextJob.status === "failed") {
+        setUploading(false);
+        toast.error(nextJob.errorMessage ?? "שגיאה בייבוא קובץ ZIP");
+      }
+    };
+
+    pollStatus().catch(() => {
+      setUploading(false);
+      toast.error("שגיאה במעקב אחר ייבוא ה-ZIP");
+    });
+
+    const timer = window.setInterval(() => {
+      pollStatus().catch(() => {
+        setUploading(false);
+        toast.error("שגיאה במעקב אחר ייבוא ה-ZIP");
+      });
+    }, 1500);
+
+    return () => window.clearInterval(timer);
+  }, [zipImportJob, refresh]);
+
   const handleSaveSettings = async () => {
     setSavingSettings(true);
     try {
@@ -97,45 +160,84 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
     }
   };
 
+  const startZipImport = async (file: File) => {
+    const safeName = file.name.replace(/[^\p{L}\p{N}._()-]+/gu, "-");
+    const sourcePath = `${deviceIdRef.current}/${collage.id}/${Date.now()}-${safeName}`;
+
+    const { error: uploadError } = await supabase.storage.from("family-zip-imports").upload(sourcePath, file, {
+      contentType: file.type || "application/zip",
+      upsert: false,
+    });
+
+    if (uploadError) throw uploadError;
+
+    const { data, error } = await supabase.functions.invoke("family-zip-import", {
+      body: {
+        action: "start",
+        collageId: collage.id,
+        deviceId: deviceIdRef.current,
+        sourcePath,
+        sourceFileName: file.name,
+      },
+    });
+
+    if (error) throw error;
+
+    setZipImportJob({
+      jobId: data.jobId,
+      sourceFileName: file.name,
+      status: data.status,
+      progress: data.progress ?? 0,
+      extractedCount: 0,
+      uploadedCount: 0,
+      errorMessage: null,
+    });
+
+    toast.success(`התחלתי לייבא את ${file.name}`);
+  };
+
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setUploading(true);
+
     try {
-      const { isArchiveFile, extractMediaFromArchive } = await import("@/lib/archiveExtract");
-      const allFiles: File[] = [];
-      const archiveErrors: string[] = [];
+      const { isArchiveFile } = await import("@/lib/archiveExtract");
+      const archiveFiles = Array.from(files).filter((file) => isArchiveFile(file));
+      const regularFiles = Array.from(files).filter((file) => !isArchiveFile(file));
 
-      for (const file of Array.from(files)) {
-        console.log("[handleFiles] file:", file.name, "type:", file.type, "isArchive:", isArchiveFile(file));
-        if (isArchiveFile(file)) {
-          const { files: extracted, error } = await extractMediaFromArchive(file);
-          console.log("[handleFiles] extracted:", extracted.length, "error:", error);
-          if (error) archiveErrors.push(error);
-          allFiles.push(...extracted);
-        } else {
-          allFiles.push(file);
-        }
-      }
-
-      if (archiveErrors.length > 0) {
-        archiveErrors.forEach(e => toast.error(e));
-      }
-
-      if (allFiles.length > 0) {
-        await uploadFiles(allFiles);
-        const vids = allFiles.filter(f => f.type.startsWith("video/")).length;
-        const imgs = allFiles.length - vids;
+      if (regularFiles.length > 0) {
+        await uploadFiles(regularFiles);
+        const vids = regularFiles.filter((f) => f.type.startsWith("video/")).length;
+        const imgs = regularFiles.length - vids;
         const parts: string[] = [];
         if (imgs > 0) parts.push(`${imgs} תמונות`);
         if (vids > 0) parts.push(`${vids} סרטונים`);
         toast.success(`הועלו ${parts.join(" + ")}`);
-      } else if (archiveErrors.length === 0) {
-        toast.info("לא נמצאו תמונות או סרטונים בארכיון");
       }
-    } catch (e) {
-      toast.error("שגיאה בהעלאה");
-    } finally {
+
+      if (archiveFiles.some((file) => file.name.toLowerCase().endsWith(".rar"))) {
+        toast.error("קבצי RAR עדיין לא נתמכים. אנא העלה ZIP.");
+      }
+
+      const zipFiles = archiveFiles.filter((file) => file.name.toLowerCase().endsWith(".zip"));
+      if (zipFiles.length > 1) {
+        toast.info("כרגע ניתן לייבא קובץ ZIP אחד בכל פעם");
+      }
+
+      const zipFile = zipFiles[0];
+      if (zipFile) {
+        await startZipImport(zipFile);
+      } else {
+        setUploading(false);
+      }
+
+      if (regularFiles.length === 0 && archiveFiles.length === 0) {
+        setUploading(false);
+        toast.info("לא נמצאו קבצים נתמכים");
+      }
+    } catch {
       setUploading(false);
+      toast.error("שגיאה בהעלאה");
     }
   };
 
@@ -374,6 +476,25 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
           </div>
         )}
       </div>
+
+      {zipImportJob && (
+        <div className="mx-auto mt-4 max-w-md rounded-lg border border-border bg-card px-4 py-3 text-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="truncate font-medium">מייבא ZIP: {zipImportJob.sourceFileName}</span>
+            <span className="text-muted-foreground">{zipImportJob.progress}%</span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full bg-primary transition-all" style={{ width: `${zipImportJob.progress}%` }} />
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground">
+            {zipImportJob.status === "failed"
+              ? (zipImportJob.errorMessage ?? "שגיאה בייבוא")
+              : zipImportJob.status === "completed"
+                ? `הסתיים: ${zipImportJob.uploadedCount} קבצים`
+                : `חולצו ${zipImportJob.extractedCount} • הועלו ${zipImportJob.uploadedCount}`}
+          </div>
+        </div>
+      )}
 
       <div className="text-center mt-4">
         <Button variant="outline" size="sm" onClick={handleShare} disabled={photos.length === 0}>שיתוף</Button>
