@@ -152,6 +152,9 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         <Button size="sm" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={uploading} title="העלאת קובץ מרובה">
           <Upload className="w-4 h-4" />
         </Button>
+        <Button size="sm" variant="ghost" onClick={() => setShowCloud(true)} title="בחר מהענן">
+          <Cloud className="w-4 h-4" />
+        </Button>
         <Button size="sm" variant="ghost" onClick={() => { setSlideIndex(0); setSlideshow(true); }} title="מצגת" disabled={photos.length === 0}>
           <Play className="w-4 h-4" />
         </Button>
