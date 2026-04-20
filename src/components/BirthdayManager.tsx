@@ -264,7 +264,7 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div className="bg-card rounded-2xl p-5 border-2 border-muted shadow-lg space-y-4 bounce-in">
+        <div id="birthday-form" className="bg-card rounded-2xl p-5 border-2 border-muted shadow-lg space-y-4 bounce-in scroll-mt-20">
           <div className="flex justify-between items-center">
             <h3 className="font-bold text-sm">{editId ? "✏️ עריכת יום הולדת" : "🎂 הוספת יום הולדת"}</h3>
             <button onClick={resetForm} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
@@ -273,7 +273,7 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <label className="text-xs font-bold text-muted-foreground mb-1 block">שם</label>
-              <input type="text" value={formName} onChange={e => setFormName(e.target.value)}
+              <input id="birthday-name-input" type="text" value={formName} onChange={e => setFormName(e.target.value)}
                 placeholder="שם בן המשפחה..." dir="rtl"
                 className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink" />
             </div>
