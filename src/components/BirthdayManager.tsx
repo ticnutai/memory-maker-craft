@@ -608,11 +608,51 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
       {viewMode === "calendar" && (
         <BirthdayCalendarView
           birthdays={birthdays}
+          familyEvents={familyEvents}
           accent={accent}
           onAddOnDate={handleAddOnDate}
           onSendInvite={(b) => setInviteFor(b)}
           onEdit={editBirthday}
+          onEditEvent={editEvent}
         />
+      )}
+
+      {/* ═══ FAMILY EVENTS LIST ═══ */}
+      {familyEvents.length > 0 && viewMode !== "calendar" && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border-2 border-blue-200 space-y-2">
+          <h3 className="text-xs font-bold text-blue-700 flex items-center gap-1">
+            <CalendarPlus className="w-3.5 h-3.5" /> אירועים משפחתיים ({familyEvents.length})
+          </h3>
+          <div className="space-y-1.5">
+            {familyEvents.map(ev => {
+              const days = getDaysUntilBirthday(ev.event_date);
+              const typeDef = EVENT_TYPES.find(t => t.id === ev.event_type);
+              return (
+                <div key={ev.id} className="flex items-center gap-2 text-sm bg-white/70 rounded-lg p-2">
+                  <span className="text-lg">{ev.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-xs truncate">{ev.name}</div>
+                    <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <span>{typeDef?.label.split(" ").slice(1).join(" ") ?? ev.event_type}</span>
+                      <span>•</span>
+                      <span>{format(parseISO(ev.event_date), "d בMMMM", { locale: he })}</span>
+                      {ev.recurring && <span>🔄</span>}
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold" style={{ color: ev.color }}>
+                    {days === 0 ? "🎉 היום!" : `עוד ${days} ימים`}
+                  </span>
+                  <button onClick={() => editEvent(ev)} className="p-1 rounded bg-muted hover:bg-muted/80">
+                    <Edit2 className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                  <button onClick={() => deleteEntry(ev.id, true)} className="p-1 rounded bg-muted hover:bg-destructive/10">
+                    <Trash2 className="w-3 h-3 text-destructive/60" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {/* ═══ TIMELINE VIEW ═══ */}
