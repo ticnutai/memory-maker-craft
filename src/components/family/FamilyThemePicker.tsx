@@ -238,6 +238,126 @@ export default function FamilyThemePicker({
               </div>
             </TabsContent>
 
+            {/* Slideshow tab */}
+            <TabsContent value="slideshow" className="space-y-4 mt-4">
+              {/* Enable toggle */}
+              <div className="flex items-center justify-between p-3 rounded-xl border bg-muted/30">
+                <div>
+                  <Label className="text-sm font-bold flex items-center gap-1">
+                    <Play className="w-3.5 h-3.5" /> הפעל Slideshow בדף הבית
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    התמונות יתחלפו אוטומטית עם אנימציה
+                  </p>
+                </div>
+                <Switch
+                  checked={slideshow.enabled}
+                  onCheckedChange={(v) => {
+                    const next = { ...slideshow, enabled: v };
+                    saveSlideshowConfig(next);
+                    onSlideshowChange(next);
+                  }}
+                />
+              </div>
+
+              {/* Source collage */}
+              <div className={slideshow.enabled ? "" : "opacity-50 pointer-events-none"}>
+                <Label className="text-xs">קולאז׳ מקור</Label>
+                <select
+                  value={slideshow.collageId ?? "__home__"}
+                  onChange={(e) => {
+                    const v = e.target.value === "__home__" ? null : e.target.value;
+                    const next = { ...slideshow, collageId: v };
+                    saveSlideshowConfig(next);
+                    onSlideshowChange(next);
+                  }}
+                  className="w-full h-10 px-3 rounded-md border bg-background text-sm mt-1"
+                >
+                  <option value="__home__">📍 השתמש בקולאז׳ של דף הבית</option>
+                  {collages.map(c => (
+                    <option key={c.id} value={c.id}>{c.emoji ?? "📸"} {c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Speed */}
+              <div className={slideshow.enabled ? "" : "opacity-50 pointer-events-none"}>
+                <div className="flex justify-between items-baseline">
+                  <Label className="text-xs">מהירות החלפה</Label>
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {(slideshow.intervalMs / 1000).toFixed(1)}s
+                  </span>
+                </div>
+                <Slider
+                  value={[slideshow.intervalMs]}
+                  min={1500}
+                  max={10000}
+                  step={500}
+                  onValueChange={([v]) => {
+                    const next = { ...slideshow, intervalMs: v };
+                    saveSlideshowConfig(next);
+                    onSlideshowChange(next);
+                  }}
+                  className="mt-2"
+                />
+              </div>
+
+              {/* Transition */}
+              <div className={slideshow.enabled ? "" : "opacity-50 pointer-events-none"}>
+                <Label className="text-xs">אפקט מעבר</Label>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  {([
+                    { id: "fade", label: "🌅 דהייה" },
+                    { id: "slide", label: "➡️ החלקה" },
+                    { id: "zoom", label: "🔍 הגדלה" },
+                    { id: "ken-burns", label: "🎬 Ken Burns" },
+                  ] as { id: SlideTransition; label: string }[]).map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        const next = { ...slideshow, transition: t.id };
+                        saveSlideshowConfig(next);
+                        onSlideshowChange(next);
+                      }}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
+                        slideshow.transition === t.id
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background hover:bg-muted"
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Toggles */}
+              <div className={`space-y-2 ${slideshow.enabled ? "" : "opacity-50 pointer-events-none"}`}>
+                <div className="flex items-center justify-between p-2 rounded-lg border">
+                  <Label className="text-xs cursor-pointer">הצג כיתוב מתחת לתמונה</Label>
+                  <Switch
+                    checked={slideshow.showCaption}
+                    onCheckedChange={(v) => {
+                      const next = { ...slideshow, showCaption: v };
+                      saveSlideshowConfig(next);
+                      onSlideshowChange(next);
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-2 rounded-lg border">
+                  <Label className="text-xs cursor-pointer">סדר אקראי (Shuffle)</Label>
+                  <Switch
+                    checked={slideshow.shuffle}
+                    onCheckedChange={(v) => {
+                      const next = { ...slideshow, shuffle: v };
+                      saveSlideshowConfig(next);
+                      onSlideshowChange(next);
+                    }}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
             {/* Themes tab */}
             <TabsContent value="themes" className="mt-4">
               <div className="grid grid-cols-2 gap-3">
