@@ -143,8 +143,25 @@ export default function FamilyThemePicker({
   };
 
   const handleCreate = async () => {
-    await onCreateCollage();
+    await onCreateCollage({ parent_id: currentFolderId } as Partial<FamilyCollage>);
     setOpen(false);
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+    try {
+      await onCreateCollage({
+        name: newFolderName.trim(),
+        emoji: "📁",
+        is_folder: true,
+        parent_id: currentFolderId,
+      } as Partial<FamilyCollage>);
+      setNewFolderName("");
+      setShowNewFolder(false);
+      toast.success("תיקייה נוצרה! 📁");
+    } catch {
+      toast.error("שגיאה ביצירת תיקייה");
+    }
   };
 
   const handleJoin = async () => {
