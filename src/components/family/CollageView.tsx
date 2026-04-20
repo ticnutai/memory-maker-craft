@@ -50,6 +50,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
   const [slideIndex, setSlideIndex] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [showShare, setShowShare] = useState(false);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
