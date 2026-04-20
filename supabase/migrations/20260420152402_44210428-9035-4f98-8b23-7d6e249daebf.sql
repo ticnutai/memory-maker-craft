@@ -1,0 +1,1 @@
+ALTER TABLE public.family_photos ADD COLUMN IF NOT EXISTS thumbnail_url text;

@@ -319,6 +319,7 @@ export type Database = {
           pos_y: number | null
           rotation: number | null
           sort_order: number | null
+          thumbnail_url: string | null
           width: number | null
         }
         Insert: {
@@ -338,6 +339,7 @@ export type Database = {
           pos_y?: number | null
           rotation?: number | null
           sort_order?: number | null
+          thumbnail_url?: string | null
           width?: number | null
         }
         Update: {
@@ -357,6 +359,7 @@ export type Database = {
           pos_y?: number | null
           rotation?: number | null
           sort_order?: number | null
+          thumbnail_url?: string | null
           width?: number | null
         }
         Relationships: [
