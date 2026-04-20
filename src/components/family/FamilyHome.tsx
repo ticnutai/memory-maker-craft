@@ -134,6 +134,9 @@ export default function FamilyHome() {
           </p>
         </header>
 
+        {/* Birthday hearts reminder */}
+        <BirthdayHearts isDark={isDark} />
+
         {loading && <div className="text-center text-foreground/60">טוען…</div>}
 
         {/* Empty state */}
