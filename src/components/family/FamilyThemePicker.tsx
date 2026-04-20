@@ -28,7 +28,7 @@ interface ThemePickerProps {
 
 export default function FamilyThemePicker({
   current, onChange,
-  collages, deviceId, homeCollageId,
+  collages = [], deviceId, homeCollageId,
   onSetHomeCollage, onOpenCollage, onCreateCollage, onDeleteCollage, onJoinByCode,
 }: ThemePickerProps) {
   const [open, setOpen] = useState(false);
