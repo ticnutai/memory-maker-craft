@@ -476,6 +476,65 @@ export type Database = {
         }
         Relationships: []
       }
+      family_zip_import_jobs: {
+        Row: {
+          collage_id: string
+          completed_at: string | null
+          created_at: string
+          device_id: string
+          error_message: string | null
+          extracted_count: number
+          id: string
+          progress: number
+          source_file_name: string
+          source_storage_path: string
+          started_at: string | null
+          status: string
+          updated_at: string
+          uploaded_count: number
+        }
+        Insert: {
+          collage_id: string
+          completed_at?: string | null
+          created_at?: string
+          device_id: string
+          error_message?: string | null
+          extracted_count?: number
+          id?: string
+          progress?: number
+          source_file_name: string
+          source_storage_path: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_count?: number
+        }
+        Update: {
+          collage_id?: string
+          completed_at?: string | null
+          created_at?: string
+          device_id?: string
+          error_message?: string | null
+          extracted_count?: number
+          id?: string
+          progress?: number
+          source_file_name?: string
+          source_storage_path?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_zip_import_jobs_collage_id_fkey"
+            columns: ["collage_id"]
+            isOneToOne: false
+            referencedRelation: "family_collages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_settings: {
         Row: {
           animations_enabled: boolean | null
