@@ -7,6 +7,7 @@ import FamilyThemePicker from "./FamilyThemePicker";
 import FamilyDecorations from "./FamilyDecorations";
 import FamilySlideshow from "./FamilySlideshow";
 import FamilyQuoteRotator from "./FamilyQuoteRotator";
+import BirthdayHearts from "./BirthdayHearts";
 import {
   loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
   loadSlideshowConfig, SlideshowConfig,
@@ -132,6 +133,9 @@ export default function FamilyHome() {
             <Sparkles className="w-4 h-4" />
           </p>
         </header>
+
+        {/* Birthday hearts reminder */}
+        <BirthdayHearts isDark={isDark} />
 
         {loading && <div className="text-center text-foreground/60">טוען…</div>}
 
