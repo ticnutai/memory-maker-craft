@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Palette, Plus, Check, KeyRound, Home as HomeIcon, Trash2, Users, Image as ImageIcon, Play } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Palette, Plus, Check, KeyRound, Home as HomeIcon, Trash2, Users, Image as ImageIcon, Play, FolderOpen, Folder, ChevronLeft, Filter, Tag, CalendarDays, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -14,19 +14,26 @@ import {
 import { FamilyCollage } from "@/hooks/useFamilyCollages";
 import { toast } from "sonner";
 
+const CATEGORIES = [
+  { id: "holidays", label: "🎉 חגים", emoji: "🎉" },
+  { id: "trips", label: "✈️ טיולים", emoji: "✈️" },
+  { id: "birthdays", label: "🎂 ימי הולדת", emoji: "🎂" },
+  { id: "daily", label: "📷 יום-יום", emoji: "📷" },
+  { id: "school", label: "🎓 בית ספר", emoji: "🎓" },
+  { id: "events", label: "🎊 אירועים", emoji: "🎊" },
+];
+
 interface ThemePickerProps {
   current: FamilyTheme;
   onChange: (theme: FamilyTheme) => void;
-  // Collages tab
   collages: FamilyCollage[];
   deviceId: string;
   homeCollageId: string | null;
   onSetHomeCollage: (id: string | null) => void;
   onOpenCollage: (id: string) => void;
-  onCreateCollage: () => Promise<void>;
+  onCreateCollage: (partial?: Partial<FamilyCollage>) => Promise<FamilyCollage>;
   onDeleteCollage: (id: string) => void;
   onJoinByCode: (code: string) => Promise<FamilyCollage | null>;
-  // Slideshow tab
   slideshow: SlideshowConfig;
   onSlideshowChange: (cfg: SlideshowConfig) => void;
 }
@@ -43,6 +50,15 @@ export default function FamilyThemePicker({
   const [joinCode, setJoinCode] = useState("");
   const [joining, setJoining] = useState(false);
 
+  // Folder navigation
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [filterYear, setFilterYear] = useState<number | null>(null);
+  const [filterFamily, setFilterFamily] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [showNewFolder, setShowNewFolder] = useState(false);
+
   const existing = loadCustomTheme();
   const [custom, setCustom] = useState<FamilyTheme>(existing ?? {
     id: "custom",
@@ -57,7 +73,40 @@ export default function FamilyThemePicker({
   const [color1, setColor1] = useState("#fce7f3");
   const [color2, setColor2] = useState("#ddd6fe");
 
+  // ─── Computed: folder tree, breadcrumb, filters ───
   const allThemes = existing ? [...FAMILY_THEMES, existing] : FAMILY_THEMES;
+
+  // Build breadcrumb path
+  const breadcrumb = useMemo(() => {
+    const path: FamilyCollage[] = [];
+    let id = currentFolderId;
+    while (id) {
+      const folder = collages.find(c => c.id === id);
+      if (!folder) break;
+      path.unshift(folder);
+      id = folder.parent_id;
+    }
+    return path;
+  }, [currentFolderId, collages]);
+
+  // Items in current folder with filters
+  const visibleItems = useMemo(() => {
+    let items = collages.filter(c => (c.parent_id ?? null) === currentFolderId);
+    if (filterCategory) items = items.filter(c => c.category === filterCategory);
+    if (filterYear) items = items.filter(c => c.year_tag === filterYear);
+    if (filterFamily) items = items.filter(c => c.family_tag === filterFamily);
+    // Sort: folders first, then by sort_order
+    return items.sort((a, b) => {
+      if (a.is_folder && !b.is_folder) return -1;
+      if (!a.is_folder && b.is_folder) return 1;
+      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    });
+  }, [collages, currentFolderId, filterCategory, filterYear, filterFamily]);
+
+  // Unique years and family tags for filter chips
+  const availableYears = useMemo(() => [...new Set(collages.map(c => c.year_tag).filter(Boolean) as number[])].sort((a, b) => b - a), [collages]);
+  const availableFamilies = useMemo(() => [...new Set(collages.map(c => c.family_tag).filter(Boolean) as string[])].sort(), [collages]);
+  const hasActiveFilters = !!(filterCategory || filterYear || filterFamily);
 
   const selectTheme = (t: FamilyTheme) => {
     saveFamilyTheme(t);
@@ -94,8 +143,25 @@ export default function FamilyThemePicker({
   };
 
   const handleCreate = async () => {
-    await onCreateCollage();
+    await onCreateCollage({ parent_id: currentFolderId } as Partial<FamilyCollage>);
     setOpen(false);
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+    try {
+      await onCreateCollage({
+        name: newFolderName.trim(),
+        emoji: "📁",
+        is_folder: true,
+        parent_id: currentFolderId,
+      } as Partial<FamilyCollage>);
+      setNewFolderName("");
+      setShowNewFolder(false);
+      toast.success("תיקייה נוצרה! 📁");
+    } catch {
+      toast.error("שגיאה ביצירת תיקייה");
+    }
   };
 
   const handleJoin = async () => {
@@ -142,13 +208,98 @@ export default function FamilyThemePicker({
             </TabsList>
 
             {/* Collages tab */}
-            <TabsContent value="collages" className="space-y-4 mt-4">
+            <TabsContent value="collages" className="space-y-3 mt-4">
               {/* Action buttons */}
               <div className="flex gap-2">
-                <Button onClick={handleCreate} className="flex-1" style={{ background: current.accent, color: "white" }}>
+                <Button onClick={handleCreate} className="flex-1" size="sm" style={{ background: current.accent, color: "white" }}>
                   <Plus className="w-4 h-4 ml-1" /> קולאז׳ חדש
                 </Button>
+                <Button onClick={() => setShowNewFolder(v => !v)} variant="outline" size="sm">
+                  <FolderOpen className="w-4 h-4 ml-1" /> תיקייה
+                </Button>
+                <Button onClick={() => setShowFilters(v => !v)} variant={hasActiveFilters ? "default" : "outline"} size="sm">
+                  <Filter className="w-3.5 h-3.5" />
+                </Button>
               </div>
+
+              {/* New folder form */}
+              {showNewFolder && (
+                <div className="rounded-xl border p-3 bg-muted/30 flex gap-2">
+                  <Input
+                    placeholder="שם התיקייה..."
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
+                    className="h-8 text-sm"
+                    dir="rtl"
+                  />
+                  <Button onClick={handleCreateFolder} size="sm" disabled={!newFolderName.trim()}>📁 צור</Button>
+                </div>
+              )}
+
+              {/* Filters panel */}
+              {showFilters && (
+                <div className="rounded-xl border p-3 bg-muted/20 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold flex items-center gap-1"><Tag className="w-3 h-3" /> סינון</Label>
+                    {hasActiveFilters && (
+                      <button onClick={() => { setFilterCategory(null); setFilterYear(null); setFilterFamily(null); }}
+                        className="text-[10px] text-destructive hover:underline">נקה הכל</button>
+                    )}
+                  </div>
+                  {/* Category chips */}
+                  <div className="flex flex-wrap gap-1">
+                    {CATEGORIES.map(cat => (
+                      <button key={cat.id} onClick={() => setFilterCategory(filterCategory === cat.id ? null : cat.id)}
+                        className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                          filterCategory === cat.id ? "bg-primary text-primary-foreground border-primary" : "bg-background border-transparent hover:bg-muted"
+                        }`}>{cat.label}</button>
+                    ))}
+                  </div>
+                  {/* Year chips */}
+                  {availableYears.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      <CalendarDays className="w-3 h-3 text-muted-foreground mt-1" />
+                      {availableYears.map(y => (
+                        <button key={y} onClick={() => setFilterYear(filterYear === y ? null : y)}
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                            filterYear === y ? "bg-primary text-primary-foreground border-primary" : "bg-background border-transparent hover:bg-muted"
+                          }`}>{y}</button>
+                      ))}
+                    </div>
+                  )}
+                  {/* Family chips */}
+                  {availableFamilies.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      <User className="w-3 h-3 text-muted-foreground mt-1" />
+                      {availableFamilies.map(f => (
+                        <button key={f} onClick={() => setFilterFamily(filterFamily === f ? null : f)}
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                            filterFamily === f ? "bg-primary text-primary-foreground border-primary" : "bg-background border-transparent hover:bg-muted"
+                          }`}>{f}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Breadcrumb */}
+              {currentFolderId && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
+                  <button onClick={() => setCurrentFolderId(null)} className="hover:text-foreground font-bold">🏠 ראשי</button>
+                  {breadcrumb.map((folder, i) => (
+                    <span key={folder.id} className="flex items-center gap-1">
+                      <ChevronLeft className="w-3 h-3" />
+                      <button
+                        onClick={() => setCurrentFolderId(i === breadcrumb.length - 1 ? folder.id : folder.id)}
+                        className={`hover:text-foreground ${i === breadcrumb.length - 1 ? "font-bold text-foreground" : ""}`}
+                      >
+                        {folder.emoji ?? "📁"} {folder.name}
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {/* Join by code */}
               <div className="rounded-xl border p-3 bg-muted/30">
@@ -170,64 +321,92 @@ export default function FamilyThemePicker({
                 </div>
               </div>
 
-              {/* Collages list */}
-              <div className="space-y-2">
+              {/* Items list (folders + collages) */}
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs text-muted-foreground">
-                    {collages.length === 0 ? "אין עדיין קולאז׳ים" : `${collages.length} קולאז׳ים`}
+                    {visibleItems.length === 0 ? "ריק" : `${visibleItems.filter(c => c.is_folder).length} תיקיות · ${visibleItems.filter(c => !c.is_folder).length} אלבומים`}
                   </Label>
-                  {homeCollageId && (
+                  {homeCollageId && !currentFolderId && (
                     <button onClick={clearHome} className="text-[10px] text-muted-foreground hover:text-foreground underline">
                       נקה דף בית
                     </button>
                   )}
                 </div>
 
-                {collages.length === 0 && (
+                {visibleItems.length === 0 && (
                   <div className="text-center py-6 text-sm text-muted-foreground">
-                    <ImageIcon className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                    צור קולאז׳ חדש או הצטרף עם קוד 👆
+                    {currentFolderId ? (
+                      <>
+                        <FolderOpen className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                        תיקייה ריקה — הוסף קולאז׳ חדש או תת-תיקייה
+                      </>
+                    ) : (
+                      <>
+                        <ImageIcon className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                        צור קולאז׳ חדש או הצטרף עם קוד 👆
+                      </>
+                    )}
                   </div>
                 )}
 
-                {collages.map(c => {
+                {visibleItems.map(c => {
                   const isShared = c.device_id !== deviceId;
                   const isHome = homeCollageId === c.id;
+                  const childCount = c.is_folder ? collages.filter(x => x.parent_id === c.id).length : 0;
                   return (
                     <div
                       key={c.id}
                       className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${
-                        isHome ? "bg-primary/10 border-primary" : "bg-background hover:bg-muted/50"
+                        isHome ? "bg-primary/10 border-primary" : c.is_folder ? "bg-muted/40 hover:bg-muted/60" : "bg-background hover:bg-muted/50"
                       }`}
                     >
                       <button
-                        onClick={() => { onOpenCollage(c.id); setOpen(false); }}
+                        onClick={() => {
+                          if (c.is_folder) {
+                            setCurrentFolderId(c.id);
+                          } else {
+                            onOpenCollage(c.id);
+                            setOpen(false);
+                          }
+                        }}
                         className="flex-1 flex items-center gap-2 text-right min-w-0"
                       >
-                        <span className="text-2xl flex-shrink-0">{c.emoji ?? "📸"}</span>
+                        <span className="text-2xl flex-shrink-0">
+                          {c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}
+                        </span>
                         <div className="flex-1 min-w-0">
                           <div className="font-bold text-sm truncate flex items-center gap-1">
                             {c.name}
                             {isHome && <HomeIcon className="w-3 h-3 text-primary flex-shrink-0" />}
                             {isShared && <Users className="w-3 h-3 text-muted-foreground flex-shrink-0" />}
                           </div>
-                          <div className="text-[10px] text-muted-foreground">
-                            {isShared ? "משותף" : "שלי"} · קוד {c.share_code}
+                          <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            {c.is_folder ? (
+                              <span>{childCount} פריטים</span>
+                            ) : (
+                              <span>{isShared ? "משותף" : "שלי"} · קוד {c.share_code}</span>
+                            )}
+                            {c.category && <span className="px-1 py-0.5 rounded bg-muted text-[9px]">{CATEGORIES.find(cat => cat.id === c.category)?.emoji ?? "📋"} {c.category}</span>}
+                            {c.year_tag && <span className="text-[9px]">📅{c.year_tag}</span>}
+                            {c.family_tag && <span className="text-[9px]">👤{c.family_tag}</span>}
                           </div>
                         </div>
                       </button>
-                      <button
-                        onClick={() => isHome ? clearHome() : setAsHome(c.id)}
-                        className={`p-1.5 rounded-md transition-colors ${
-                          isHome ? "text-primary bg-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                        }`}
-                        title={isHome ? "הסר מדף הבית" : "קבע כדף הבית"}
-                      >
-                        <HomeIcon className="w-3.5 h-3.5" />
-                      </button>
+                      {!c.is_folder && (
+                        <button
+                          onClick={() => isHome ? clearHome() : setAsHome(c.id)}
+                          className={`p-1.5 rounded-md transition-colors ${
+                            isHome ? "text-primary bg-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                          }`}
+                          title={isHome ? "הסר מדף הבית" : "קבע כדף הבית"}
+                        >
+                          <HomeIcon className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       <button
                         onClick={() => {
-                          const msg = isShared ? `לעזוב את "${c.name}"?` : `למחוק את "${c.name}"?`;
+                          const msg = c.is_folder ? `למחוק את התיקייה "${c.name}" וכל תוכנה?` : isShared ? `לעזוב את "${c.name}"?` : `למחוק את "${c.name}"?`;
                           if (confirm(msg)) {
                             if (homeCollageId === c.id) clearHome();
                             onDeleteCollage(c.id);

@@ -42,6 +42,12 @@ export interface FamilyCollage {
   share_code: string;
   created_at: string;
   updated_at: string;
+  parent_id: string | null;
+  is_folder: boolean;
+  category: string | null;
+  year_tag: number | null;
+  family_tag: string | null;
+  event_tag: string | null;
 }
 
 export interface FamilyPhoto {
@@ -104,7 +110,13 @@ export function useFamilyCollages() {
         cols: partial.cols ?? 3,
         gap: partial.gap ?? 8,
         background: partial.background ?? "#ffffff",
-      })
+        parent_id: partial.parent_id ?? null,
+        is_folder: partial.is_folder ?? false,
+        category: partial.category ?? null,
+        year_tag: partial.year_tag ?? null,
+        family_tag: partial.family_tag ?? null,
+        event_tag: partial.event_tag ?? null,
+      } as never)
       .select()
       .single();
     if (error) throw error;
