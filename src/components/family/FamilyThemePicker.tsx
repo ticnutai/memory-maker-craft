@@ -75,6 +75,7 @@ export default function FamilyThemePicker({
 
   // ─── Computed: folder tree, breadcrumb, filters ───
   const allThemes = existing ? [...FAMILY_THEMES, existing] : FAMILY_THEMES;
+  const selectableCollages = useMemo(() => collages.filter((c) => !c.is_folder), [collages]);
 
   // Build breadcrumb path
   const breadcrumb = useMemo(() => {
@@ -125,6 +126,10 @@ export default function FamilyThemePicker({
   };
 
   const setAsHome = (id: string) => {
+    if (!selectableCollages.some((c) => c.id === id)) {
+      toast.error("אפשר לבחור לדף הבית רק קולאז׳ים ולא תיקיות");
+      return;
+    }
     saveHomeCollageId(id);
     onSetHomeCollage(id);
     // Auto-enable slideshow when setting a home collage
@@ -459,7 +464,7 @@ export default function FamilyThemePicker({
                   className="w-full h-10 px-3 rounded-md border bg-background text-sm mt-1"
                 >
                   <option value="__home__">📍 השתמש בקולאז׳ של דף הבית</option>
-                  {collages.map(c => (
+                  {selectableCollages.map(c => (
                     <option key={c.id} value={c.id}>{c.emoji ?? "📸"} {c.name}</option>
                   ))}
                 </select>

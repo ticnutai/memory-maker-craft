@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Upload, Download, Play, Trash2, Settings, ArrowLeft, GripVertical, Pencil, Share2, Copy, Cloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +53,47 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [showShare, setShowShare] = useState(false);
   const [showCloud, setShowCloud] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsDraft, setSettingsDraft] = useState({
+    name: collage.name,
+    emoji: collage.emoji ?? "",
+    layout_type: collage.layout_type,
+    cols: collage.cols,
+    gap: collage.gap,
+    background: collage.background ?? "#ffffff",
+  });
+
+  useEffect(() => {
+    if (!showSettings) return;
+    setSettingsDraft({
+      name: collage.name,
+      emoji: collage.emoji ?? "",
+      layout_type: collage.layout_type,
+      cols: collage.cols,
+      gap: collage.gap,
+      background: collage.background ?? "#ffffff",
+    });
+  }, [showSettings, collage]);
+
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      await onUpdateCollage(collage.id, {
+        name: settingsDraft.name.trim() || collage.name,
+        emoji: settingsDraft.emoji.trim() || null,
+        layout_type: settingsDraft.layout_type,
+        cols: settingsDraft.cols,
+        gap: settingsDraft.gap,
+        background: settingsDraft.background,
+      });
+      setShowSettings(false);
+      toast.success("ההגדרות נשמרו");
+    } catch {
+      toast.error("שגיאה בשמירת ההגדרות");
+    } finally {
+      setSavingSettings(false);
+    }
+  };
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;

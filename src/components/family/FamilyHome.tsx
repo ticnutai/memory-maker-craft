@@ -10,7 +10,7 @@ import FamilyQuoteRotator from "./FamilyQuoteRotator";
 import BirthdayHearts from "./BirthdayHearts";
 import {
   loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
-  loadSlideshowConfig, SlideshowConfig,
+  loadSlideshowConfig, saveSlideshowConfig, SlideshowConfig,
 } from "@/lib/familyThemes";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,25 +30,41 @@ export default function FamilyHome() {
     return () => { document.body.style.background = prev; };
   }, [theme.background]);
 
+  const photoCollages = collages.filter((c) => !c.is_folder);
+
   // Auto-set home collage to first one if none selected
   useEffect(() => {
-    if (!loading && !homeCollageId && collages.length > 0) {
-      const firstId = collages[0].id;
-      saveHomeCollageId(firstId);
-      setHomeCollageId(firstId);
-    }
-    // Clear home if it points to a deleted collage
-    if (!loading && homeCollageId && collages.length > 0 && !collages.find(c => c.id === homeCollageId)) {
-      saveHomeCollageId(null);
-      setHomeCollageId(null);
-    }
-  }, [loading, homeCollageId, collages]);
+    if (loading) return;
+    const firstPhotoCollageId = photoCollages[0]?.id ?? null;
+    const hasValidHome = homeCollageId ? photoCollages.some((c) => c.id === homeCollageId) : false;
 
-  const homeCollage = collages.find(c => c.id === homeCollageId);
+    if (!hasValidHome && homeCollageId) {
+      saveHomeCollageId(firstPhotoCollageId);
+      setHomeCollageId(firstPhotoCollageId);
+      return;
+    }
+
+    if (!homeCollageId && firstPhotoCollageId) {
+      saveHomeCollageId(firstPhotoCollageId);
+      setHomeCollageId(firstPhotoCollageId);
+    }
+  }, [loading, homeCollageId, photoCollages]);
+
+  useEffect(() => {
+    if (!slideshow.collageId) return;
+    if (photoCollages.some((c) => c.id === slideshow.collageId)) return;
+
+    const next = { ...slideshow, collageId: null };
+    saveSlideshowConfig(next);
+    setSlideshow(next);
+  }, [slideshow, photoCollages]);
+
+  const homeCollage = photoCollages.find(c => c.id === homeCollageId);
 
   // Determine the source collage for slideshow & preview (slideshow can override)
   const slideshowCollageId = slideshow.collageId ?? homeCollageId;
   const displayCollageId = slideshow.enabled ? slideshowCollageId : homeCollageId;
+  const displayCollage = photoCollages.find((c) => c.id === displayCollageId);
 
   // Load preview photos for the active display collage
   useEffect(() => {
@@ -72,7 +88,7 @@ export default function FamilyHome() {
       }
     })();
     return () => { cancelled = true; };
-  }, [displayCollageId, slideshow.enabled]);
+  }, [activeId, displayCollageId, slideshow.enabled]);
 
   const active = collages.find(c => c.id === activeId);
   if (active) {
@@ -82,7 +98,7 @@ export default function FamilyHome() {
   const handleCreate = async (partial?: Partial<typeof collages[0]>) => {
     try {
       const c = await createCollage({ name: `קולאז׳ ${collages.length + 1}`, ...partial });
-      if (!homeCollageId) {
+      if (!homeCollageId || !photoCollages.some((item) => item.id === homeCollageId)) {
         saveHomeCollageId(c.id);
         setHomeCollageId(c.id);
       }
@@ -168,7 +184,7 @@ export default function FamilyHome() {
         )}
 
         {/* Home collage display — clean, photos only. Editing happens via the 🎨 icon above. */}
-        {!loading && homeCollage && (
+        {!loading && displayCollage && (
           <div className="max-w-3xl mx-auto">
             {slideshow.enabled && homePreviewPhotos.length > 0 ? (
               <FamilySlideshow
