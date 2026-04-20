@@ -42,7 +42,7 @@ const FRAMES = [
 ];
 
 export default function CollageView({ collage, onBack, onUpdateCollage }: CollageViewProps) {
-  const { photos, uploadFiles, updatePhoto, deletePhoto, reorderPhotos } = useFamilyPhotos(collage.id);
+  const { photos, uploadFiles, addFromUrls, updatePhoto, deletePhoto, reorderPhotos } = useFamilyPhotos(collage.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const collageRef = useRef<HTMLDivElement>(null);
   const [editingPhoto, setEditingPhoto] = useState<FamilyPhoto | null>(null);
@@ -52,6 +52,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
   const [uploading, setUploading] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [showShare, setShowShare] = useState(false);
+  const [showCloud, setShowCloud] = useState(false);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
