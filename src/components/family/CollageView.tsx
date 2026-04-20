@@ -260,7 +260,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*,video/*"
+        accept="image/*,video/*,.zip,.rar,application/zip,application/x-rar-compressed"
         multiple
         className="hidden"
         onChange={(e) => { handleFiles(e.target.files); if (fileInputRef.current) fileInputRef.current.value = ""; }}
