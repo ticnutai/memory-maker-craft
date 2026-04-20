@@ -477,6 +477,25 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         )}
       </div>
 
+      {zipImportJob && (
+        <div className="mx-auto mt-4 max-w-md rounded-lg border border-border bg-card px-4 py-3 text-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="truncate font-medium">מייבא ZIP: {zipImportJob.sourceFileName}</span>
+            <span className="text-muted-foreground">{zipImportJob.progress}%</span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full bg-primary transition-all" style={{ width: `${zipImportJob.progress}%` }} />
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground">
+            {zipImportJob.status === "failed"
+              ? (zipImportJob.errorMessage ?? "שגיאה בייבוא")
+              : zipImportJob.status === "completed"
+                ? `הסתיים: ${zipImportJob.uploadedCount} קבצים`
+                : `חולצו ${zipImportJob.extractedCount} • הועלו ${zipImportJob.uploadedCount}`}
+          </div>
+        </div>
+      )}
+
       <div className="text-center mt-4">
         <Button variant="outline" size="sm" onClick={handleShare} disabled={photos.length === 0}>שיתוף</Button>
       </div>
