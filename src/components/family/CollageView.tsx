@@ -440,19 +440,34 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         </DialogContent>
       </Dialog>
 
-      {slideshow && photos.length > 0 && (
-        <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center" onClick={() => setSlideshow(false)}>
-          <img src={photos[slideIndex].image_url} alt="" className="max-w-[95vw] max-h-[95vh] object-contain" />
-          <button onClick={(e) => { e.stopPropagation(); setSlideIndex((slideIndex - 1 + photos.length) % photos.length); }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 text-white rounded-full w-12 h-12 text-2xl">‹</button>
-          <button onClick={(e) => { e.stopPropagation(); setSlideIndex((slideIndex + 1) % photos.length); }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 text-white rounded-full w-12 h-12 text-2xl">›</button>
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
-            {slideIndex + 1} / {photos.length}
-            {photos[slideIndex].caption && <span className="mr-2">— {photos[slideIndex].caption}</span>}
+      {slideshow && photos.length > 0 && (() => {
+        const currentItem = photos[slideIndex];
+        const isVid = currentItem.media_type === "video";
+        return (
+          <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center" onClick={() => setSlideshow(false)}>
+            {isVid ? (
+              <video
+                src={currentItem.image_url}
+                className="max-w-[95vw] max-h-[95vh] object-contain"
+                autoPlay
+                controls
+                onClick={(e) => e.stopPropagation()}
+                onEnded={() => setSlideIndex((slideIndex + 1) % photos.length)}
+              />
+            ) : (
+              <img src={currentItem.image_url} alt="" className="max-w-[95vw] max-h-[95vh] object-contain" />
+            )}
+            <button onClick={(e) => { e.stopPropagation(); setSlideIndex((slideIndex - 1 + photos.length) % photos.length); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 text-white rounded-full w-12 h-12 text-2xl">‹</button>
+            <button onClick={(e) => { e.stopPropagation(); setSlideIndex((slideIndex + 1) % photos.length); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 text-white rounded-full w-12 h-12 text-2xl">›</button>
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
+              {slideIndex + 1} / {photos.length}
+              {currentItem.caption && <span className="mr-2">— {currentItem.caption}</span>}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
