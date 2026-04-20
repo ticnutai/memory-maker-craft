@@ -54,6 +54,24 @@ async function updateJob(jobId: string, patch: Record<string, unknown>) {
   if (error) throw error;
 }
 
+async function getStartingSortOrder(collageId: string) {
+  const { data, error } = await admin
+    .from("family_photos")
+    .select("sort_order")
+    .eq("collage_id", collageId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data?.sort_order ?? -1) + 1;
+}
+
+async function cleanupSourceZip(sourcePath: string) {
+  const { error } = await admin.storage.from("family-zip-imports").remove([sourcePath]);
+  if (error) console.warn("family-zip-import cleanup failed:", error.message);
+}
+
 async function processZipJob(jobId: string, collageId: string, deviceId: string, sourcePath: string) {
   try {
     await updateJob(jobId, { status: "processing", progress: 5, started_at: new Date().toISOString() });
@@ -77,6 +95,7 @@ async function processZipJob(jobId: string, collageId: string, deviceId: string,
       throw new Error("לא נמצאו תמונות או סרטונים בתוך ה-ZIP");
     }
 
+    const sortStart = await getStartingSortOrder(collageId);
     let uploadedCount = 0;
 
     for (let index = 0; index < fileEntries.length; index++) {
@@ -99,7 +118,7 @@ async function processZipJob(jobId: string, collageId: string, deviceId: string,
         collage_id: collageId,
         device_id: deviceId,
         image_url: publicUrl,
-        sort_order: index,
+        sort_order: sortStart + index,
         media_type: mediaType,
         thumbnail_url: null,
         duration_ms: null,
@@ -111,7 +130,7 @@ async function processZipJob(jobId: string, collageId: string, deviceId: string,
       await updateJob(jobId, { progress, uploaded_count: uploadedCount });
     }
 
-    await admin.storage.from("family-zip-imports").remove([sourcePath]);
+    await cleanupSourceZip(sourcePath);
     await updateJob(jobId, {
       status: "completed",
       progress: 100,
@@ -122,6 +141,7 @@ async function processZipJob(jobId: string, collageId: string, deviceId: string,
   } catch (error) {
     const message = error instanceof Error ? error.message : "שגיאה לא ידועה";
     console.error("family-zip-import failed:", message);
+    await cleanupSourceZip(sourcePath);
     await updateJob(jobId, {
       status: "failed",
       progress: 100,
