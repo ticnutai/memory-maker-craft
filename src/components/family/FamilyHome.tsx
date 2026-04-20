@@ -18,7 +18,8 @@ export default function FamilyHome() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [homeCollageId, setHomeCollageId] = useState<string | null>(() => loadHomeCollageId());
   const [theme, setTheme] = useState<FamilyTheme>(() => loadFamilyTheme());
-  const [homePreviewPhotos, setHomePreviewPhotos] = useState<string[]>([]);
+  const [homePreviewPhotos, setHomePreviewPhotos] = useState<{ url: string; caption: string | null }[]>([]);
+  const [slideshow, setSlideshow] = useState<SlideshowConfig>(() => loadSlideshowConfig());
 
   // Apply theme to body so it covers the entire page (under the icons too)
   useEffect(() => {
