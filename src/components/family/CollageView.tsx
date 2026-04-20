@@ -116,6 +116,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
   const renderPhoto = (p: FamilyPhoto, extraClass = "") => {
     const filter = FILTERS.find(f => f.id === p.filter_style)?.css ?? "";
     const frame = FRAMES.find(f => f.id === p.frame_style) ?? FRAMES[0];
+    const isVideo = p.media_type === "video";
     return (
       <div
         key={p.id}
@@ -125,9 +126,27 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         onDrop={() => onDropOn(p.id)}
         className={`group relative ${frame.className} ${extraClass}`}
       >
-        <img src={p.image_url} alt={p.caption ?? ""} style={{ filter }} className="w-full h-full object-cover block" loading="lazy" />
+        {isVideo ? (
+          <video
+            src={p.image_url}
+            style={{ filter }}
+            className="w-full h-full object-cover block"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+          />
+        ) : (
+          <img src={p.image_url} alt={p.caption ?? ""} style={{ filter }} className="w-full h-full object-cover block" loading="lazy" />
+        )}
         {p.caption && <div className="text-xs text-center mt-1 px-1 truncate">{p.caption}</div>}
         {p.photo_date && <div className="text-[10px] text-center text-foreground/60 px-1">{p.photo_date}</div>}
+        {isVideo && (
+          <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+            🎬 וידאו
+          </div>
+        )}
         <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
           <button onClick={() => setEditingPhoto(p)} className="bg-background/90 rounded-full p-1 shadow"><Pencil className="w-3 h-3" /></button>
           <button onClick={() => deletePhoto(p.id)} className="bg-destructive/90 text-destructive-foreground rounded-full p-1 shadow"><Trash2 className="w-3 h-3" /></button>
