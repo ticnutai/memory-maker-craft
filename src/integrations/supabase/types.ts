@@ -193,6 +193,113 @@ export type Database = {
         }
         Relationships: []
       }
+      family_collages: {
+        Row: {
+          background: string | null
+          background_image: string | null
+          cols: number
+          created_at: string
+          device_id: string
+          emoji: string | null
+          gap: number
+          id: string
+          layout_type: string
+          name: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          background?: string | null
+          background_image?: string | null
+          cols?: number
+          created_at?: string
+          device_id: string
+          emoji?: string | null
+          gap?: number
+          id?: string
+          layout_type?: string
+          name?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          background?: string | null
+          background_image?: string | null
+          cols?: number
+          created_at?: string
+          device_id?: string
+          emoji?: string | null
+          gap?: number
+          id?: string
+          layout_type?: string
+          name?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      family_photos: {
+        Row: {
+          caption: string | null
+          collage_id: string
+          created_at: string
+          device_id: string
+          filter_style: string | null
+          frame_style: string | null
+          height: number | null
+          id: string
+          image_url: string
+          photo_date: string | null
+          pos_x: number | null
+          pos_y: number | null
+          rotation: number | null
+          sort_order: number | null
+          width: number | null
+        }
+        Insert: {
+          caption?: string | null
+          collage_id: string
+          created_at?: string
+          device_id: string
+          filter_style?: string | null
+          frame_style?: string | null
+          height?: number | null
+          id?: string
+          image_url: string
+          photo_date?: string | null
+          pos_x?: number | null
+          pos_y?: number | null
+          rotation?: number | null
+          sort_order?: number | null
+          width?: number | null
+        }
+        Update: {
+          caption?: string | null
+          collage_id?: string
+          created_at?: string
+          device_id?: string
+          filter_style?: string | null
+          frame_style?: string | null
+          height?: number | null
+          id?: string
+          image_url?: string
+          photo_date?: string | null
+          pos_x?: number | null
+          pos_y?: number | null
+          rotation?: number | null
+          sort_order?: number | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_photos_collage_id_fkey"
+            columns: ["collage_id"]
+            isOneToOne: false
+            referencedRelation: "family_collages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_settings: {
         Row: {
           animations_enabled: boolean | null
