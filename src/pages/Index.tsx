@@ -47,6 +47,8 @@ const Index = () => {
           />
         ) : tab === "train" ? (
           <TrainGame onHome={() => setTab("memory")} />
+        ) : tab === "family" ? (
+          <FamilyHome />
         ) : (
           <TreasureHuntGame onHome={() => setTab("memory")} />
         )}
