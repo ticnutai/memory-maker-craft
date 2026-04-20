@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { Palette, Plus, Check, KeyRound, Home as HomeIcon, Trash2, Users, Image as ImageIcon } from "lucide-react";
+import { Palette, Plus, Check, KeyRound, Home as HomeIcon, Trash2, Users, Image as ImageIcon, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   FAMILY_THEMES, FamilyTheme, loadCustomTheme, saveFamilyTheme,
-  saveHomeCollageId,
+  saveHomeCollageId, SlideshowConfig, SlideTransition, saveSlideshowConfig,
 } from "@/lib/familyThemes";
 import { FamilyCollage } from "@/hooks/useFamilyCollages";
 import { toast } from "sonner";
