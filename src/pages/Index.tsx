@@ -68,7 +68,7 @@ const Index = () => {
         ) : tab === "treasure" ? (
           <TreasureHuntGame onHome={() => handleSelect("memory")} />
         ) : tab === "birthdays" ? (
-          <div className="p-4 pt-14 max-w-6xl mx-auto">
+          <div className="w-full px-4 sm:px-6 lg:px-8 pt-14 pb-8">
             <BirthdayManager theme="girl" />
           </div>
         ) : (
