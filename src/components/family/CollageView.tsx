@@ -302,17 +302,15 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         </div>
       )}
 
-      {/* Drop zone for empty state */}
+      {/* Empty state */}
       {photos.length === 0 && (
         <div
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
           className="border-2 border-dashed border-foreground/20 rounded-2xl p-12 text-center mt-12 cursor-pointer hover:border-foreground/40 transition-colors"
           onClick={() => fileInputRef.current?.click()}
         >
           <Upload className="w-12 h-12 mx-auto mb-3 text-foreground/40" />
           <div className="font-bold mb-1">גרור תמונות או סרטונים לכאן 📸 🎬</div>
-          <div className="text-sm text-foreground/60">או לחץ להעלאה מהמכשיר</div>
+          <div className="text-sm text-foreground/60">או לחץ להעלאה מהמכשיר • תומך גם בקבצי ZIP</div>
         </div>
       )}
 
