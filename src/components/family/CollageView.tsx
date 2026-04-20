@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Plus, Upload, Download, Play, Trash2, Settings, ArrowLeft, GripVertical, Pencil, Share2, Copy } from "lucide-react";
+import { Plus, Upload, Download, Play, Trash2, Settings, ArrowLeft, GripVertical, Pencil, Share2, Copy, Cloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useFamilyPhotos, FamilyPhoto, FamilyCollage } from "@/hooks/useFamilyCollages";
+import CloudGallery from "@/components/CloudGallery";
 import * as htmlToImage from "html-to-image";
 import { toast } from "sonner";
 
@@ -41,7 +42,7 @@ const FRAMES = [
 ];
 
 export default function CollageView({ collage, onBack, onUpdateCollage }: CollageViewProps) {
-  const { photos, uploadFiles, updatePhoto, deletePhoto, reorderPhotos } = useFamilyPhotos(collage.id);
+  const { photos, uploadFiles, addFromUrls, updatePhoto, deletePhoto, reorderPhotos } = useFamilyPhotos(collage.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const collageRef = useRef<HTMLDivElement>(null);
   const [editingPhoto, setEditingPhoto] = useState<FamilyPhoto | null>(null);
@@ -51,6 +52,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
   const [uploading, setUploading] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [showShare, setShowShare] = useState(false);
+  const [showCloud, setShowCloud] = useState(false);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -150,6 +152,9 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         <Button size="sm" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={uploading} title="העלאת קובץ מרובה">
           <Upload className="w-4 h-4" />
         </Button>
+        <Button size="sm" variant="ghost" onClick={() => setShowCloud(true)} title="בחר מהענן">
+          <Cloud className="w-4 h-4" />
+        </Button>
         <Button size="sm" variant="ghost" onClick={() => { setSlideIndex(0); setSlideshow(true); }} title="מצגת" disabled={photos.length === 0}>
           <Play className="w-4 h-4" />
         </Button>
@@ -172,6 +177,22 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         className="hidden"
         onChange={(e) => { handleFiles(e.target.files); if (fileInputRef.current) fileInputRef.current.value = ""; }}
       />
+
+      {/* Cloud gallery picker */}
+      {showCloud && (
+        <div className="fixed inset-0 z-[150] bg-background overflow-auto">
+          <CloudGallery
+            theme="girl"
+            onClose={() => setShowCloud(false)}
+            onSelect={async (urls) => {
+              setShowCloud(false);
+              if (urls.length === 0) return;
+              await addFromUrls(urls);
+              toast.success(`נוספו ${urls.length} תמונות מהענן`);
+            }}
+          />
+        </div>
+      )}
 
       {/* Drop zone for empty state */}
       {photos.length === 0 && (
