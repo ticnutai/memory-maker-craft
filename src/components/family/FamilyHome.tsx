@@ -156,66 +156,42 @@ export default function FamilyHome() {
           </div>
         )}
 
-        {/* Home collage display */}
+        {/* Home collage display — clean, photos only. Editing happens via the 🎨 icon above. */}
         {!loading && homeCollage && (
-          <div
-            className="rounded-3xl p-6 sm:p-8 max-w-3xl mx-auto shadow-xl backdrop-blur-md border border-white/40"
-            style={{ background: theme.cardBg }}
-          >
-            <div className="flex items-center justify-between mb-5">
-              <div className="text-right min-w-0 flex-1">
-                <div className="text-3xl mb-1">{homeCollage.emoji ?? "📸"}</div>
-                <h2 className={`text-xl sm:text-2xl font-bold truncate ${isDark ? "text-white" : "text-foreground"}`}>
-                  {homeCollage.name}
-                </h2>
-                <p className={`text-xs ${isDark ? "text-white/70" : "text-foreground/60"}`}>
-                  {homePreviewPhotos.length === 0 ? "אין עדיין תמונות" : `${homePreviewPhotos.length} תמונות אחרונות`}
-                </p>
-              </div>
-              <Button
-                onClick={() => setActiveId(homeCollage.id)}
-                size="lg"
-                className="rounded-full shadow-md flex-shrink-0"
-                style={{ background: theme.accent, color: "white" }}
-              >
-                <Settings2 className="w-4 h-4 ml-1" /> פתח / ערוך
-              </Button>
-            </div>
-
-            {/* Slideshow OR Photos preview grid */}
+          <div className="max-w-3xl mx-auto">
             {slideshow.enabled && homePreviewPhotos.length > 0 ? (
               <FamilySlideshow
                 photos={homePreviewPhotos}
                 config={slideshow}
-                onOpenCollage={() => setActiveId(homeCollage.id)}
+                onOpenCollage={() => {}}
               />
             ) : homePreviewPhotos.length > 0 ? (
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                {homePreviewPhotos.slice(0, 9).map((p, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveId(homeCollage.id)}
-                    className="aspect-square rounded-xl overflow-hidden bg-white/50 hover:scale-[1.03] transition-transform shadow-md"
-                  >
-                    <img src={p.url} alt={p.caption ?? ""} className="w-full h-full object-cover" loading="lazy" />
-                  </button>
-                ))}
+              <div
+                className="rounded-3xl p-4 sm:p-6 shadow-xl backdrop-blur-md border border-white/40"
+                style={{ background: theme.cardBg }}
+              >
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  {homePreviewPhotos.slice(0, 9).map((p, i) => (
+                    <div
+                      key={i}
+                      className="aspect-square rounded-xl overflow-hidden bg-white/50 shadow-md"
+                    >
+                      <img src={p.url} alt={p.caption ?? ""} className="w-full h-full object-cover" loading="lazy" />
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
-              <button
-                onClick={() => setActiveId(homeCollage.id)}
-                className="w-full py-12 rounded-2xl border-2 border-dashed border-foreground/20 hover:border-foreground/40 transition-all text-center"
+              <div
+                className="rounded-3xl py-12 px-6 text-center shadow-xl backdrop-blur-md border border-white/40"
+                style={{ background: theme.cardBg }}
               >
-                <ImageIcon className={`w-10 h-10 mx-auto mb-2 ${isDark ? "text-white/40" : "text-foreground/40"}`} />
-                <p className={`font-bold ${isDark ? "text-white/80" : "text-foreground/70"}`}>הוסף תמונות ראשונות</p>
-                <p className={`text-xs mt-1 ${isDark ? "text-white/50" : "text-foreground/50"}`}>לחץ כדי לפתוח את הקולאז׳</p>
-              </button>
-            )}
-
-            {collages.length > 1 && (
-              <p className={`text-center text-xs mt-4 ${isDark ? "text-white/60" : "text-foreground/60"}`}>
-                💡 יש לך {collages.length} קולאז׳ים — בחר את דף הבית באייקון 🎨
-              </p>
+                <ImageIcon className={`w-12 h-12 mx-auto mb-3 ${isDark ? "text-white/40" : "text-foreground/40"}`} />
+                <p className={`font-bold ${isDark ? "text-white/80" : "text-foreground/70"}`}>אין עדיין תמונות בקולאז׳ הזה</p>
+                <p className={`text-xs mt-2 ${isDark ? "text-white/50" : "text-foreground/50"}`}>
+                  לחץ על האייקון 🎨 למעלה כדי לפתוח ולערוך
+                </p>
+              </div>
             )}
           </div>
         )}
