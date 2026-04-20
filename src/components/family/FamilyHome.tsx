@@ -154,7 +154,7 @@ export default function FamilyHome() {
               צרו את הקולאז׳ המשפחתי הראשון, או הצטרפו לקולאז׳ קיים עם קוד שיתוף.
             </p>
             <Button
-              onClick={handleCreate}
+              onClick={() => handleCreate()}
               size="lg"
               className="rounded-full shadow-lg text-base px-7 h-14"
               style={{ background: theme.accent, color: "white" }}
