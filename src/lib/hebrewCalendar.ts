@@ -129,7 +129,7 @@ export function getHebDayInfo(date: Date): HebDayInfo {
   const hebDay = toHebrewNumeral(hd.getDate());
   const monthName = hd.getMonthName(); // English
   const hebMonth = HEB_MONTH_NAMES[monthName] || monthName;
-  const hebYear = toHebrewNumeral((hd.getFullYear() % 100)); // simplified
+  
   const hebFull = `${hebDay} ${hebMonth}`;
   const isShabbat = date.getDay() === 6;
 
