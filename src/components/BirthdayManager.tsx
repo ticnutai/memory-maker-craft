@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send } from "lucide-react";
+import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send, CalendarPlus } from "lucide-react";
 import { format, differenceInDays, addYears, isBefore, parseISO, getMonth, getDate } from "date-fns";
 import { he } from "date-fns/locale";
 import BirthdayCalendarView from "./BirthdayCalendarView";
@@ -29,6 +29,31 @@ const RELATIONS = [
 ];
 
 const BIRTHDAY_EMOJIS = ["🎂", "🎈", "🎁", "🎉", "🧁", "🎊", "👑", "⭐", "💖", "🌟", "🦄", "🎀"];
+
+// ─── Event types ───
+const EVENT_TYPES = [
+  { id: "birthday", label: "🎂 יום הולדת", emoji: "🎂", defaultColor: "#f472b6" },
+  { id: "anniversary", label: "💍 יום נישואין", emoji: "💍", defaultColor: "#f59e0b" },
+  { id: "bar_mitzvah", label: "📜 בר/בת מצווה", emoji: "📜", defaultColor: "#8b5cf6" },
+  { id: "memorial", label: "🕯️ יום זיכרון", emoji: "🕯️", defaultColor: "#6b7280" },
+  { id: "graduation", label: "🎓 סיום לימודים", emoji: "🎓", defaultColor: "#10b981" },
+  { id: "military", label: "🎖️ גיוס/שחרור", emoji: "🎖️", defaultColor: "#059669" },
+  { id: "aliyah", label: "✈️ יום עלייה", emoji: "✈️", defaultColor: "#0ea5e9" },
+  { id: "custom", label: "📅 אירוע מותאם", emoji: "📅", defaultColor: "#60a5fa" },
+];
+
+interface FamilyEvent {
+  id: string;
+  device_id: string;
+  name: string;
+  event_date: string;
+  event_type: string;
+  emoji: string;
+  color: string;
+  notes: string | null;
+  recurring: boolean;
+}
+
 const COLORS = ["#f472b6", "#fb923c", "#facc15", "#4ade80", "#60a5fa", "#a78bfa", "#f87171", "#38bdf8"];
 
 // ─── Hebrew date helpers ───
