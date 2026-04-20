@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star } from "lucide-react";
+import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send } from "lucide-react";
 import { format, differenceInDays, addYears, isBefore, parseISO, getMonth, getDate } from "date-fns";
 import { he } from "date-fns/locale";
+import BirthdayCalendarView from "./BirthdayCalendarView";
+import BirthdayInviteDialog from "./BirthdayInviteDialog";
 
 interface Birthday {
   id: string;
@@ -116,7 +118,7 @@ function generateGoogleCalendarUrl(b: Birthday): string {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateStr}/${dateStr}&details=${details}&recur=RRULE:FREQ=YEARLY`;
 }
 
-type ViewMode = "cards" | "calendar" | "timeline" | "holidays";
+type ViewMode = "calendar" | "cards" | "timeline" | "holidays";
 
 interface BirthdayManagerProps {
   theme: "girl" | "boy";
@@ -125,9 +127,10 @@ interface BirthdayManagerProps {
 export default function BirthdayManager({ theme }: BirthdayManagerProps) {
   const [birthdays, setBirthdays] = useState<Birthday[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<ViewMode>("cards");
+  const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [inviteFor, setInviteFor] = useState<Birthday | null>(null);
 
   const [formName, setFormName] = useState("");
   const [formDate, setFormDate] = useState("");
@@ -192,11 +195,17 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
   }));
 
   const VIEW_OPTIONS: { id: ViewMode; icon: React.ReactNode; label: string }[] = [
+    { id: "calendar", icon: <Calendar className="w-4 h-4" />, label: "לוח שנה" },
     { id: "cards", icon: <LayoutGrid className="w-4 h-4" />, label: "כרטיסים" },
-    { id: "calendar", icon: <Calendar className="w-4 h-4" />, label: "יומן" },
     { id: "timeline", icon: <Heart className="w-4 h-4" />, label: "ציר זמן" },
     { id: "holidays", icon: <Star className="w-4 h-4" />, label: "חגים" },
   ];
+
+  const handleAddOnDate = (date: Date) => {
+    resetForm();
+    setFormDate(format(date, "yyyy-MM-dd"));
+    setShowForm(true);
+  };
 
   if (loading) return <div className="flex justify-center py-8"><div className="animate-spin text-2xl">🎂</div></div>;
 
@@ -384,6 +393,9 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
                     {b.notes && <p className="text-[10px] text-muted-foreground mt-1 truncate">📝 {b.notes}</p>}
                   </div>
                   <div className="flex flex-col gap-1 shrink-0">
+                    <button onClick={() => setInviteFor(b)} className="p-1.5 rounded-lg transition-all active:scale-90" style={{ background: b.color + "30" }} title="שלח הזמנה">
+                      <Send className="w-3.5 h-3.5" style={{ color: b.color }} />
+                    </button>
                     <button onClick={() => editBirthday(b)} className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90">
                       <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
@@ -402,46 +414,16 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
         </div>
       )}
 
-      {/* ═══ CALENDAR VIEW ═══ */}
+      {/* ═══ CALENDAR VIEW (interactive grid) ═══ */}
       {viewMode === "calendar" && (
-        <div className="space-y-3">
-          {monthGroups.map(mg => (
-            <div key={mg.month} className={`rounded-2xl overflow-hidden border-2 border-muted ${mg.birthdays.length > 0 ? "" : "opacity-50"}`}>
-              <div className={`px-4 py-2 ${accent} text-primary-foreground font-bold text-sm flex items-center gap-2`}>
-                <Calendar className="w-4 h-4" />
-                {mg.label}
-                {mg.birthdays.length > 0 && (
-                  <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">{mg.birthdays.length}</span>
-                )}
-              </div>
-              {mg.birthdays.length > 0 ? (
-                <div className="divide-y divide-muted">
-                  {mg.birthdays.map(b => {
-                    const days = getDaysUntilBirthday(b.birth_date);
-                    const hebrewDate = getHebrewDateShort(parseISO(b.birth_date));
-                    return (
-                      <div key={b.id} className="flex items-center gap-3 px-4 py-3 bg-card hover:bg-muted/30 transition-colors">
-                        <span className="text-lg">{b.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <span className="font-bold text-sm">{b.name}</span>
-                          <span className="text-xs text-muted-foreground mr-2">
-                            {format(parseISO(b.birth_date), "d/M")} • {b.relation}
-                          </span>
-                          {hebrewDate && <span className="text-[10px] text-purple-500 mr-1">({hebrewDate})</span>}
-                        </div>
-                        <span className="text-xs font-bold shrink-0" style={{ color: b.color }}>
-                          {days === 0 ? "🎂 היום!" : `${days} ימים`}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="px-4 py-3 bg-card text-xs text-muted-foreground text-center">אין ימי הולדת בחודש זה</div>
-              )}
-            </div>
-          ))}
-        </div>
+        <BirthdayCalendarView
+          birthdays={birthdays}
+          holidays={JEWISH_HOLIDAYS}
+          accent={accent}
+          onAddOnDate={handleAddOnDate}
+          onSendInvite={(b) => setInviteFor(b)}
+          onEdit={editBirthday}
+        />
       )}
 
       {/* ═══ TIMELINE VIEW ═══ */}
@@ -552,6 +534,11 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
             </div>
           )}
         </div>
+      )}
+
+      {/* Invite Dialog */}
+      {inviteFor && (
+        <BirthdayInviteDialog birthday={inviteFor} onClose={() => setInviteFor(null)} />
       )}
     </div>
   );
