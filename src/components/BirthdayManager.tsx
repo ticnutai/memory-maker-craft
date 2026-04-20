@@ -453,13 +453,15 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
                 </p>
               )}
             </div>
-            <div className="col-span-2">
-              <label className="text-xs font-bold text-muted-foreground mb-1 block">קרבה</label>
-              <select value={formRelation} onChange={e => setFormRelation(e.target.value)} dir="rtl"
-                className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink bg-card">
-                {RELATIONS.map(r => <option key={r.label} value={r.label}>{r.emoji} {r.label}</option>)}
-              </select>
-            </div>
+            {formType === "birthday" && (
+              <div className="col-span-2">
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">קרבה</label>
+                <select value={formRelation} onChange={e => setFormRelation(e.target.value)} dir="rtl"
+                  className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink bg-card">
+                  {RELATIONS.map(r => <option key={r.label} value={r.label}>{r.emoji} {r.label}</option>)}
+                </select>
+              </div>
+            )}
           </div>
 
           <div>
@@ -491,10 +493,24 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
             </div>
           </div>
 
+          {/* Recurring toggle — for non-birthday events */}
+          {formType !== "birthday" && (
+            <div className="flex items-center justify-between p-3 rounded-xl border bg-muted/30">
+              <label className="text-xs font-bold text-muted-foreground">🔄 חוזר כל שנה</label>
+              <button
+                type="button"
+                onClick={() => setFormRecurring(r => !r)}
+                className={`w-10 h-6 rounded-full transition-all relative ${formRecurring ? "bg-primary" : "bg-muted"}`}
+              >
+                <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${formRecurring ? "right-0.5" : "right-4"}`} />
+              </button>
+            </div>
+          )}
+
           <div>
             <label className="text-xs font-bold text-muted-foreground mb-1 block">הערות</label>
             <input type="text" value={formNotes} onChange={e => setFormNotes(e.target.value)}
-              placeholder="מתנה שאוהב, תחביבים..." dir="rtl"
+              placeholder="פרטים נוספים..." dir="rtl"
               className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink" />
           </div>
 
