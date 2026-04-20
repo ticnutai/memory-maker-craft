@@ -257,49 +257,75 @@ export type Database = {
         Row: {
           background: string | null
           background_image: string | null
+          category: string | null
           cols: number
           created_at: string
           device_id: string
           emoji: string | null
+          event_tag: string | null
+          family_tag: string | null
           gap: number
           id: string
+          is_folder: boolean
           layout_type: string
           name: string
+          parent_id: string | null
           share_code: string
           sort_order: number | null
           updated_at: string
+          year_tag: number | null
         }
         Insert: {
           background?: string | null
           background_image?: string | null
+          category?: string | null
           cols?: number
           created_at?: string
           device_id: string
           emoji?: string | null
+          event_tag?: string | null
+          family_tag?: string | null
           gap?: number
           id?: string
+          is_folder?: boolean
           layout_type?: string
           name?: string
+          parent_id?: string | null
           share_code?: string
           sort_order?: number | null
           updated_at?: string
+          year_tag?: number | null
         }
         Update: {
           background?: string | null
           background_image?: string | null
+          category?: string | null
           cols?: number
           created_at?: string
           device_id?: string
           emoji?: string | null
+          event_tag?: string | null
+          family_tag?: string | null
           gap?: number
           id?: string
+          is_folder?: boolean
           layout_type?: string
           name?: string
+          parent_id?: string | null
           share_code?: string
           sort_order?: number | null
           updated_at?: string
+          year_tag?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "family_collages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "family_collages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       family_events: {
         Row: {
