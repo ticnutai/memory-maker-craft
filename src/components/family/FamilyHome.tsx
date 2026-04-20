@@ -6,6 +6,7 @@ import CollageView from "./CollageView";
 import FamilyThemePicker from "./FamilyThemePicker";
 import FamilyDecorations from "./FamilyDecorations";
 import FamilySlideshow from "./FamilySlideshow";
+import FamilyQuoteRotator from "./FamilyQuoteRotator";
 import {
   loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
   loadSlideshowConfig, SlideshowConfig,
@@ -203,12 +204,8 @@ export default function FamilyHome() {
           </div>
         )}
 
-        {/* Footer quote */}
-        {!loading && (
-          <div className={`text-center mt-12 text-xs ${isDark ? "text-white/50" : "text-foreground/50"}`}>
-            ✨ "המשפחה היא הכל" ✨
-          </div>
-        )}
+        {/* Rotating family quotes — built-in pool + user-added, click to manage */}
+        {!loading && <FamilyQuoteRotator isDark={isDark} />}
       </div>
     </div>
   );
