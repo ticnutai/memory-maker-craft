@@ -227,7 +227,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
           onClick={() => fileInputRef.current?.click()}
         >
           <Upload className="w-12 h-12 mx-auto mb-3 text-foreground/40" />
-          <div className="font-bold mb-1">גרור תמונות לכאן</div>
+          <div className="font-bold mb-1">גרור תמונות או סרטונים לכאן 📸 🎬</div>
           <div className="text-sm text-foreground/60">או לחץ להעלאה מהמכשיר</div>
         </div>
       )}
