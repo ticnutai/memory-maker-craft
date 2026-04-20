@@ -210,7 +210,8 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
   if (loading) return <div className="flex justify-center py-8"><div className="animate-spin text-2xl">🎂</div></div>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full max-w-none">
+
       {/* Upcoming reminders */}
       {upcoming.length > 0 && (
         <div className="bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl p-4 border-2 border-pink-200 space-y-2">
