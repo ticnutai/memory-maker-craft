@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { Palette, Plus, Check, KeyRound, Home as HomeIcon, Trash2, Users, Image as ImageIcon } from "lucide-react";
+import { Palette, Plus, Check, KeyRound, Home as HomeIcon, Trash2, Users, Image as ImageIcon, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   FAMILY_THEMES, FamilyTheme, loadCustomTheme, saveFamilyTheme,
-  saveHomeCollageId,
+  saveHomeCollageId, SlideshowConfig, SlideTransition, saveSlideshowConfig,
 } from "@/lib/familyThemes";
 import { FamilyCollage } from "@/hooks/useFamilyCollages";
 import { toast } from "sonner";
@@ -24,15 +26,19 @@ interface ThemePickerProps {
   onCreateCollage: () => Promise<void>;
   onDeleteCollage: (id: string) => void;
   onJoinByCode: (code: string) => Promise<FamilyCollage | null>;
+  // Slideshow tab
+  slideshow: SlideshowConfig;
+  onSlideshowChange: (cfg: SlideshowConfig) => void;
 }
 
 export default function FamilyThemePicker({
   current, onChange,
   collages = [], deviceId, homeCollageId,
   onSetHomeCollage, onOpenCollage, onCreateCollage, onDeleteCollage, onJoinByCode,
+  slideshow, onSlideshowChange,
 }: ThemePickerProps) {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"collages" | "themes">("collages");
+  const [tab, setTab] = useState<"collages" | "themes" | "slideshow">("collages");
   const [showCustom, setShowCustom] = useState(false);
   const [joinCode, setJoinCode] = useState("");
   const [joining, setJoining] = useState(false);
@@ -122,10 +128,11 @@ export default function FamilyThemePicker({
             <DialogTitle>בית משפחת טננבאום 🏠</DialogTitle>
           </DialogHeader>
 
-          <Tabs value={tab} onValueChange={(v) => setTab(v as "collages" | "themes")}>
-            <TabsList className="grid grid-cols-2 w-full">
-              <TabsTrigger value="collages">📸 קולאז׳ים</TabsTrigger>
-              <TabsTrigger value="themes">🎨 ערכות נושא</TabsTrigger>
+          <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+            <TabsList className="grid grid-cols-3 w-full">
+              <TabsTrigger value="collages" className="text-xs">📸 קולאז׳ים</TabsTrigger>
+              <TabsTrigger value="slideshow" className="text-xs">▶️ Slideshow</TabsTrigger>
+              <TabsTrigger value="themes" className="text-xs">🎨 ערכות</TabsTrigger>
             </TabsList>
 
             {/* Collages tab */}
@@ -228,6 +235,126 @@ export default function FamilyThemePicker({
                     </div>
                   );
                 })}
+              </div>
+            </TabsContent>
+
+            {/* Slideshow tab */}
+            <TabsContent value="slideshow" className="space-y-4 mt-4">
+              {/* Enable toggle */}
+              <div className="flex items-center justify-between p-3 rounded-xl border bg-muted/30">
+                <div>
+                  <Label className="text-sm font-bold flex items-center gap-1">
+                    <Play className="w-3.5 h-3.5" /> הפעל Slideshow בדף הבית
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    התמונות יתחלפו אוטומטית עם אנימציה
+                  </p>
+                </div>
+                <Switch
+                  checked={slideshow.enabled}
+                  onCheckedChange={(v) => {
+                    const next = { ...slideshow, enabled: v };
+                    saveSlideshowConfig(next);
+                    onSlideshowChange(next);
+                  }}
+                />
+              </div>
+
+              {/* Source collage */}
+              <div className={slideshow.enabled ? "" : "opacity-50 pointer-events-none"}>
+                <Label className="text-xs">קולאז׳ מקור</Label>
+                <select
+                  value={slideshow.collageId ?? "__home__"}
+                  onChange={(e) => {
+                    const v = e.target.value === "__home__" ? null : e.target.value;
+                    const next = { ...slideshow, collageId: v };
+                    saveSlideshowConfig(next);
+                    onSlideshowChange(next);
+                  }}
+                  className="w-full h-10 px-3 rounded-md border bg-background text-sm mt-1"
+                >
+                  <option value="__home__">📍 השתמש בקולאז׳ של דף הבית</option>
+                  {collages.map(c => (
+                    <option key={c.id} value={c.id}>{c.emoji ?? "📸"} {c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Speed */}
+              <div className={slideshow.enabled ? "" : "opacity-50 pointer-events-none"}>
+                <div className="flex justify-between items-baseline">
+                  <Label className="text-xs">מהירות החלפה</Label>
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {(slideshow.intervalMs / 1000).toFixed(1)}s
+                  </span>
+                </div>
+                <Slider
+                  value={[slideshow.intervalMs]}
+                  min={1500}
+                  max={10000}
+                  step={500}
+                  onValueChange={([v]) => {
+                    const next = { ...slideshow, intervalMs: v };
+                    saveSlideshowConfig(next);
+                    onSlideshowChange(next);
+                  }}
+                  className="mt-2"
+                />
+              </div>
+
+              {/* Transition */}
+              <div className={slideshow.enabled ? "" : "opacity-50 pointer-events-none"}>
+                <Label className="text-xs">אפקט מעבר</Label>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  {([
+                    { id: "fade", label: "🌅 דהייה" },
+                    { id: "slide", label: "➡️ החלקה" },
+                    { id: "zoom", label: "🔍 הגדלה" },
+                    { id: "ken-burns", label: "🎬 Ken Burns" },
+                  ] as { id: SlideTransition; label: string }[]).map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        const next = { ...slideshow, transition: t.id };
+                        saveSlideshowConfig(next);
+                        onSlideshowChange(next);
+                      }}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
+                        slideshow.transition === t.id
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background hover:bg-muted"
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Toggles */}
+              <div className={`space-y-2 ${slideshow.enabled ? "" : "opacity-50 pointer-events-none"}`}>
+                <div className="flex items-center justify-between p-2 rounded-lg border">
+                  <Label className="text-xs cursor-pointer">הצג כיתוב מתחת לתמונה</Label>
+                  <Switch
+                    checked={slideshow.showCaption}
+                    onCheckedChange={(v) => {
+                      const next = { ...slideshow, showCaption: v };
+                      saveSlideshowConfig(next);
+                      onSlideshowChange(next);
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-2 rounded-lg border">
+                  <Label className="text-xs cursor-pointer">סדר אקראי (Shuffle)</Label>
+                  <Switch
+                    checked={slideshow.shuffle}
+                    onCheckedChange={(v) => {
+                      const next = { ...slideshow, shuffle: v };
+                      saveSlideshowConfig(next);
+                      onSlideshowChange(next);
+                    }}
+                  />
+                </div>
               </div>
             </TabsContent>
 

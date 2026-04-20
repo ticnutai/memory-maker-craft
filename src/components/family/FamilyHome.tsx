@@ -5,7 +5,11 @@ import { useFamilyCollages } from "@/hooks/useFamilyCollages";
 import CollageView from "./CollageView";
 import FamilyThemePicker from "./FamilyThemePicker";
 import FamilyDecorations from "./FamilyDecorations";
-import { loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId } from "@/lib/familyThemes";
+import FamilySlideshow from "./FamilySlideshow";
+import {
+  loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
+  loadSlideshowConfig, SlideshowConfig,
+} from "@/lib/familyThemes";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,7 +18,8 @@ export default function FamilyHome() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [homeCollageId, setHomeCollageId] = useState<string | null>(() => loadHomeCollageId());
   const [theme, setTheme] = useState<FamilyTheme>(() => loadFamilyTheme());
-  const [homePreviewPhotos, setHomePreviewPhotos] = useState<string[]>([]);
+  const [homePreviewPhotos, setHomePreviewPhotos] = useState<{ url: string; caption: string | null }[]>([]);
+  const [slideshow, setSlideshow] = useState<SlideshowConfig>(() => loadSlideshowConfig());
 
   // Apply theme to body so it covers the entire page (under the icons too)
   useEffect(() => {
@@ -39,21 +44,28 @@ export default function FamilyHome() {
 
   const homeCollage = collages.find(c => c.id === homeCollageId);
 
-  // Load preview photos for home collage
+  // Determine the source collage for slideshow & preview (slideshow can override)
+  const slideshowCollageId = slideshow.collageId ?? homeCollageId;
+  const displayCollageId = slideshow.enabled ? slideshowCollageId : homeCollageId;
+
+  // Load preview photos for the active display collage
   useEffect(() => {
-    if (!homeCollage) { setHomePreviewPhotos([]); return; }
+    if (!displayCollageId) { setHomePreviewPhotos([]); return; }
     let cancelled = false;
     (async () => {
+      const limit = slideshow.enabled ? 50 : 9;
       const { data } = await supabase
         .from("family_photos")
-        .select("image_url")
-        .eq("collage_id", homeCollage.id)
+        .select("image_url, caption")
+        .eq("collage_id", displayCollageId)
         .order("sort_order", { ascending: true })
-        .limit(9);
-      if (!cancelled) setHomePreviewPhotos((data ?? []).map(p => p.image_url));
+        .limit(limit);
+      if (!cancelled) {
+        setHomePreviewPhotos((data ?? []).map(p => ({ url: p.image_url, caption: p.caption })));
+      }
     })();
     return () => { cancelled = true; };
-  }, [homeCollage?.id]);
+  }, [displayCollageId, slideshow.enabled]);
 
   const active = collages.find(c => c.id === activeId);
   if (active) {
@@ -93,6 +105,8 @@ export default function FamilyHome() {
           onCreateCollage={handleCreate}
           onDeleteCollage={deleteCollage}
           onJoinByCode={joinByCode}
+          slideshow={slideshow}
+          onSlideshowChange={setSlideshow}
         />
       </div>
 
@@ -168,16 +182,22 @@ export default function FamilyHome() {
               </Button>
             </div>
 
-            {/* Photos preview grid */}
-            {homePreviewPhotos.length > 0 ? (
+            {/* Slideshow OR Photos preview grid */}
+            {slideshow.enabled && homePreviewPhotos.length > 0 ? (
+              <FamilySlideshow
+                photos={homePreviewPhotos}
+                config={slideshow}
+                onOpenCollage={() => setActiveId(homeCollage.id)}
+              />
+            ) : homePreviewPhotos.length > 0 ? (
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                {homePreviewPhotos.map((url, i) => (
+                {homePreviewPhotos.slice(0, 9).map((p, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveId(homeCollage.id)}
                     className="aspect-square rounded-xl overflow-hidden bg-white/50 hover:scale-[1.03] transition-transform shadow-md"
                   >
-                    <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    <img src={p.url} alt={p.caption ?? ""} className="w-full h-full object-cover" loading="lazy" />
                   </button>
                 ))}
               </div>

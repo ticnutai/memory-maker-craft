@@ -122,3 +122,33 @@ export function saveHomeCollageId(id: string | null) {
   if (id) localStorage.setItem(HOME_COLLAGE_KEY, id);
   else localStorage.removeItem(HOME_COLLAGE_KEY);
 }
+
+// Slideshow configuration
+export type SlideTransition = "fade" | "slide" | "zoom" | "ken-burns";
+export interface SlideshowConfig {
+  enabled: boolean;
+  collageId: string | null; // null = use home collage
+  intervalMs: number;       // 1500 - 10000
+  transition: SlideTransition;
+  showCaption: boolean;
+  shuffle: boolean;
+}
+const SLIDESHOW_KEY = "family-home-slideshow-config";
+export const DEFAULT_SLIDESHOW: SlideshowConfig = {
+  enabled: false,
+  collageId: null,
+  intervalMs: 3000,
+  transition: "fade",
+  showCaption: true,
+  shuffle: false,
+};
+export function loadSlideshowConfig(): SlideshowConfig {
+  try {
+    const raw = localStorage.getItem(SLIDESHOW_KEY);
+    if (raw) return { ...DEFAULT_SLIDESHOW, ...JSON.parse(raw) };
+  } catch { /* fall through */ }
+  return DEFAULT_SLIDESHOW;
+}
+export function saveSlideshowConfig(cfg: SlideshowConfig) {
+  localStorage.setItem(SLIDESHOW_KEY, JSON.stringify(cfg));
+}
