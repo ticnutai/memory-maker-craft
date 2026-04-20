@@ -174,9 +174,16 @@ export default function FamilyHome() {
                   {homePreviewPhotos.slice(0, 9).map((p, i) => (
                     <div
                       key={i}
-                      className="aspect-square rounded-xl overflow-hidden bg-white/50 shadow-md"
+                      className="aspect-square rounded-xl overflow-hidden bg-white/50 shadow-md relative"
                     >
-                      <img src={p.url} alt={p.caption ?? ""} className="w-full h-full object-cover" loading="lazy" />
+                      {p.media_type === "video" ? (
+                        <>
+                          <video src={p.url} className="w-full h-full object-cover" autoPlay muted loop playsInline preload="metadata" />
+                          <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full backdrop-blur-sm">🎬</div>
+                        </>
+                      ) : (
+                        <img src={p.url} alt={p.caption ?? ""} className="w-full h-full object-cover" loading="lazy" />
+                      )}
                     </div>
                   ))}
                 </div>
