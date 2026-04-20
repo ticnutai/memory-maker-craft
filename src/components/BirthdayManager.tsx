@@ -476,8 +476,8 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
           </div>
 
           <Button variant={theme === "girl" ? "game-pink" : "game-blue"} className="w-full rounded-xl"
-            onClick={saveBirthday} disabled={!formName || !formDate}>
-            {editId ? "💾 שמירה" : "🎂 הוספה"}
+            onClick={saveEntry} disabled={!formName || !formDate}>
+            {editId ? "💾 שמירה" : `${EVENT_TYPES.find(t => t.id === formType)?.emoji ?? "📅"} הוספה`}
           </Button>
         </div>
       )}
