@@ -79,17 +79,18 @@ export default function FamilyHome() {
     return <CollageView collage={active} onBack={() => setActiveId(null)} onUpdateCollage={updateCollage} />;
   }
 
-  const handleCreate = async () => {
+  const handleCreate = async (partial?: Partial<typeof collages[0]>) => {
     try {
-      const c = await createCollage({ name: `קולאז׳ ${collages.length + 1}` });
-      // First collage becomes home automatically
+      const c = await createCollage({ name: `קולאז׳ ${collages.length + 1}`, ...partial });
       if (!homeCollageId) {
         saveHomeCollageId(c.id);
         setHomeCollageId(c.id);
       }
       setActiveId(c.id);
+      return c;
     } catch {
       toast.error("שגיאה ביצירת קולאז׳");
+      throw new Error("create failed");
     }
   };
 
