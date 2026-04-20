@@ -7,6 +7,7 @@ import FamilyThemePicker from "./FamilyThemePicker";
 import FamilyDecorations from "./FamilyDecorations";
 import FamilySlideshow from "./FamilySlideshow";
 import FamilyQuoteRotator from "./FamilyQuoteRotator";
+import BirthdayHearts from "./BirthdayHearts";
 import {
   loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
   loadSlideshowConfig, SlideshowConfig,
