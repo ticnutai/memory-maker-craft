@@ -108,10 +108,12 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
   // ─── Shared day cell renderer ───
   const renderDayCell = (day: Date, inRange: boolean, tall: boolean) => {
     const dayBirthdays = getBirthdaysForDate(day);
+    const dayEvents = getEventsForDate(day);
     const heb = getHebDayInfo(day);
     const isToday = isSameDay(day, today);
     const isSat = day.getDay() === 6;
     const hasBirthdays = dayBirthdays.length > 0;
+    const hasEvents = dayEvents.length > 0;
     const hasHoliday = heb.holidays.length > 0;
     const hasYomTov = heb.holidays.some(h => h.isYomTov);
 
@@ -169,6 +171,23 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
           </div>
         )}
 
+        {/* Family events */}
+        {hasEvents && (
+          <div className="flex flex-wrap gap-0.5 mt-0.5">
+            {dayEvents.slice(0, 2).map(ev => (
+              <span
+                key={ev.id}
+                onClick={(e) => { e.stopPropagation(); onEditEvent?.(ev); }}
+                className="text-[9px] font-bold truncate cursor-pointer hover:underline px-1 py-0.5 rounded"
+                style={{ color: ev.color, background: ev.color + "15" }}
+                title={ev.name}
+              >
+                {ev.emoji} {ev.name}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Birthdays */}
         {hasBirthdays && (
           <div className="flex flex-wrap gap-0.5 mt-auto justify-end">
@@ -189,7 +208,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
           </div>
         )}
 
-        {!hasBirthdays && !hasHoliday && inRange && (
+        {!hasBirthdays && !hasEvents && !hasHoliday && inRange && (
           <Plus className="w-3 h-3 text-muted-foreground/0 group-hover:text-muted-foreground absolute bottom-1 left-1" />
         )}
       </button>
