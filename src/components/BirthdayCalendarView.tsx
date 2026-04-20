@@ -1,7 +1,14 @@
 import { useMemo, useState } from "react";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, getMonth, getDate, parseISO } from "date-fns";
+import {
+  format, addMonths, subMonths, addWeeks, subWeeks, addDays, subDays, addYears, subYears,
+  startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval,
+  isSameMonth, isSameDay, getMonth, getDate, parseISO,
+} from "date-fns";
 import { he } from "date-fns/locale";
-import { ChevronRight, ChevronLeft, CalendarDays, LayoutGrid, Plus, Send, Moon, BookOpen } from "lucide-react";
+import {
+  ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft,
+  CalendarDays, LayoutGrid, Plus, Send, Moon, BookOpen, Calendar, Rows3,
+} from "lucide-react";
 import { getHebDayInfo, getHebMonthLabel } from "@/lib/hebrewCalendar";
 
 interface Birthday {
@@ -23,7 +30,7 @@ interface Props {
   onEdit: (b: Birthday) => void;
 }
 
-type CalMode = "month" | "year";
+type CalMode = "week" | "month" | "year";
 
 const HEBREW_DAYS = ["א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ש'"];
 
@@ -47,6 +54,154 @@ export default function BirthdayCalendarView({ birthdays, accent, onAddOnDate, o
   const getBirthdaysForDate = (date: Date) =>
     birthdaysByDay.get(`${date.getMonth()}-${date.getDate()}`) || [];
 
+  // ─── Navigation helpers ───
+  const goBack = () => {
+    if (mode === "week") setCursor(subWeeks(cursor, 1));
+    else if (mode === "month") setCursor(subMonths(cursor, 1));
+    else setCursor(subYears(cursor, 1));
+  };
+  const goForward = () => {
+    if (mode === "week") setCursor(addWeeks(cursor, 1));
+    else if (mode === "month") setCursor(addMonths(cursor, 1));
+    else setCursor(addYears(cursor, 1));
+  };
+  const goBackBig = () => {
+    if (mode === "week") setCursor(subMonths(cursor, 1));
+    else if (mode === "month") setCursor(subYears(cursor, 1));
+    else setCursor(subYears(cursor, 10));
+  };
+  const goForwardBig = () => {
+    if (mode === "week") setCursor(addMonths(cursor, 1));
+    else if (mode === "month") setCursor(addYears(cursor, 1));
+    else setCursor(addYears(cursor, 10));
+  };
+
+  // ─── Shared day cell renderer ───
+  const renderDayCell = (day: Date, inRange: boolean, tall: boolean) => {
+    const dayBirthdays = getBirthdaysForDate(day);
+    const heb = getHebDayInfo(day);
+    const isToday = isSameDay(day, today);
+    const isSat = day.getDay() === 6;
+    const hasBirthdays = dayBirthdays.length > 0;
+    const hasHoliday = heb.holidays.length > 0;
+    const hasYomTov = heb.holidays.some(h => h.isYomTov);
+
+    return (
+      <button
+        key={day.toISOString()}
+        onClick={() => onAddOnDate(day)}
+        className={`relative p-1.5 border-t border-r border-muted text-right transition-all hover:bg-accent/30 active:scale-[0.97] flex flex-col ${
+          tall ? "min-h-[100px] sm:min-h-[110px]" : "min-h-[88px]"
+        } ${
+          !inRange ? "opacity-30" : ""
+        } ${isSat ? "bg-blue-50/40" : ""} ${hasYomTov ? "bg-amber-50/60" : ""} ${
+          isToday ? "ring-2 ring-yellow-400 ring-inset bg-yellow-50/70 z-10" : ""
+        }`}
+      >
+        {/* Top: dates */}
+        <div className="flex items-start justify-between leading-tight">
+          <div className="flex flex-col items-start">
+            <span className={`text-[10px] font-bold ${isToday ? "text-yellow-700" : "text-purple-500"}`}>
+              {heb.hebDay}
+            </span>
+            {heb.isRoshChodesh && (
+              <span className="text-[8px] text-blue-600 flex items-center gap-0.5 font-bold">
+                <Moon className="w-2 h-2" /> ר״ח
+              </span>
+            )}
+          </div>
+          <span className={`text-sm font-black ${isToday ? "text-yellow-700" : "text-foreground"}`}>
+            {format(day, "d")}
+          </span>
+        </div>
+
+        {/* Holidays */}
+        {hasHoliday && (
+          <div className="mt-0.5 flex-1">
+            {heb.holidays.slice(0, 2).map((h, idx) => (
+              <div
+                key={idx}
+                className={`text-[9px] leading-tight font-bold truncate ${
+                  h.isYomTov ? "text-amber-700" : "text-blue-700"
+                }`}
+                title={h.name}
+              >
+                {h.emoji} {h.name}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Saturday parsha */}
+        {isSat && heb.parsha && !hasHoliday && (
+          <div className="text-[9px] text-blue-700 font-bold truncate mt-0.5 flex items-center gap-0.5" title={`פרשת ${heb.parsha}`}>
+            <BookOpen className="w-2 h-2 shrink-0" />
+            <span className="truncate">{heb.parsha}</span>
+          </div>
+        )}
+
+        {/* Birthdays */}
+        {hasBirthdays && (
+          <div className="flex flex-wrap gap-0.5 mt-auto justify-end">
+            {dayBirthdays.slice(0, 4).map(b => (
+              <span
+                key={b.id}
+                onClick={(e) => { e.stopPropagation(); onEdit(b); }}
+                className="text-sm cursor-pointer hover:scale-125 transition-transform"
+                style={{ filter: `drop-shadow(0 0 2px ${b.color})` }}
+                title={b.name}
+              >
+                {b.emoji}
+              </span>
+            ))}
+            {dayBirthdays.length > 4 && (
+              <span className="text-[9px] font-bold text-muted-foreground">+{dayBirthdays.length - 4}</span>
+            )}
+          </div>
+        )}
+
+        {!hasBirthdays && !hasHoliday && inRange && (
+          <Plus className="w-3 h-3 text-muted-foreground/0 group-hover:text-muted-foreground absolute bottom-1 left-1" />
+        )}
+      </button>
+    );
+  };
+
+  // ─── WEEK VIEW ───
+  const renderWeek = () => {
+    const weekStart = startOfWeek(cursor, { weekStartsOn: 0 });
+    const weekEnd = endOfWeek(cursor, { weekStartsOn: 0 });
+    const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+
+    return (
+      <div className="bg-card rounded-2xl border-2 border-muted overflow-hidden shadow-sm">
+        {/* Day headers */}
+        <div className="grid grid-cols-7 bg-muted/50">
+          {days.map((day, i) => {
+            const isToday = isSameDay(day, today);
+            return (
+              <div
+                key={i}
+                className={`text-center py-2 ${isToday ? "bg-yellow-100" : ""}`}
+              >
+                <div className={`text-[10px] font-bold ${i === 6 ? "text-blue-600" : "text-muted-foreground"}`}>
+                  {HEBREW_DAYS[i]}
+                </div>
+                <div className={`text-xs font-black ${isToday ? "text-yellow-700" : "text-foreground/70"}`}>
+                  {format(day, "d/M")}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Days - tall cells for week view */}
+        <div className="grid grid-cols-7">
+          {days.map(day => renderDayCell(day, true, true))}
+        </div>
+      </div>
+    );
+  };
+
   // ─── MONTH VIEW ───
   const renderMonth = () => {
     const monthStart = startOfMonth(cursor);
@@ -57,7 +212,6 @@ export default function BirthdayCalendarView({ birthdays, accent, onAddOnDate, o
 
     return (
       <div className="bg-card rounded-2xl border-2 border-muted overflow-hidden shadow-sm">
-        {/* Day headers */}
         <div className="grid grid-cols-7 bg-muted/50">
           {HEBREW_DAYS.map((d, i) => (
             <div
@@ -68,102 +222,14 @@ export default function BirthdayCalendarView({ birthdays, accent, onAddOnDate, o
             </div>
           ))}
         </div>
-        {/* Days grid */}
         <div className="grid grid-cols-7">
-          {days.map((day, i) => {
-            const dayBirthdays = getBirthdaysForDate(day);
-            const heb = getHebDayInfo(day);
-            const inMonth = isSameMonth(day, cursor);
-            const isToday = isSameDay(day, today);
-            const isSat = day.getDay() === 6;
-            const hasBirthdays = dayBirthdays.length > 0;
-            const hasHoliday = heb.holidays.length > 0;
-            const hasYomTov = heb.holidays.some(h => h.isYomTov);
-
-            return (
-              <button
-                key={i}
-                onClick={() => onAddOnDate(day)}
-                className={`relative min-h-[88px] p-1.5 border-t border-r border-muted text-right transition-all hover:bg-accent/30 active:scale-[0.97] flex flex-col ${
-                  !inMonth ? "opacity-30" : ""
-                } ${isSat ? "bg-blue-50/40" : ""} ${hasYomTov ? "bg-amber-50/60" : ""} ${
-                  isToday ? "ring-2 ring-yellow-400 ring-inset bg-yellow-50 z-10" : ""
-                }`}
-              >
-                {/* Top: dates */}
-                <div className="flex items-start justify-between leading-tight">
-                  <div className="flex flex-col items-start">
-                    <span className={`text-[10px] font-bold ${isToday ? "text-yellow-700" : "text-purple-500"}`}>
-                      {heb.hebDay}
-                    </span>
-                    {heb.isRoshChodesh && (
-                      <span className="text-[8px] text-blue-600 flex items-center gap-0.5 font-bold">
-                        <Moon className="w-2 h-2" /> ר״ח
-                      </span>
-                    )}
-                  </div>
-                  <span className={`text-sm font-black ${isToday ? "text-yellow-700" : "text-foreground"}`}>
-                    {format(day, "d")}
-                  </span>
-                </div>
-
-                {/* Middle: holidays */}
-                {hasHoliday && (
-                  <div className="mt-0.5 flex-1">
-                    {heb.holidays.slice(0, 2).map((h, idx) => (
-                      <div
-                        key={idx}
-                        className={`text-[9px] leading-tight font-bold truncate ${
-                          h.isYomTov ? "text-amber-700" : "text-blue-700"
-                        }`}
-                        title={h.name}
-                      >
-                        {h.emoji} {h.name}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Saturday: parsha */}
-                {isSat && heb.parsha && !hasHoliday && (
-                  <div className="text-[9px] text-blue-700 font-bold truncate mt-0.5 flex items-center gap-0.5" title={`פרשת ${heb.parsha}`}>
-                    <BookOpen className="w-2 h-2 shrink-0" />
-                    <span className="truncate">{heb.parsha}</span>
-                  </div>
-                )}
-
-                {/* Bottom: birthdays */}
-                {hasBirthdays && (
-                  <div className="flex flex-wrap gap-0.5 mt-auto justify-end">
-                    {dayBirthdays.slice(0, 4).map(b => (
-                      <span
-                        key={b.id}
-                        onClick={(e) => { e.stopPropagation(); onEdit(b); }}
-                        className="text-sm cursor-pointer hover:scale-125 transition-transform"
-                        style={{ filter: `drop-shadow(0 0 2px ${b.color})` }}
-                        title={b.name}
-                      >
-                        {b.emoji}
-                      </span>
-                    ))}
-                    {dayBirthdays.length > 4 && (
-                      <span className="text-[9px] font-bold text-muted-foreground">+{dayBirthdays.length - 4}</span>
-                    )}
-                  </div>
-                )}
-
-                {!hasBirthdays && !hasHoliday && inMonth && (
-                  <Plus className="w-3 h-3 text-muted-foreground/0 group-hover:text-muted-foreground absolute bottom-1 left-1" />
-                )}
-              </button>
-            );
-          })}
+          {days.map(day => renderDayCell(day, isSameMonth(day, cursor), false))}
         </div>
       </div>
     );
   };
 
-  // ─── YEAR VIEW (mini-calendars) ───
+  // ─── YEAR VIEW ───
   const renderYear = () => {
     const year = cursor.getFullYear();
     const months = Array.from({ length: 12 }, (_, i) => new Date(year, i, 1));
@@ -228,13 +294,43 @@ export default function BirthdayCalendarView({ birthdays, accent, onAddOnDate, o
     );
   };
 
+  // ─── Toolbar title ───
+  const getTitle = () => {
+    if (mode === "week") {
+      const ws = startOfWeek(cursor, { weekStartsOn: 0 });
+      const we = endOfWeek(cursor, { weekStartsOn: 0 });
+      return (
+        <>
+          <span>{format(ws, "d MMM", { locale: he })} — {format(we, "d MMM yyyy", { locale: he })}</span>
+          <span className="text-[11px] text-blue-700 font-bold">
+            {getHebMonthLabel(ws)}
+            {getHebMonthLabel(ws) !== getHebMonthLabel(we) ? ` - ${getHebMonthLabel(we)}` : ""}
+          </span>
+        </>
+      );
+    }
+    if (mode === "month") {
+      return (
+        <>
+          <span>{format(cursor, "MMMM yyyy", { locale: he })}</span>
+          <span className="text-[11px] text-blue-700 font-bold">
+            {getHebMonthLabel(new Date(cursor.getFullYear(), cursor.getMonth(), 1))}
+            {" - "}
+            {getHebMonthLabel(endOfMonth(cursor))}
+          </span>
+        </>
+      );
+    }
+    return <span>{cursor.getFullYear()}</span>;
+  };
+
   // ─── Today's full info banner ───
   const todayInfo = getHebDayInfo(today);
   const todayBirthdays = getBirthdaysForDate(today);
 
   return (
     <div className="space-y-3">
-      {/* Today banner — Hebrew + Gregorian */}
+      {/* Today banner */}
       <div className="bg-gradient-to-l from-purple-100 via-pink-50 to-yellow-50 rounded-2xl p-3 border-2 border-purple-200 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <div className="bg-white/80 rounded-xl px-3 py-2 text-center shadow-sm">
@@ -270,55 +366,70 @@ export default function BirthdayCalendarView({ birthdays, accent, onAddOnDate, o
         </div>
       </div>
 
-      {/* Toolbar */}
+      {/* Toolbar — arrows for step + big step (year/decade) */}
       <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-3 border-2 border-pink-200">
-        <div className="flex items-center gap-1">
+        {/* Right side: navigation arrows (RTL: right = back) */}
+        <div className="flex items-center gap-0.5">
           <button
-            onClick={() => setCursor(mode === "month" ? subMonths(cursor, 1) : new Date(cursor.getFullYear() - 1, 0, 1))}
-            className="p-1.5 rounded-lg hover:bg-white/60 active:scale-90"
+            onClick={goBack}
+            className="p-1.5 rounded-lg hover:bg-white/60 active:scale-90 transition-all"
+            title={mode === "week" ? "שבוע קודם" : mode === "month" ? "חודש קודם" : "שנה קודמת"}
           >
             <ChevronRight className="w-4 h-4" />
           </button>
           <button
+            onClick={goBackBig}
+            className="p-1.5 rounded-lg hover:bg-white/60 active:scale-90 transition-all"
+            title={mode === "week" ? "חודש קודם" : mode === "month" ? "שנה קודמת" : "10 שנים אחורה"}
+          >
+            <ChevronsRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <button
             onClick={() => setCursor(new Date())}
-            className="text-xs font-bold px-2 py-1 rounded-lg hover:bg-white/60"
+            className="text-xs font-bold px-2.5 py-1 rounded-lg hover:bg-white/60 bg-white/40 transition-all"
           >
             היום
           </button>
           <button
-            onClick={() => setCursor(mode === "month" ? addMonths(cursor, 1) : new Date(cursor.getFullYear() + 1, 0, 1))}
-            className="p-1.5 rounded-lg hover:bg-white/60 active:scale-90"
+            onClick={goForwardBig}
+            className="p-1.5 rounded-lg hover:bg-white/60 active:scale-90 transition-all"
+            title={mode === "week" ? "חודש קדימה" : mode === "month" ? "שנה קדימה" : "10 שנים קדימה"}
+          >
+            <ChevronsLeft className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <button
+            onClick={goForward}
+            className="p-1.5 rounded-lg hover:bg-white/60 active:scale-90 transition-all"
+            title={mode === "week" ? "שבוע הבא" : mode === "month" ? "חודש הבא" : "שנה הבאה"}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
         </div>
 
+        {/* Center: title */}
         <h3 className="text-sm font-black text-purple-800 flex-1 text-center flex flex-col leading-tight">
-          {mode === "month" ? (
-            <>
-              <span>{format(cursor, "MMMM yyyy", { locale: he })}</span>
-              <span className="text-[11px] text-blue-700 font-bold">
-                {getHebMonthLabel(new Date(cursor.getFullYear(), cursor.getMonth(), 1))}
-                {" - "}
-                {getHebMonthLabel(endOfMonth(cursor))}
-              </span>
-            </>
-          ) : (
-            <span>{cursor.getFullYear()}</span>
-          )}
+          {getTitle()}
         </h3>
 
-        <div className="flex gap-1 bg-white/60 rounded-lg p-0.5">
+        {/* Left side: mode toggles */}
+        <div className="flex gap-0.5 bg-white/60 rounded-lg p-0.5">
+          <button
+            onClick={() => setMode("week")}
+            className={`p-1.5 rounded transition-all ${mode === "week" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
+            title="שבוע"
+          >
+            <Rows3 className="w-3.5 h-3.5" />
+          </button>
           <button
             onClick={() => setMode("month")}
-            className={`p-1.5 rounded ${mode === "month" ? `${accent} text-primary-foreground` : "text-muted-foreground"}`}
+            className={`p-1.5 rounded transition-all ${mode === "month" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
             title="חודש"
           >
             <CalendarDays className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => setMode("year")}
-            className={`p-1.5 rounded ${mode === "year" ? `${accent} text-primary-foreground` : "text-muted-foreground"}`}
+            className={`p-1.5 rounded transition-all ${mode === "year" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
             title="שנה"
           >
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -336,10 +447,10 @@ export default function BirthdayCalendarView({ birthdays, accent, onAddOnDate, o
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-yellow-300" />היום</span>
       </div>
 
-      {/* Calendar */}
-      {mode === "month" ? renderMonth() : renderYear()}
+      {/* Calendar view */}
+      {mode === "week" ? renderWeek() : mode === "month" ? renderMonth() : renderYear()}
 
-      {/* Today's birthdays quick-actions */}
+      {/* Today's birthdays */}
       {todayBirthdays.length > 0 && (
         <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-3 border-2 border-yellow-200 space-y-2">
           <div className="text-xs font-bold text-orange-700">🎉 יום הולדת היום:</div>
