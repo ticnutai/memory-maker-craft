@@ -6,11 +6,13 @@ import { he } from "date-fns/locale";
 
 interface Birthday {
   id: string;
+  device_id: string;
   name: string;
   birth_date: string;
   emoji: string;
   color: string;
   relation: string;
+  notes?: string | null;
 }
 
 interface Props {

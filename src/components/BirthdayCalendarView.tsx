@@ -5,6 +5,7 @@ import { ChevronRight, ChevronLeft, CalendarDays, LayoutGrid, Plus, Send } from 
 
 interface Birthday {
   id: string;
+  device_id: string;
   name: string;
   birth_date: string;
   emoji: string;
