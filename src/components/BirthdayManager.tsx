@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star } from "lucide-react";
+import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send } from "lucide-react";
 import { format, differenceInDays, addYears, isBefore, parseISO, getMonth, getDate } from "date-fns";
 import { he } from "date-fns/locale";
+import BirthdayCalendarView from "./BirthdayCalendarView";
+import BirthdayInviteDialog from "./BirthdayInviteDialog";
 
 interface Birthday {
   id: string;
@@ -116,7 +118,7 @@ function generateGoogleCalendarUrl(b: Birthday): string {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateStr}/${dateStr}&details=${details}&recur=RRULE:FREQ=YEARLY`;
 }
 
-type ViewMode = "cards" | "calendar" | "timeline" | "holidays";
+type ViewMode = "calendar" | "cards" | "timeline" | "holidays";
 
 interface BirthdayManagerProps {
   theme: "girl" | "boy";
@@ -125,9 +127,10 @@ interface BirthdayManagerProps {
 export default function BirthdayManager({ theme }: BirthdayManagerProps) {
   const [birthdays, setBirthdays] = useState<Birthday[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<ViewMode>("cards");
+  const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [inviteFor, setInviteFor] = useState<Birthday | null>(null);
 
   const [formName, setFormName] = useState("");
   const [formDate, setFormDate] = useState("");
@@ -192,11 +195,17 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
   }));
 
   const VIEW_OPTIONS: { id: ViewMode; icon: React.ReactNode; label: string }[] = [
+    { id: "calendar", icon: <Calendar className="w-4 h-4" />, label: "לוח שנה" },
     { id: "cards", icon: <LayoutGrid className="w-4 h-4" />, label: "כרטיסים" },
-    { id: "calendar", icon: <Calendar className="w-4 h-4" />, label: "יומן" },
     { id: "timeline", icon: <Heart className="w-4 h-4" />, label: "ציר זמן" },
     { id: "holidays", icon: <Star className="w-4 h-4" />, label: "חגים" },
   ];
+
+  const handleAddOnDate = (date: Date) => {
+    resetForm();
+    setFormDate(format(date, "yyyy-MM-dd"));
+    setShowForm(true);
+  };
 
   if (loading) return <div className="flex justify-center py-8"><div className="animate-spin text-2xl">🎂</div></div>;
 
