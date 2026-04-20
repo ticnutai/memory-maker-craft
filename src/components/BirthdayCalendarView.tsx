@@ -328,7 +328,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
                         !inMonth ? "opacity-20" : ""
                       } ${isToday ? "bg-yellow-300 text-yellow-900 font-bold" : ""}`}
                     >
-                      {format(day, "d")}
+                      {heb.hebDay}
                       {hasB && inMonth && (
                         <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full" style={{ background: dayBirthdays[0].color }} />
                       )}
