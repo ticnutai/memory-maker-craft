@@ -346,7 +346,7 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
                 </p>
               )}
             </div>
-            <div>
+            <div className="col-span-2">
               <label className="text-xs font-bold text-muted-foreground mb-1 block">קרבה</label>
               <select value={formRelation} onChange={e => setFormRelation(e.target.value)} dir="rtl"
                 className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink bg-card">
