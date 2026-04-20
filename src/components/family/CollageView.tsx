@@ -156,6 +156,9 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         <Button size="sm" variant="ghost" onClick={handleExport} title="ייצוא PNG" disabled={photos.length === 0}>
           <Download className="w-4 h-4" />
         </Button>
+        <Button size="sm" variant="ghost" onClick={() => setShowShare(true)} title="שתף עם משפחה">
+          <Share2 className="w-4 h-4" />
+        </Button>
         <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} title="הגדרות">
           <Settings className="w-4 h-4" />
         </Button>
