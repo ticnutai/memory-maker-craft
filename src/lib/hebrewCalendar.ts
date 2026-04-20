@@ -114,7 +114,7 @@ function translateParsha(en: string): string {
 
 // ── Sedra cache per year (Israel) ──
 const sedraCache = new Map<number, Sedra>();
-function getSedra(hebYear: number): Sedra {
+function getCachedSedra(hebYear: number): Sedra {
   let s = sedraCache.get(hebYear);
   if (!s) {
     s = new Sedra(hebYear, true /* il */);
