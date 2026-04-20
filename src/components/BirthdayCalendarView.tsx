@@ -346,34 +346,49 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
     );
   };
 
-  // ─── Toolbar title ───
+  // ─── Toolbar title — Hebrew dominant ───
   const getTitle = () => {
+    const getHebYearLabel = (d: Date) => toHebrewYear(new HDate(d).getFullYear());
     if (mode === "week") {
       const ws = startOfWeek(cursor, { weekStartsOn: 0 });
       const we = endOfWeek(cursor, { weekStartsOn: 0 });
+      const hebStart = getHebDayInfo(ws);
+      const hebEnd = getHebDayInfo(we);
       return (
         <>
-          <span>{format(ws, "d MMM", { locale: he })} — {format(we, "d MMM yyyy", { locale: he })}</span>
-          <span className="text-[11px] text-blue-700 font-bold">
-            {getHebMonthLabel(ws)}
-            {getHebMonthLabel(ws) !== getHebMonthLabel(we) ? ` - ${getHebMonthLabel(we)}` : ""}
+          <span className="text-purple-800 font-black">
+            {hebStart.hebDay} {hebStart.hebMonth}
+            {hebStart.hebMonth !== hebEnd.hebMonth ? ` — ${hebEnd.hebDay} ${hebEnd.hebMonth}` : ` — ${hebEnd.hebDay}`}
+            {" "}{getHebYearLabel(ws)}
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            {format(ws, "d MMM", { locale: he })} — {format(we, "d MMM yyyy", { locale: he })}
           </span>
         </>
       );
     }
     if (mode === "month") {
+      const hebMonthStart = getHebMonthLabel(new Date(cursor.getFullYear(), cursor.getMonth(), 1));
+      const hebMonthEnd = getHebMonthLabel(endOfMonth(cursor));
+      const hebYr = getHebYearLabel(new Date(cursor.getFullYear(), cursor.getMonth(), 15));
       return (
         <>
-          <span>{format(cursor, "MMMM yyyy", { locale: he })}</span>
-          <span className="text-[11px] text-blue-700 font-bold">
-            {getHebMonthLabel(new Date(cursor.getFullYear(), cursor.getMonth(), 1))}
-            {" - "}
-            {getHebMonthLabel(endOfMonth(cursor))}
+          <span className="text-purple-800 font-black">
+            {hebMonthStart}{hebMonthStart !== hebMonthEnd ? ` - ${hebMonthEnd}` : ""} {hebYr}
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            {format(cursor, "MMMM yyyy", { locale: he })}
           </span>
         </>
       );
     }
-    return <span>{cursor.getFullYear()}</span>;
+    const hebYr = getHebYearLabel(new Date(cursor.getFullYear(), 6, 1));
+    return (
+      <>
+        <span className="text-purple-800 font-black">{hebYr}</span>
+        <span className="text-[10px] text-muted-foreground">{cursor.getFullYear()}</span>
+      </>
+    );
   };
 
   // ─── Today's full info banner ───
