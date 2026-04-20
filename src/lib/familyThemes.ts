@@ -128,19 +128,31 @@ export type SlideTransition = "fade" | "slide" | "zoom" | "ken-burns";
 export interface SlideshowConfig {
   enabled: boolean;
   collageId: string | null; // null = use home collage
-  intervalMs: number;       // 1500 - 10000
+  intervalMs: number;       // image display duration 1500 - 30000
+  videoMaxMs: number;       // max video play duration 5000 - 120000, 0 = full
   transition: SlideTransition;
   showCaption: boolean;
   shuffle: boolean;
+  loop: boolean;            // loop at end vs stop
+  showClock: boolean;       // show clock overlay
+  autoCaptions: boolean;    // show filename/date when no caption
+  bgMusicUrl: string | null; // optional background music URL
+  bgMusicVolume: number;    // 0-1
 }
 const SLIDESHOW_KEY = "family-home-slideshow-config";
 export const DEFAULT_SLIDESHOW: SlideshowConfig = {
   enabled: false,
   collageId: null,
   intervalMs: 3000,
+  videoMaxMs: 0,
   transition: "fade",
   showCaption: true,
   shuffle: false,
+  loop: true,
+  showClock: false,
+  autoCaptions: false,
+  bgMusicUrl: null,
+  bgMusicVolume: 0.3,
 };
 export function loadSlideshowConfig(): SlideshowConfig {
   try {

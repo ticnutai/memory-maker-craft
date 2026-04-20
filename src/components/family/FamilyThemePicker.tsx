@@ -470,10 +470,10 @@ export default function FamilyThemePicker({
                 </select>
               </div>
 
-              {/* Speed */}
+              {/* Image duration */}
               <div className={slideshow.enabled ? "" : "opacity-50 pointer-events-none"}>
                 <div className="flex justify-between items-baseline">
-                  <Label className="text-xs">מהירות החלפה</Label>
+                  <Label className="text-xs">🖼️ משך תצוגת תמונה</Label>
                   <span className="text-xs font-mono text-muted-foreground">
                     {(slideshow.intervalMs / 1000).toFixed(1)}s
                   </span>
@@ -481,7 +481,7 @@ export default function FamilyThemePicker({
                 <Slider
                   value={[slideshow.intervalMs]}
                   min={1500}
-                  max={10000}
+                  max={30000}
                   step={500}
                   onValueChange={([v]) => {
                     const next = { ...slideshow, intervalMs: v };
@@ -490,6 +490,29 @@ export default function FamilyThemePicker({
                   }}
                   className="mt-2"
                 />
+              </div>
+
+              {/* Video max duration */}
+              <div className={slideshow.enabled ? "" : "opacity-50 pointer-events-none"}>
+                <div className="flex justify-between items-baseline">
+                  <Label className="text-xs">🎬 משך מקסימלי לסרטון</Label>
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {slideshow.videoMaxMs === 0 ? "עד הסוף" : `${(slideshow.videoMaxMs / 1000).toFixed(0)}s`}
+                  </span>
+                </div>
+                <Slider
+                  value={[slideshow.videoMaxMs]}
+                  min={0}
+                  max={120000}
+                  step={5000}
+                  onValueChange={([v]) => {
+                    const next = { ...slideshow, videoMaxMs: v };
+                    saveSlideshowConfig(next);
+                    onSlideshowChange(next);
+                  }}
+                  className="mt-2"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">0 = ניגון עד הסוף</p>
               </div>
 
               {/* Transition */}
@@ -535,6 +558,17 @@ export default function FamilyThemePicker({
                   />
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg border">
+                  <Label className="text-xs cursor-pointer">📝 כיתובים אוטומטיים (שם קובץ/תאריך)</Label>
+                  <Switch
+                    checked={slideshow.autoCaptions}
+                    onCheckedChange={(v) => {
+                      const next = { ...slideshow, autoCaptions: v };
+                      saveSlideshowConfig(next);
+                      onSlideshowChange(next);
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-2 rounded-lg border">
                   <Label className="text-xs cursor-pointer">סדר אקראי (Shuffle)</Label>
                   <Switch
                     checked={slideshow.shuffle}
@@ -545,6 +579,50 @@ export default function FamilyThemePicker({
                     }}
                   />
                 </div>
+                <div className="flex items-center justify-between p-2 rounded-lg border">
+                  <Label className="text-xs cursor-pointer">🔁 חזרה מההתחלה (לופ)</Label>
+                  <Switch
+                    checked={slideshow.loop}
+                    onCheckedChange={(v) => {
+                      const next = { ...slideshow, loop: v };
+                      saveSlideshowConfig(next);
+                      onSlideshowChange(next);
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-2 rounded-lg border">
+                  <Label className="text-xs cursor-pointer">🕐 הצג שעון</Label>
+                  <Switch
+                    checked={slideshow.showClock}
+                    onCheckedChange={(v) => {
+                      const next = { ...slideshow, showClock: v };
+                      saveSlideshowConfig(next);
+                      onSlideshowChange(next);
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Background music volume */}
+              <div className={slideshow.enabled ? "" : "opacity-50 pointer-events-none"}>
+                <div className="flex justify-between items-baseline">
+                  <Label className="text-xs">🎵 עוצמת מוזיקת רקע</Label>
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {Math.round(slideshow.bgMusicVolume * 100)}%
+                  </span>
+                </div>
+                <Slider
+                  value={[slideshow.bgMusicVolume]}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  onValueChange={([v]) => {
+                    const next = { ...slideshow, bgMusicVolume: v };
+                    saveSlideshowConfig(next);
+                    onSlideshowChange(next);
+                  }}
+                  className="mt-2"
+                />
               </div>
             </TabsContent>
 

@@ -191,6 +191,7 @@ export default function FamilyHome() {
                 photos={homePreviewPhotos}
                 config={slideshow}
                 onOpenCollage={() => {}}
+                onConfigChange={(cfg) => { setSlideshow(cfg); }}
               />
             ) : homePreviewPhotos.length > 0 ? (
               <div
