@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useFamilyPhotos, FamilyPhoto, FamilyCollage } from "@/hooks/useFamilyCollages";
+import CloudGallery from "@/components/CloudGallery";
 import * as htmlToImage from "html-to-image";
 import { toast } from "sonner";
 
