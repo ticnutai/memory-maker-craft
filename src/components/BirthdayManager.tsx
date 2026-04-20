@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send } from "lucide-react";
+import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send, CalendarPlus } from "lucide-react";
 import { format, differenceInDays, addYears, isBefore, parseISO, getMonth, getDate } from "date-fns";
 import { he } from "date-fns/locale";
 import BirthdayCalendarView from "./BirthdayCalendarView";
@@ -29,6 +29,31 @@ const RELATIONS = [
 ];
 
 const BIRTHDAY_EMOJIS = ["🎂", "🎈", "🎁", "🎉", "🧁", "🎊", "👑", "⭐", "💖", "🌟", "🦄", "🎀"];
+
+// ─── Event types ───
+const EVENT_TYPES = [
+  { id: "birthday", label: "🎂 יום הולדת", emoji: "🎂", defaultColor: "#f472b6" },
+  { id: "anniversary", label: "💍 יום נישואין", emoji: "💍", defaultColor: "#f59e0b" },
+  { id: "bar_mitzvah", label: "📜 בר/בת מצווה", emoji: "📜", defaultColor: "#8b5cf6" },
+  { id: "memorial", label: "🕯️ יום זיכרון", emoji: "🕯️", defaultColor: "#6b7280" },
+  { id: "graduation", label: "🎓 סיום לימודים", emoji: "🎓", defaultColor: "#10b981" },
+  { id: "military", label: "🎖️ גיוס/שחרור", emoji: "🎖️", defaultColor: "#059669" },
+  { id: "aliyah", label: "✈️ יום עלייה", emoji: "✈️", defaultColor: "#0ea5e9" },
+  { id: "custom", label: "📅 אירוע מותאם", emoji: "📅", defaultColor: "#60a5fa" },
+];
+
+interface FamilyEvent {
+  id: string;
+  device_id: string;
+  name: string;
+  event_date: string;
+  event_type: string;
+  emoji: string;
+  color: string;
+  notes: string | null;
+  recurring: boolean;
+}
+
 const COLORS = ["#f472b6", "#fb923c", "#facc15", "#4ade80", "#60a5fa", "#a78bfa", "#f87171", "#38bdf8"];
 
 // ─── Hebrew date helpers ───
@@ -127,51 +152,71 @@ interface BirthdayManagerProps {
 
 export default function BirthdayManager({ theme }: BirthdayManagerProps) {
   const [birthdays, setBirthdays] = useState<Birthday[]>([]);
+  const [familyEvents, setFamilyEvents] = useState<FamilyEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [editingEvent, setEditingEvent] = useState<boolean>(false); // true = editing family_events row
   const [inviteFor, setInviteFor] = useState<Birthday | null>(null);
 
+  const [formType, setFormType] = useState("birthday");
   const [formName, setFormName] = useState("");
   const [formDate, setFormDate] = useState("");
   const [formRelation, setFormRelation] = useState("משפחה");
   const [formEmoji, setFormEmoji] = useState("🎂");
   const [formNotes, setFormNotes] = useState("");
   const [formColor, setFormColor] = useState("#f472b6");
+  const [formRecurring, setFormRecurring] = useState(true);
   const [dateMode, setDateMode] = useState<"greg" | "heb">("greg");
   const [hebYear, setHebYear] = useState<number>(getCurrentHebYear());
-  const [hebMonth, setHebMonth] = useState<number>(7); // Tishrei default
+  const [hebMonth, setHebMonth] = useState<number>(7);
   const [hebDay, setHebDay] = useState<number>(1);
 
   const deviceId = getDeviceId();
   const accent = theme === "girl" ? "bg-game-pink" : "bg-game-blue";
 
   const loadBirthdays = useCallback(async () => {
-    const { data } = await supabase
-      .from("birthdays").select("*").eq("device_id", deviceId)
-      .order("birth_date", { ascending: true });
-    if (data) setBirthdays(data as Birthday[]);
+    const [{ data: bData }, { data: eData }] = await Promise.all([
+      supabase.from("birthdays").select("*").eq("device_id", deviceId).order("birth_date", { ascending: true }),
+      supabase.from("family_events").select("*").eq("device_id", deviceId).order("event_date", { ascending: true }),
+    ]);
+    if (bData) setBirthdays(bData as Birthday[]);
+    if (eData) setFamilyEvents(eData as FamilyEvent[]);
     setLoading(false);
   }, [deviceId]);
 
   useEffect(() => { loadBirthdays(); }, [loadBirthdays]);
 
   const resetForm = () => {
-    setFormName(""); setFormDate(""); setFormRelation("משפחה");
-    setFormEmoji("🎂"); setFormNotes(""); setFormColor("#f472b6");
-    setEditId(null); setShowForm(false);
+    setFormType("birthday"); setFormName(""); setFormDate(""); setFormRelation("משפחה");
+    setFormEmoji("🎂"); setFormNotes(""); setFormColor("#f472b6"); setFormRecurring(true);
+    setEditId(null); setEditingEvent(false); setShowForm(false);
     setDateMode("greg");
     setHebYear(getCurrentHebYear()); setHebMonth(7); setHebDay(1);
   };
 
   const editBirthday = (b: Birthday) => {
+    setFormType("birthday");
     setFormName(b.name); setFormDate(b.birth_date); setFormRelation(b.relation);
     setFormEmoji(b.emoji); setFormNotes(b.notes || ""); setFormColor(b.color);
-    setEditId(b.id); setShowForm(true);
+    setEditId(b.id); setEditingEvent(false); setShowForm(true);
     setDateMode("greg");
     try {
       const h = gregorianToHebrew(parseISO(b.birth_date));
+      setHebYear(h.hyear); setHebMonth(h.hmonth); setHebDay(h.hday);
+    } catch { /* ignore */ }
+  };
+
+  const editEvent = (ev: FamilyEvent) => {
+    setFormType(ev.event_type);
+    setFormName(ev.name); setFormDate(ev.event_date); setFormRelation("משפחה");
+    setFormEmoji(ev.emoji); setFormNotes(ev.notes || ""); setFormColor(ev.color);
+    setFormRecurring(ev.recurring);
+    setEditId(ev.id); setEditingEvent(true); setShowForm(true);
+    setDateMode("greg");
+    try {
+      const h = gregorianToHebrew(parseISO(ev.event_date));
       setHebYear(h.hyear); setHebMonth(h.hmonth); setHebDay(h.hday);
     } catch { /* ignore */ }
   };
@@ -185,23 +230,62 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
     } catch { /* invalid combo — leave formDate */ }
   }, [dateMode, hebYear, hebMonth, hebDay]);
 
-  const saveBirthday = async () => {
+  // Auto-set emoji & color when event type changes
+  const handleTypeChange = (typeId: string) => {
+    setFormType(typeId);
+    const t = EVENT_TYPES.find(e => e.id === typeId);
+    if (t) {
+      setFormEmoji(t.emoji);
+      setFormColor(t.defaultColor);
+    }
+  };
+
+  const saveEntry = async () => {
     if (!formName || !formDate) return;
-    const payload = {
-      device_id: deviceId, name: formName, birth_date: formDate,
-      relation: formRelation, emoji: formEmoji, notes: formNotes || null,
-      color: formColor, updated_at: new Date().toISOString(),
-    };
-    if (editId) {
-      await supabase.from("birthdays").update(payload).eq("id", editId);
+
+    if (formType === "birthday") {
+      // Save as birthday
+      const payload = {
+        device_id: deviceId, name: formName, birth_date: formDate,
+        relation: formRelation, emoji: formEmoji, notes: formNotes || null,
+        color: formColor, updated_at: new Date().toISOString(),
+      };
+      if (editId && !editingEvent) {
+        await supabase.from("birthdays").update(payload).eq("id", editId);
+      } else {
+        // If switching from event to birthday while editing, delete old event
+        if (editId && editingEvent) {
+          await supabase.from("family_events").delete().eq("id", editId);
+        }
+        await supabase.from("birthdays").insert(payload);
+      }
     } else {
-      await supabase.from("birthdays").insert(payload);
+      // Save as family event
+      const payload = {
+        device_id: deviceId, name: formName, event_date: formDate,
+        event_type: formType, emoji: formEmoji, color: formColor,
+        notes: formNotes || null, recurring: formRecurring,
+        updated_at: new Date().toISOString(),
+      };
+      if (editId && editingEvent) {
+        await supabase.from("family_events").update(payload).eq("id", editId);
+      } else {
+        // If switching from birthday to event while editing, delete old birthday
+        if (editId && !editingEvent) {
+          await supabase.from("birthdays").delete().eq("id", editId);
+        }
+        await supabase.from("family_events").insert(payload);
+      }
     }
     resetForm(); loadBirthdays();
   };
 
-  const deleteBirthday = async (id: string) => {
-    await supabase.from("birthdays").delete().eq("id", id);
+  const deleteEntry = async (id: string, isEvent: boolean) => {
+    if (isEvent) {
+      await supabase.from("family_events").delete().eq("id", id);
+    } else {
+      await supabase.from("birthdays").delete().eq("id", id);
+    }
     loadBirthdays();
   };
 
@@ -287,8 +371,31 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
       {showForm && (
         <div id="birthday-form" className="bg-card rounded-2xl p-5 border-2 border-muted shadow-lg space-y-4 bounce-in scroll-mt-20">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold text-sm">{editId ? "✏️ עריכת יום הולדת" : "🎂 הוספת יום הולדת"}</h3>
+            <h3 className="font-bold text-sm">
+              {editId ? "✏️ עריכה" : `${EVENT_TYPES.find(t => t.id === formType)?.emoji ?? "📅"} הוספת ${EVENT_TYPES.find(t => t.id === formType)?.label.split(" ").slice(1).join(" ") ?? "אירוע"}`}
+            </h3>
             <button onClick={resetForm} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+          </div>
+
+          {/* Event type selector */}
+          <div>
+            <label className="text-xs font-bold text-muted-foreground mb-1.5 block">סוג אירוע</label>
+            <div className="flex flex-wrap gap-1.5">
+              {EVENT_TYPES.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => handleTypeChange(t.id)}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 border ${
+                    formType === t.id
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -346,13 +453,15 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
                 </p>
               )}
             </div>
-            <div className="col-span-2">
-              <label className="text-xs font-bold text-muted-foreground mb-1 block">קרבה</label>
-              <select value={formRelation} onChange={e => setFormRelation(e.target.value)} dir="rtl"
-                className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink bg-card">
-                {RELATIONS.map(r => <option key={r.label} value={r.label}>{r.emoji} {r.label}</option>)}
-              </select>
-            </div>
+            {formType === "birthday" && (
+              <div className="col-span-2">
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">קרבה</label>
+                <select value={formRelation} onChange={e => setFormRelation(e.target.value)} dir="rtl"
+                  className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink bg-card">
+                  {RELATIONS.map(r => <option key={r.label} value={r.label}>{r.emoji} {r.label}</option>)}
+                </select>
+              </div>
+            )}
           </div>
 
           <div>
@@ -384,16 +493,30 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
             </div>
           </div>
 
+          {/* Recurring toggle — for non-birthday events */}
+          {formType !== "birthday" && (
+            <div className="flex items-center justify-between p-3 rounded-xl border bg-muted/30">
+              <label className="text-xs font-bold text-muted-foreground">🔄 חוזר כל שנה</label>
+              <button
+                type="button"
+                onClick={() => setFormRecurring(r => !r)}
+                className={`w-10 h-6 rounded-full transition-all relative ${formRecurring ? "bg-primary" : "bg-muted"}`}
+              >
+                <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${formRecurring ? "right-0.5" : "right-4"}`} />
+              </button>
+            </div>
+          )}
+
           <div>
             <label className="text-xs font-bold text-muted-foreground mb-1 block">הערות</label>
             <input type="text" value={formNotes} onChange={e => setFormNotes(e.target.value)}
-              placeholder="מתנה שאוהב, תחביבים..." dir="rtl"
+              placeholder="פרטים נוספים..." dir="rtl"
               className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink" />
           </div>
 
           <Button variant={theme === "girl" ? "game-pink" : "game-blue"} className="w-full rounded-xl"
-            onClick={saveBirthday} disabled={!formName || !formDate}>
-            {editId ? "💾 שמירה" : "🎂 הוספה"}
+            onClick={saveEntry} disabled={!formName || !formDate}>
+            {editId ? "💾 שמירה" : `${EVENT_TYPES.find(t => t.id === formType)?.emoji ?? "📅"} הוספה`}
           </Button>
         </div>
       )}
@@ -470,7 +593,7 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
                       className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="הוספה ליומן גוגל">
                       <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
                     </a>
-                    <button onClick={() => deleteBirthday(b.id)} className="p-1.5 rounded-lg bg-muted hover:bg-destructive/10 transition-all active:scale-90">
+                    <button onClick={() => deleteEntry(b.id, false)} className="p-1.5 rounded-lg bg-muted hover:bg-destructive/10 transition-all active:scale-90">
                       <Trash2 className="w-3.5 h-3.5 text-destructive/60" />
                     </button>
                   </div>
@@ -485,11 +608,51 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
       {viewMode === "calendar" && (
         <BirthdayCalendarView
           birthdays={birthdays}
+          familyEvents={familyEvents}
           accent={accent}
           onAddOnDate={handleAddOnDate}
           onSendInvite={(b) => setInviteFor(b)}
           onEdit={editBirthday}
+          onEditEvent={editEvent}
         />
+      )}
+
+      {/* ═══ FAMILY EVENTS LIST ═══ */}
+      {familyEvents.length > 0 && viewMode !== "calendar" && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border-2 border-blue-200 space-y-2">
+          <h3 className="text-xs font-bold text-blue-700 flex items-center gap-1">
+            <CalendarPlus className="w-3.5 h-3.5" /> אירועים משפחתיים ({familyEvents.length})
+          </h3>
+          <div className="space-y-1.5">
+            {familyEvents.map(ev => {
+              const days = getDaysUntilBirthday(ev.event_date);
+              const typeDef = EVENT_TYPES.find(t => t.id === ev.event_type);
+              return (
+                <div key={ev.id} className="flex items-center gap-2 text-sm bg-white/70 rounded-lg p-2">
+                  <span className="text-lg">{ev.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-xs truncate">{ev.name}</div>
+                    <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <span>{typeDef?.label.split(" ").slice(1).join(" ") ?? ev.event_type}</span>
+                      <span>•</span>
+                      <span>{format(parseISO(ev.event_date), "d בMMMM", { locale: he })}</span>
+                      {ev.recurring && <span>🔄</span>}
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold" style={{ color: ev.color }}>
+                    {days === 0 ? "🎉 היום!" : `עוד ${days} ימים`}
+                  </span>
+                  <button onClick={() => editEvent(ev)} className="p-1 rounded bg-muted hover:bg-muted/80">
+                    <Edit2 className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                  <button onClick={() => deleteEntry(ev.id, true)} className="p-1 rounded bg-muted hover:bg-destructive/10">
+                    <Trash2 className="w-3 h-3 text-destructive/60" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {/* ═══ TIMELINE VIEW ═══ */}

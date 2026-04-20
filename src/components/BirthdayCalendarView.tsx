@@ -22,19 +22,33 @@ interface Birthday {
   notes: string | null;
 }
 
+interface FamilyEvent {
+  id: string;
+  device_id: string;
+  name: string;
+  event_date: string;
+  event_type: string;
+  emoji: string;
+  color: string;
+  notes: string | null;
+  recurring: boolean;
+}
+
 interface Props {
   birthdays: Birthday[];
+  familyEvents?: FamilyEvent[];
   accent: string;
   onAddOnDate: (date: Date) => void;
   onSendInvite: (b: Birthday) => void;
   onEdit: (b: Birthday) => void;
+  onEditEvent?: (ev: FamilyEvent) => void;
 }
 
 type CalMode = "week" | "month" | "year";
 
 const HEBREW_DAYS = ["א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ש'"];
 
-export default function BirthdayCalendarView({ birthdays, accent, onAddOnDate, onSendInvite, onEdit }: Props) {
+export default function BirthdayCalendarView({ birthdays, familyEvents = [], accent, onAddOnDate, onSendInvite, onEdit, onEditEvent }: Props) {
   const [mode, setMode] = useState<CalMode>("month");
   const [cursor, setCursor] = useState(new Date());
   const today = new Date();
@@ -51,8 +65,23 @@ export default function BirthdayCalendarView({ birthdays, accent, onAddOnDate, o
     return map;
   }, [birthdays]);
 
+  const eventsByDay = useMemo(() => {
+    const map = new Map<string, FamilyEvent[]>();
+    familyEvents.forEach(ev => {
+      const d = parseISO(ev.event_date);
+      const key = `${getMonth(d)}-${getDate(d)}`;
+      const arr = map.get(key) || [];
+      arr.push(ev);
+      map.set(key, arr);
+    });
+    return map;
+  }, [familyEvents]);
+
   const getBirthdaysForDate = (date: Date) =>
     birthdaysByDay.get(`${date.getMonth()}-${date.getDate()}`) || [];
+
+  const getEventsForDate = (date: Date) =>
+    eventsByDay.get(`${date.getMonth()}-${date.getDate()}`) || [];
 
   // ─── Navigation helpers ───
   const goBack = () => {
@@ -79,10 +108,12 @@ export default function BirthdayCalendarView({ birthdays, accent, onAddOnDate, o
   // ─── Shared day cell renderer ───
   const renderDayCell = (day: Date, inRange: boolean, tall: boolean) => {
     const dayBirthdays = getBirthdaysForDate(day);
+    const dayEvents = getEventsForDate(day);
     const heb = getHebDayInfo(day);
     const isToday = isSameDay(day, today);
     const isSat = day.getDay() === 6;
     const hasBirthdays = dayBirthdays.length > 0;
+    const hasEvents = dayEvents.length > 0;
     const hasHoliday = heb.holidays.length > 0;
     const hasYomTov = heb.holidays.some(h => h.isYomTov);
 
@@ -140,6 +171,23 @@ export default function BirthdayCalendarView({ birthdays, accent, onAddOnDate, o
           </div>
         )}
 
+        {/* Family events */}
+        {hasEvents && (
+          <div className="flex flex-wrap gap-0.5 mt-0.5">
+            {dayEvents.slice(0, 2).map(ev => (
+              <span
+                key={ev.id}
+                onClick={(e) => { e.stopPropagation(); onEditEvent?.(ev); }}
+                className="text-[9px] font-bold truncate cursor-pointer hover:underline px-1 py-0.5 rounded"
+                style={{ color: ev.color, background: ev.color + "15" }}
+                title={ev.name}
+              >
+                {ev.emoji} {ev.name}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Birthdays */}
         {hasBirthdays && (
           <div className="flex flex-wrap gap-0.5 mt-auto justify-end">
@@ -160,7 +208,7 @@ export default function BirthdayCalendarView({ birthdays, accent, onAddOnDate, o
           </div>
         )}
 
-        {!hasBirthdays && !hasHoliday && inRange && (
+        {!hasBirthdays && !hasEvents && !hasHoliday && inRange && (
           <Plus className="w-3 h-3 text-muted-foreground/0 group-hover:text-muted-foreground absolute bottom-1 left-1" />
         )}
       </button>
@@ -440,6 +488,7 @@ export default function BirthdayCalendarView({ birthdays, accent, onAddOnDate, o
       {/* Legend */}
       <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground px-1">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-pink-400" />יום הולדת</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400" />אירוע משפחתי</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-amber-100 border border-amber-400" />יום טוב</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-blue-50 border border-blue-300" />שבת</span>
         <span className="flex items-center gap-1"><Moon className="w-2.5 h-2.5 text-blue-600" />ראש חודש</span>
