@@ -161,13 +161,29 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
     setFormName(""); setFormDate(""); setFormRelation("משפחה");
     setFormEmoji("🎂"); setFormNotes(""); setFormColor("#f472b6");
     setEditId(null); setShowForm(false);
+    setDateMode("greg");
+    setHebYear(getCurrentHebYear()); setHebMonth(7); setHebDay(1);
   };
 
   const editBirthday = (b: Birthday) => {
     setFormName(b.name); setFormDate(b.birth_date); setFormRelation(b.relation);
     setFormEmoji(b.emoji); setFormNotes(b.notes || ""); setFormColor(b.color);
     setEditId(b.id); setShowForm(true);
+    setDateMode("greg");
+    try {
+      const h = gregorianToHebrew(parseISO(b.birth_date));
+      setHebYear(h.hyear); setHebMonth(h.hmonth); setHebDay(h.hday);
+    } catch { /* ignore */ }
   };
+
+  // When user picks Hebrew date, convert to Gregorian and store in formDate
+  useEffect(() => {
+    if (dateMode !== "heb") return;
+    try {
+      const greg = hebrewToGregorian(hebYear, hebMonth, hebDay);
+      setFormDate(format(greg, "yyyy-MM-dd"));
+    } catch { /* invalid combo — leave formDate */ }
+  }, [dateMode, hebYear, hebMonth, hebDay]);
 
   const saveBirthday = async () => {
     if (!formName || !formDate) return;
