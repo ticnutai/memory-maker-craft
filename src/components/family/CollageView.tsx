@@ -51,6 +51,8 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
   const [slideIndex, setSlideIndex] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const dragCounterRef = useRef(0);
   const [showShare, setShowShare] = useState(false);
   const [showCloud, setShowCloud] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -229,7 +231,23 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
   const gap = collage.gap;
 
   return (
-    <div className="min-h-screen pt-14 pb-20 px-3">
+    <div
+      className="min-h-screen pt-14 pb-20 px-3 relative"
+      onDragEnter={(e) => { e.preventDefault(); dragCounterRef.current++; setIsDraggingOver(true); }}
+      onDragOver={(e) => e.preventDefault()}
+      onDragLeave={(e) => { e.preventDefault(); dragCounterRef.current--; if (dragCounterRef.current <= 0) { dragCounterRef.current = 0; setIsDraggingOver(false); } }}
+      onDrop={(e) => { e.preventDefault(); dragCounterRef.current = 0; setIsDraggingOver(false); handleFiles(e.dataTransfer.files); }}
+    >
+      {/* Drag & Drop overlay */}
+      {isDraggingOver && (
+        <div className="fixed inset-0 z-[200] bg-primary/20 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+          <div className="bg-background border-2 border-dashed border-primary rounded-2xl p-12 text-center shadow-2xl">
+            <Upload className="w-16 h-16 mx-auto mb-4 text-primary animate-bounce" />
+            <div className="text-xl font-bold text-foreground">שחרר קבצים כאן 📸🎬</div>
+            <div className="text-sm text-muted-foreground mt-1">תמונות, סרטונים או קבצי ZIP</div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="fixed top-[max(0.5rem,env(safe-area-inset-top))] right-3 z-[80] flex items-center gap-2">
         <Button size="sm" variant="ghost" onClick={onBack}><ArrowLeft className="w-4 h-4" /></Button>
@@ -284,17 +302,15 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         </div>
       )}
 
-      {/* Drop zone for empty state */}
+      {/* Empty state */}
       {photos.length === 0 && (
         <div
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
           className="border-2 border-dashed border-foreground/20 rounded-2xl p-12 text-center mt-12 cursor-pointer hover:border-foreground/40 transition-colors"
           onClick={() => fileInputRef.current?.click()}
         >
           <Upload className="w-12 h-12 mx-auto mb-3 text-foreground/40" />
           <div className="font-bold mb-1">גרור תמונות או סרטונים לכאן 📸 🎬</div>
-          <div className="text-sm text-foreground/60">או לחץ להעלאה מהמכשיר</div>
+          <div className="text-sm text-foreground/60">או לחץ להעלאה מהמכשיר • תומך גם בקבצי ZIP</div>
         </div>
       )}
 
