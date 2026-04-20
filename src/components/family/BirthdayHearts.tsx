@@ -4,6 +4,7 @@ import { differenceInDays, addYears, isBefore, parseISO } from "date-fns";
 import { HDate } from "@hebcal/core";
 import { toHebrewNumeral } from "@/lib/hebrewCalendar";
 import { getDeviceId } from "@/lib/deviceId";
+import { loadHeartsConfig } from "@/lib/heartsDisplayConfig";
 
 const HEB_MONTH_NAMES: Record<string, string> = {
   Nisan: "ניסן", Iyyar: "אייר", Sivan: "סיון", Tamuz: "תמוז",
@@ -27,8 +28,13 @@ function hebrewDateLabel(gregDate: Date): string {
 const EVENT_TYPE_INFO: Record<string, { emoji: string; label: string }> = {
   birthday: { emoji: "🎂", label: "יום הולדת" },
   anniversary: { emoji: "💍", label: "יום נישואין" },
+  bar_mitzvah: { emoji: "📜", label: "בר/בת מצווה" },
   memorial: { emoji: "🕯️", label: "יום זיכרון" },
+  graduation: { emoji: "🎓", label: "סיום לימודים" },
+  military: { emoji: "🎖️", label: "גיוס/שחרור" },
+  aliyah: { emoji: "✈️", label: "יום עלייה" },
   holiday: { emoji: "🎉", label: "חג" },
+  custom: { emoji: "📅", label: "אירוע" },
   other: { emoji: "📅", label: "אירוע" },
 };
 
@@ -58,6 +64,9 @@ export default function BirthdayHearts({ isDark }: { isDark?: boolean }) {
   const [items, setItems] = useState<UpcomingItem[]>([]);
 
   useEffect(() => {
+    const config = loadHeartsConfig();
+    if (!config.enabled) { setItems([]); return; }
+
     const deviceId = getDeviceId();
     if (!deviceId) return;
 
@@ -70,26 +79,43 @@ export default function BirthdayHearts({ isDark }: { isDark?: boolean }) {
       const now = new Date();
       const currentMonth = now.getMonth();
       const all: UpcomingItem[] = [];
+      const { filterMode, eventTypes } = config;
 
-      for (const b of birthdays ?? []) {
-        const { date, daysUntil } = getNextOccurrence(b.birth_date);
-        if (date.getMonth() === currentMonth || daysUntil <= 30) {
-          all.push({
-            name: b.name,
-            emoji: b.emoji ?? "🎂",
-            color: b.color ?? "#f472b6",
-            daysUntil,
-            date,
-            hebDate: hebrewDateLabel(date),
-            eventType: "birthday",
-            eventLabel: "יום הולדת",
-          });
+      const shouldInclude = (type: string) =>
+        eventTypes.length === 0 || eventTypes.includes(type);
+
+      const timeFilter = (daysUntil: number, date: Date) => {
+        switch (filterMode) {
+          case "all": return true;
+          case "month": return date.getMonth() === currentMonth || daysUntil <= 30;
+          case "30days": return daysUntil <= 30;
+          case "7days": return daysUntil <= 7;
+          default: return true;
+        }
+      };
+
+      if (shouldInclude("birthday")) {
+        for (const b of birthdays ?? []) {
+          const { date, daysUntil } = getNextOccurrence(b.birth_date);
+          if (timeFilter(daysUntil, date)) {
+            all.push({
+              name: b.name,
+              emoji: b.emoji ?? "🎂",
+              color: b.color ?? "#f472b6",
+              daysUntil,
+              date,
+              hebDate: hebrewDateLabel(date),
+              eventType: "birthday",
+              eventLabel: "יום הולדת",
+            });
+          }
         }
       }
 
       for (const e of events ?? []) {
+        if (!shouldInclude(e.event_type)) continue;
         const { date, daysUntil } = getNextOccurrence(e.event_date);
-        if (date.getMonth() === currentMonth || daysUntil <= 30) {
+        if (timeFilter(daysUntil, date)) {
           const info = EVENT_TYPE_INFO[e.event_type] ?? EVENT_TYPE_INFO.other;
           all.push({
             name: e.name,

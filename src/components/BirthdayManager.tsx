@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send, CalendarPlus } from "lucide-react";
+import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send, CalendarPlus, Home, Eye, EyeOff } from "lucide-react";
+import { loadHeartsConfig, saveHeartsConfig, HeartsDisplayConfig, HeartsFilterMode } from "@/lib/heartsDisplayConfig";
 import { format, differenceInDays, addYears, isBefore, parseISO, getMonth, getDate } from "date-fns";
 import { he } from "date-fns/locale";
 import BirthdayCalendarView from "./BirthdayCalendarView";
@@ -154,8 +155,10 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [editingEvent, setEditingEvent] = useState<boolean>(false); // true = editing family_events row
+  const [editingEvent, setEditingEvent] = useState<boolean>(false);
   const [inviteFor, setInviteFor] = useState<Birthday | null>(null);
+  const [heartsConfig, setHeartsConfig] = useState<HeartsDisplayConfig>(() => loadHeartsConfig());
+  const [showHomeSettings, setShowHomeSettings] = useState(false);
 
   const [formType, setFormType] = useState("birthday");
   const [formName, setFormName] = useState("");
@@ -358,11 +361,135 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
             </button>
           ))}
         </div>
+        <button
+          onClick={() => setShowHomeSettings(s => !s)}
+          className={`p-2 rounded-xl transition-all active:scale-90 ${showHomeSettings ? "bg-primary text-primary-foreground shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+          title="הגדרות תצוגת דף הבית"
+        >
+          <Home className="w-4 h-4" />
+        </button>
         <Button variant={theme === "girl" ? "game-pink" : "game-blue"} size="sm"
           onClick={() => { resetForm(); setShowForm(true); }} className="rounded-xl">
           <Plus className="w-4 h-4" />
         </Button>
       </div>
+
+      {/* ═══ HOME DISPLAY SETTINGS ═══ */}
+      {showHomeSettings && (
+        <div className="bg-card rounded-2xl p-4 border-2 border-muted shadow-lg space-y-4 bounce-in">
+          <div className="flex justify-between items-center">
+            <h3 className="font-bold text-sm flex items-center gap-2">
+              <Home className="w-4 h-4" /> הגדרות תצוגה בדף הבית
+            </h3>
+            <button onClick={() => setShowHomeSettings(false)} className="text-muted-foreground hover:text-foreground">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Enable/disable toggle */}
+          <div className="flex items-center justify-between p-3 rounded-xl border bg-muted/30">
+            <label className="text-xs font-bold text-muted-foreground flex items-center gap-2">
+              {heartsConfig.enabled ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+              הצגת לבבות בדף הבית
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                const next = { ...heartsConfig, enabled: !heartsConfig.enabled };
+                setHeartsConfig(next);
+                saveHeartsConfig(next);
+              }}
+              className={`w-10 h-6 rounded-full transition-all relative ${heartsConfig.enabled ? "bg-primary" : "bg-muted"}`}
+            >
+              <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${heartsConfig.enabled ? "right-0.5" : "right-4"}`} />
+            </button>
+          </div>
+
+          {heartsConfig.enabled && (
+            <>
+              {/* Filter mode */}
+              <div>
+                <label className="text-xs font-bold text-muted-foreground mb-1.5 block">סינון לפי זמן</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {([
+                    { id: "all" as HeartsFilterMode, label: "📋 הכל" },
+                    { id: "month" as HeartsFilterMode, label: "📅 החודש הנוכחי" },
+                    { id: "30days" as HeartsFilterMode, label: "🗓️ 30 יום" },
+                    { id: "7days" as HeartsFilterMode, label: "⏰ 7 ימים" },
+                  ]).map(opt => (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        const next = { ...heartsConfig, filterMode: opt.id };
+                        setHeartsConfig(next);
+                        saveHeartsConfig(next);
+                      }}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 border ${
+                        heartsConfig.filterMode === opt.id
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Event type filter */}
+              <div>
+                <label className="text-xs font-bold text-muted-foreground mb-1.5 block">סוגי אירועים להצגה</label>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    onClick={() => {
+                      const next = { ...heartsConfig, eventTypes: [] };
+                      setHeartsConfig(next);
+                      saveHeartsConfig(next);
+                    }}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 border ${
+                      heartsConfig.eventTypes.length === 0
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
+                    }`}
+                  >
+                    ✨ הכל
+                  </button>
+                  {EVENT_TYPES.map(t => {
+                    const selected = heartsConfig.eventTypes.includes(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => {
+                          let types: string[];
+                          if (heartsConfig.eventTypes.length === 0) {
+                            // switching from "all" — select only this one
+                            types = [t.id];
+                          } else if (selected) {
+                            types = heartsConfig.eventTypes.filter(x => x !== t.id);
+                            if (types.length === 0) types = []; // back to all
+                          } else {
+                            types = [...heartsConfig.eventTypes, t.id];
+                          }
+                          const next = { ...heartsConfig, eventTypes: types };
+                          setHeartsConfig(next);
+                          saveHeartsConfig(next);
+                        }}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 border ${
+                          selected
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Add/Edit Form */}
       {showForm && (
