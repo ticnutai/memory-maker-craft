@@ -35,9 +35,10 @@ export default function FamilyThemePicker({
   current, onChange,
   collages = [], deviceId, homeCollageId,
   onSetHomeCollage, onOpenCollage, onCreateCollage, onDeleteCollage, onJoinByCode,
+  slideshow, onSlideshowChange,
 }: ThemePickerProps) {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"collages" | "themes">("collages");
+  const [tab, setTab] = useState<"collages" | "themes" | "slideshow">("collages");
   const [showCustom, setShowCustom] = useState(false);
   const [joinCode, setJoinCode] = useState("");
   const [joining, setJoining] = useState(false);
