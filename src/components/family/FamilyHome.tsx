@@ -19,7 +19,7 @@ export default function FamilyHome() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [homeCollageId, setHomeCollageId] = useState<string | null>(() => loadHomeCollageId());
   const [theme, setTheme] = useState<FamilyTheme>(() => loadFamilyTheme());
-  const [homePreviewPhotos, setHomePreviewPhotos] = useState<{ url: string; caption: string | null; media_type: string }[]>([]);
+  const [homePreviewPhotos, setHomePreviewPhotos] = useState<{ url: string; caption: string | null; media_type: string; thumbnail_url: string | null }[]>([]);
   const [slideshow, setSlideshow] = useState<SlideshowConfig>(() => loadSlideshowConfig());
 
   // Apply theme to body so it covers the entire page (under the icons too)
@@ -57,12 +57,17 @@ export default function FamilyHome() {
       const limit = slideshow.enabled ? 50 : 9;
       const { data } = await supabase
         .from("family_photos")
-        .select("image_url, caption, media_type")
+        .select("image_url, caption, media_type, thumbnail_url")
         .eq("collage_id", displayCollageId)
         .order("sort_order", { ascending: true })
         .limit(limit);
       if (!cancelled) {
-        setHomePreviewPhotos((data ?? []).map(p => ({ url: p.image_url, caption: p.caption, media_type: p.media_type ?? "image" })));
+        setHomePreviewPhotos((data ?? []).map((p: any) => ({
+          url: p.image_url,
+          caption: p.caption,
+          media_type: p.media_type ?? "image",
+          thumbnail_url: p.thumbnail_url ?? null,
+        })));
       }
     })();
     return () => { cancelled = true; };
@@ -179,7 +184,16 @@ export default function FamilyHome() {
                     >
                       {p.media_type === "video" ? (
                         <>
-                          <video src={p.url} className="w-full h-full object-cover" autoPlay muted loop playsInline preload="metadata" />
+                          {p.thumbnail_url ? (
+                            <img src={p.thumbnail_url} alt={p.caption ?? ""} className="w-full h-full object-cover" loading="lazy" />
+                          ) : (
+                            <video src={p.url} className="w-full h-full object-cover" muted loop playsInline preload="metadata" />
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                              <span className="text-white text-sm">▶</span>
+                            </div>
+                          </div>
                           <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full backdrop-blur-sm">🎬</div>
                         </>
                       ) : (

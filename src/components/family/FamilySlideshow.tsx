@@ -6,6 +6,7 @@ interface SlideItem {
   url: string;
   caption?: string | null;
   media_type?: string; // 'image' | 'video'
+  thumbnail_url?: string | null;
 }
 
 interface SlideshowProps {
@@ -107,7 +108,8 @@ export default function FamilySlideshow({ photos, config, onOpenCollage }: Slide
                 <video
                   ref={videoRef}
                   src={p.url}
-                  className="w-full h-full object-cover"
+                  poster={p.thumbnail_url ?? undefined}
+                  className="w-full h-full object-cover bg-black"
                   autoPlay
                   muted={muted}
                   playsInline
@@ -115,6 +117,8 @@ export default function FamilySlideshow({ photos, config, onOpenCollage }: Slide
                   onEnded={() => { if (!paused) next(); }}
                   onError={() => { if (!paused) setTimeout(next, 800); }}
                 />
+              ) : p.thumbnail_url ? (
+                <img src={p.thumbnail_url} alt={p.caption ?? ""} className="w-full h-full object-cover" loading="lazy" />
               ) : null
             ) : (
               <img

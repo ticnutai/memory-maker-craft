@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { captureVideoThumbnail } from "@/lib/videoThumbnail";
 
 function getDeviceId(): string {
   const key = "memory-game-device-id";
@@ -61,6 +62,7 @@ export interface FamilyPhoto {
   created_at: string;
   media_type: string;          // 'image' | 'video'
   duration_ms: number | null;
+  thumbnail_url: string | null; // poster image for videos
 }
 
 export function useFamilyCollages() {
@@ -192,10 +194,12 @@ export function useFamilyPhotos(collageId: string | null) {
       if (upErr) { console.warn("upload error:", upErr); continue; }
       const { data: pub } = supabase.storage.from("family-photos").getPublicUrl(path);
 
-      // Try to read video duration (best effort)
+      // For videos: capture a thumbnail frame + read duration
       let durationMs: number | null = null;
+      let thumbnailUrl: string | null = null;
       if (isVideo) {
         try {
+          // Duration
           durationMs = await new Promise<number | null>((resolve) => {
             const v = document.createElement("video");
             v.preload = "metadata";
@@ -204,7 +208,22 @@ export function useFamilyPhotos(collageId: string | null) {
             v.src = URL.createObjectURL(file);
             setTimeout(() => resolve(null), 4000);
           });
-        } catch { durationMs = null; }
+
+          // Thumbnail frame (~0.5s in, or middle for very short clips)
+          const seekTo = durationMs && durationMs < 1000 ? (durationMs / 2000) : 0.5;
+          const thumbBlob = await captureVideoThumbnail(file, { seekTo, maxWidth: 800 });
+          if (thumbBlob) {
+            const thumbPath = `${deviceId}/${collageId}/${Date.now()}-${i}-thumb.jpg`;
+            const { error: thErr } = await supabase.storage
+              .from("family-photos")
+              .upload(thumbPath, thumbBlob, { upsert: false, contentType: "image/jpeg" });
+            if (!thErr) {
+              thumbnailUrl = supabase.storage.from("family-photos").getPublicUrl(thumbPath).data.publicUrl;
+            }
+          }
+        } catch (e) {
+          console.warn("thumbnail capture failed:", e);
+        }
       }
 
       const { data, error } = await supabase
@@ -216,7 +235,8 @@ export function useFamilyPhotos(collageId: string | null) {
           sort_order: startOrder + i,
           media_type: isVideo ? "video" : "image",
           duration_ms: durationMs,
-        })
+          thumbnail_url: thumbnailUrl,
+        } as never)
         .select()
         .single();
       if (!error && data) uploaded.push(data as FamilyPhoto);
