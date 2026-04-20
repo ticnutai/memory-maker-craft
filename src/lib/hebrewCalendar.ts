@@ -163,7 +163,7 @@ export function getHebDayInfo(date: Date): HebDayInfo {
   let parsha: string | undefined;
   if (isShabbat) {
     try {
-      const sedra = getSedra(hd.getFullYear());
+      const sedra = getCachedSedra(hd.getFullYear());
       const result = sedra.lookup(hd);
       if (result && !result.chag && result.parsha && result.parsha.length) {
         parsha = result.parsha.map(translateParsha).join(" - ");
