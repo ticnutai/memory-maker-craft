@@ -65,8 +65,23 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
     return map;
   }, [birthdays]);
 
+  const eventsByDay = useMemo(() => {
+    const map = new Map<string, FamilyEvent[]>();
+    familyEvents.forEach(ev => {
+      const d = parseISO(ev.event_date);
+      const key = `${getMonth(d)}-${getDate(d)}`;
+      const arr = map.get(key) || [];
+      arr.push(ev);
+      map.set(key, arr);
+    });
+    return map;
+  }, [familyEvents]);
+
   const getBirthdaysForDate = (date: Date) =>
     birthdaysByDay.get(`${date.getMonth()}-${date.getDate()}`) || [];
+
+  const getEventsForDate = (date: Date) =>
+    eventsByDay.get(`${date.getMonth()}-${date.getDate()}`) || [];
 
   // ─── Navigation helpers ───
   const goBack = () => {
