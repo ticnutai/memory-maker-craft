@@ -73,7 +73,40 @@ export default function FamilyThemePicker({
   const [color1, setColor1] = useState("#fce7f3");
   const [color2, setColor2] = useState("#ddd6fe");
 
+  // ─── Computed: folder tree, breadcrumb, filters ───
   const allThemes = existing ? [...FAMILY_THEMES, existing] : FAMILY_THEMES;
+
+  // Build breadcrumb path
+  const breadcrumb = useMemo(() => {
+    const path: FamilyCollage[] = [];
+    let id = currentFolderId;
+    while (id) {
+      const folder = collages.find(c => c.id === id);
+      if (!folder) break;
+      path.unshift(folder);
+      id = folder.parent_id;
+    }
+    return path;
+  }, [currentFolderId, collages]);
+
+  // Items in current folder with filters
+  const visibleItems = useMemo(() => {
+    let items = collages.filter(c => (c.parent_id ?? null) === currentFolderId);
+    if (filterCategory) items = items.filter(c => c.category === filterCategory);
+    if (filterYear) items = items.filter(c => c.year_tag === filterYear);
+    if (filterFamily) items = items.filter(c => c.family_tag === filterFamily);
+    // Sort: folders first, then by sort_order
+    return items.sort((a, b) => {
+      if (a.is_folder && !b.is_folder) return -1;
+      if (!a.is_folder && b.is_folder) return 1;
+      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    });
+  }, [collages, currentFolderId, filterCategory, filterYear, filterFamily]);
+
+  // Unique years and family tags for filter chips
+  const availableYears = useMemo(() => [...new Set(collages.map(c => c.year_tag).filter(Boolean) as number[])].sort((a, b) => b - a), [collages]);
+  const availableFamilies = useMemo(() => [...new Set(collages.map(c => c.family_tag).filter(Boolean) as string[])].sort(), [collages]);
+  const hasActiveFilters = !!(filterCategory || filterYear || filterFamily);
 
   const selectTheme = (t: FamilyTheme) => {
     saveFamilyTheme(t);
