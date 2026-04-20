@@ -400,15 +400,17 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
       {/* Today banner */}
       <div className="bg-gradient-to-l from-purple-100 via-pink-50 to-yellow-50 rounded-2xl p-3 border-2 border-purple-200 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <div className="bg-white/80 rounded-xl px-3 py-2 text-center shadow-sm">
-            <div className="text-[10px] text-muted-foreground leading-none">היום</div>
-            <div className="text-2xl font-black text-purple-700 leading-tight">{format(today, "d")}</div>
-            <div className="text-[10px] font-bold text-purple-600">{format(today, "MMMM", { locale: he })}</div>
-          </div>
-          <div className="bg-white/80 rounded-xl px-3 py-2 text-center shadow-sm">
+          {/* Hebrew — dominant */}
+          <div className="bg-white/80 rounded-xl px-4 py-2 text-center shadow-sm">
             <div className="text-[10px] text-muted-foreground leading-none">תאריך עברי</div>
-            <div className="text-xl font-black text-blue-700 leading-tight">{todayInfo.hebDay}</div>
-            <div className="text-[10px] font-bold text-blue-600">{todayInfo.hebMonth}</div>
+            <div className="text-2xl font-black text-purple-700 leading-tight">{todayInfo.hebDay}</div>
+            <div className="text-[10px] font-bold text-purple-600">{todayInfo.hebMonth} {toHebrewYear(new HDate(today).getFullYear())}</div>
+          </div>
+          {/* Gregorian — secondary */}
+          <div className="bg-white/60 rounded-xl px-3 py-2 text-center shadow-sm">
+            <div className="text-[10px] text-muted-foreground leading-none">לועזי</div>
+            <div className="text-lg font-bold text-foreground/70 leading-tight">{format(today, "d")}</div>
+            <div className="text-[10px] text-muted-foreground">{format(today, "MMM yyyy", { locale: he })}</div>
           </div>
         </div>
         <div className="flex flex-col items-end gap-1 text-xs">
