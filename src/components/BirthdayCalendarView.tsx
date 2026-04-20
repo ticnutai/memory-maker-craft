@@ -236,7 +236,10 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
                 <div className={`text-[10px] font-bold ${i === 6 ? "text-blue-600" : "text-muted-foreground"}`}>
                   {HEBREW_DAYS[i]}
                 </div>
-                <div className={`text-xs font-black ${isToday ? "text-yellow-700" : "text-foreground/70"}`}>
+                <div className={`text-sm font-black ${isToday ? "text-yellow-700" : "text-purple-700"}`}>
+                  {getHebDayInfo(day).hebDay}
+                </div>
+                <div className={`text-[9px] ${isToday ? "text-yellow-600" : "text-muted-foreground"}`}>
                   {format(day, "d/M")}
                 </div>
               </div>
