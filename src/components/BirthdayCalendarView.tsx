@@ -9,7 +9,8 @@ import {
   ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft,
   CalendarDays, LayoutGrid, Plus, Send, Moon, BookOpen, Calendar, Rows3,
 } from "lucide-react";
-import { getHebDayInfo, getHebMonthLabel } from "@/lib/hebrewCalendar";
+import { getHebDayInfo, getHebMonthLabel, toHebrewYear, toHebrewNumeral } from "@/lib/hebrewCalendar";
+import { HDate } from "@hebcal/core";
 
 interface Birthday {
   id: string;
