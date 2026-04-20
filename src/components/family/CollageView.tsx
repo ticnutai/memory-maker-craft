@@ -344,7 +344,53 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         </DialogContent>
       </Dialog>
 
-      {/* Slideshow */}
+      {/* Share dialog */}
+      <Dialog open={showShare} onOpenChange={setShowShare}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>שתף עם המשפחה 👨‍👩‍👧‍👦</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-foreground/70">
+              שלח את הקוד הזה לבני המשפחה. הם יוכלו להוסיף תמונות ולערוך את הקולאז׳ יחד איתך בזמן אמת.
+            </p>
+            <div className="bg-muted rounded-2xl p-6 text-center">
+              <div className="text-xs text-foreground/60 mb-2">קוד שיתוף</div>
+              <div className="text-3xl font-bold tracking-[0.3em] font-mono select-all">
+                {collage.share_code?.toUpperCase()}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  navigator.clipboard.writeText(collage.share_code ?? "");
+                  toast.success("הקוד הועתק");
+                }}
+              >
+                <Copy className="w-4 h-4 ml-1" /> העתק קוד
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={async () => {
+                  const text = `🏠 הצטרפו אלי לקולאז׳ "${collage.name}"!\nהיכנסו ל"בית משפחה טננבאום" והכניסו את הקוד:\n\n${collage.share_code?.toUpperCase()}`;
+                  if (navigator.share) {
+                    try { await navigator.share({ text, title: collage.name }); } catch { /* canceled */ }
+                  } else {
+                    navigator.clipboard.writeText(text);
+                    toast.success("ההזמנה הועתקה");
+                  }
+                }}
+              >
+                <Share2 className="w-4 h-4 ml-1" /> שתף הזמנה
+              </Button>
+            </div>
+            <div className="text-xs text-foreground/50 text-center">
+              💡 כל מי שיש לו את הקוד יכול לערוך — כולל הוספה ומחיקה של תמונות
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {slideshow && photos.length > 0 && (
         <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center" onClick={() => setSlideshow(false)}>
           <img src={photos[slideIndex].image_url} alt="" className="max-w-[95vw] max-h-[95vh] object-contain" />
