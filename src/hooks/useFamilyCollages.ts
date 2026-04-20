@@ -11,17 +11,34 @@ function getDeviceId(): string {
   return id;
 }
 
+const JOINED_KEY = "family-joined-collages";
+function getJoinedCollageIds(): string[] {
+  try { return JSON.parse(localStorage.getItem(JOINED_KEY) ?? "[]"); } catch { return []; }
+}
+function addJoinedCollageId(id: string) {
+  const arr = getJoinedCollageIds();
+  if (!arr.includes(id)) {
+    arr.push(id);
+    localStorage.setItem(JOINED_KEY, JSON.stringify(arr));
+  }
+}
+function removeJoinedCollageId(id: string) {
+  const arr = getJoinedCollageIds().filter(x => x !== id);
+  localStorage.setItem(JOINED_KEY, JSON.stringify(arr));
+}
+
 export interface FamilyCollage {
   id: string;
   device_id: string;
   name: string;
   emoji: string | null;
-  layout_type: string; // grid | masonry | freeform | template
+  layout_type: string;
   cols: number;
   gap: number;
   background: string | null;
   background_image: string | null;
   sort_order: number | null;
+  share_code: string;
   created_at: string;
   updated_at: string;
 }
@@ -50,13 +67,23 @@ export function useFamilyCollages() {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    const { data } = await supabase
+    const joinedIds = getJoinedCollageIds();
+    // Fetch own collages + joined (shared) collages
+    const { data: own } = await supabase
       .from("family_collages")
       .select("*")
-      .eq("device_id", deviceId)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
-    setCollages((data ?? []) as FamilyCollage[]);
+      .eq("device_id", deviceId);
+    let joined: FamilyCollage[] = [];
+    if (joinedIds.length > 0) {
+      const { data } = await supabase
+        .from("family_collages")
+        .select("*")
+        .in("id", joinedIds);
+      joined = (data ?? []) as FamilyCollage[];
+    }
+    const all = [...((own ?? []) as FamilyCollage[]), ...joined.filter(j => !(own ?? []).some(o => o.id === j.id))];
+    all.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || b.created_at.localeCompare(a.created_at));
+    setCollages(all);
     setLoading(false);
   }, [deviceId]);
 
@@ -87,11 +114,31 @@ export function useFamilyCollages() {
   }, [refresh]);
 
   const deleteCollage = useCallback(async (id: string) => {
-    await supabase.from("family_collages").delete().eq("id", id);
+    const c = collages.find(x => x.id === id);
+    if (c && c.device_id !== deviceId) {
+      // Joined collage — just leave it locally
+      removeJoinedCollageId(id);
+    } else {
+      await supabase.from("family_collages").delete().eq("id", id);
+    }
     await refresh();
+  }, [collages, deviceId, refresh]);
+
+  const joinByCode = useCallback(async (code: string): Promise<FamilyCollage | null> => {
+    const cleanCode = code.trim().toLowerCase();
+    if (!cleanCode) return null;
+    const { data } = await supabase
+      .from("family_collages")
+      .select("*")
+      .eq("share_code", cleanCode)
+      .maybeSingle();
+    if (!data) return null;
+    addJoinedCollageId(data.id);
+    await refresh();
+    return data as FamilyCollage;
   }, [refresh]);
 
-  return { collages, loading, refresh, createCollage, updateCollage, deleteCollage, deviceId };
+  return { collages, loading, refresh, createCollage, updateCollage, deleteCollage, joinByCode, deviceId };
 }
 
 export function useFamilyPhotos(collageId: string | null) {
@@ -112,6 +159,20 @@ export function useFamilyPhotos(collageId: string | null) {
   }, [collageId]);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  // Realtime subscription so collaborators see live updates
+  useEffect(() => {
+    if (!collageId) return;
+    const channel = supabase
+      .channel(`family-photos-${collageId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "family_photos", filter: `collage_id=eq.${collageId}` },
+        () => { refresh(); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [collageId, refresh]);
 
   const uploadFiles = useCallback(async (files: File[]) => {
     if (!collageId) return [];
