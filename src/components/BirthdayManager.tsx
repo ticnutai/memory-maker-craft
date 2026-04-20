@@ -430,7 +430,7 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
                   <select value={hebDay} onChange={e => setHebDay(Number(e.target.value))}
                     className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink">
                     {Array.from({ length: daysInHebMonth(hebYear, hebMonth) }, (_, i) => i + 1).map(d => (
-                      <option key={d} value={d}>{d}</option>
+                      <option key={d} value={d}>{toHebrewNumeral(d)}</option>
                     ))}
                   </select>
                   <select value={hebMonth} onChange={e => setHebMonth(Number(e.target.value))}
@@ -439,9 +439,14 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
                       <option key={m.index} value={m.index}>{m.name}</option>
                     ))}
                   </select>
-                  <input type="number" min={5700} max={5900} value={hebYear}
-                    onChange={e => setHebYear(Number(e.target.value) || getCurrentHebYear())}
-                    className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink text-center" />
+                  <div className="relative">
+                    <input type="number" min={5700} max={5900} value={hebYear}
+                      onChange={e => setHebYear(Number(e.target.value) || getCurrentHebYear())}
+                      className="h-10 w-full rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink text-center opacity-0 absolute inset-0 z-10" />
+                    <div className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card flex items-center justify-center font-bold text-purple-700">
+                      {toHebrewYear(hebYear)}
+                    </div>
+                  </div>
                 </div>
               )}
 
