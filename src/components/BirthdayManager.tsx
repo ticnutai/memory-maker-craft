@@ -298,13 +298,51 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
                 placeholder="שם בן המשפחה..." dir="rtl"
                 className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink" />
             </div>
-            <div>
-              <label className="text-xs font-bold text-muted-foreground mb-1 block">תאריך לידה (לועזי)</label>
-              <input type="date" value={formDate} onChange={e => setFormDate(e.target.value)}
-                className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink" />
+            <div className="col-span-2">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-muted-foreground">תאריך לידה</label>
+                <div className="flex gap-1 bg-muted rounded-lg p-0.5 text-[10px] font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setDateMode("greg")}
+                    className={`px-2 py-0.5 rounded transition-all ${dateMode === "greg" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
+                  >📅 לועזי</button>
+                  <button
+                    type="button"
+                    onClick={() => setDateMode("heb")}
+                    className={`px-2 py-0.5 rounded transition-all ${dateMode === "heb" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
+                  >🕎 עברי</button>
+                </div>
+              </div>
+
+              {dateMode === "greg" ? (
+                <input type="date" value={formDate} onChange={e => setFormDate(e.target.value)}
+                  className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink" />
+              ) : (
+                <div className="grid grid-cols-3 gap-2" dir="rtl">
+                  <select value={hebDay} onChange={e => setHebDay(Number(e.target.value))}
+                    className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink">
+                    {Array.from({ length: daysInHebMonth(hebYear, hebMonth) }, (_, i) => i + 1).map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                  <select value={hebMonth} onChange={e => setHebMonth(Number(e.target.value))}
+                    className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink">
+                    {getHebMonthsForYear(hebYear).map(m => (
+                      <option key={m.index} value={m.index}>{m.name}</option>
+                    ))}
+                  </select>
+                  <input type="number" min={5700} max={5900} value={hebYear}
+                    onChange={e => setHebYear(Number(e.target.value) || getCurrentHebYear())}
+                    className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink text-center" />
+                </div>
+              )}
+
               {formDate && (
-                <p className="text-[10px] text-purple-500 mt-1 flex items-center gap-1">
-                  📅 {getHebrewDate(parseISO(formDate))}
+                <p className="text-[10px] text-purple-500 mt-1 flex items-center gap-2 flex-wrap">
+                  <span>📅 {format(parseISO(formDate), "d MMMM yyyy", { locale: he })}</span>
+                  <span>•</span>
+                  <span>🕎 {getHebrewDate(parseISO(formDate))}</span>
                 </p>
               )}
             </div>
