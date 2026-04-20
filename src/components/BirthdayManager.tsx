@@ -6,7 +6,7 @@ import { format, differenceInDays, addYears, isBefore, parseISO, getMonth, getDa
 import { he } from "date-fns/locale";
 import BirthdayCalendarView from "./BirthdayCalendarView";
 import BirthdayInviteDialog from "./BirthdayInviteDialog";
-import { getHebMonthsForYear, hebrewToGregorian, gregorianToHebrew, getCurrentHebYear, daysInHebMonth } from "@/lib/hebrewCalendar";
+import { getHebMonthsForYear, hebrewToGregorian, gregorianToHebrew, getCurrentHebYear, daysInHebMonth, toHebrewNumeral, toHebrewYear } from "@/lib/hebrewCalendar";
 
 interface Birthday {
   id: string;
