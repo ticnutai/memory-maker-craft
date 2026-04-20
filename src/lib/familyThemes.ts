@@ -112,3 +112,13 @@ export function loadCustomTheme(): FamilyTheme | null {
     return c ? JSON.parse(c) : null;
   } catch { return null; }
 }
+
+// Home collage selection — which collage to show on the family home page
+const HOME_COLLAGE_KEY = "family-home-collage-id";
+export function loadHomeCollageId(): string | null {
+  try { return localStorage.getItem(HOME_COLLAGE_KEY); } catch { return null; }
+}
+export function saveHomeCollageId(id: string | null) {
+  if (id) localStorage.setItem(HOME_COLLAGE_KEY, id);
+  else localStorage.removeItem(HOME_COLLAGE_KEY);
+}

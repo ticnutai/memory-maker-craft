@@ -1,22 +1,20 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, KeyRound, Users, Sparkles, Heart, Image as ImageIcon } from "lucide-react";
+import { Plus, Sparkles, Heart, Image as ImageIcon, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useFamilyCollages, FamilyCollage } from "@/hooks/useFamilyCollages";
+import { useFamilyCollages } from "@/hooks/useFamilyCollages";
 import CollageView from "./CollageView";
 import FamilyThemePicker from "./FamilyThemePicker";
 import FamilyDecorations from "./FamilyDecorations";
-import { loadFamilyTheme, FamilyTheme } from "@/lib/familyThemes";
+import { loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId } from "@/lib/familyThemes";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function FamilyHome() {
   const { collages, loading, createCollage, updateCollage, deleteCollage, joinByCode, deviceId } = useFamilyCollages();
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [showJoin, setShowJoin] = useState(false);
-  const [joinCode, setJoinCode] = useState("");
-  const [joining, setJoining] = useState(false);
+  const [homeCollageId, setHomeCollageId] = useState<string | null>(() => loadHomeCollageId());
   const [theme, setTheme] = useState<FamilyTheme>(() => loadFamilyTheme());
+  const [homePreviewPhotos, setHomePreviewPhotos] = useState<string[]>([]);
 
   // Apply theme to body so it covers the entire page (under the icons too)
   useEffect(() => {
@@ -24,6 +22,38 @@ export default function FamilyHome() {
     document.body.style.background = theme.background;
     return () => { document.body.style.background = prev; };
   }, [theme.background]);
+
+  // Auto-set home collage to first one if none selected
+  useEffect(() => {
+    if (!loading && !homeCollageId && collages.length > 0) {
+      const firstId = collages[0].id;
+      saveHomeCollageId(firstId);
+      setHomeCollageId(firstId);
+    }
+    // Clear home if it points to a deleted collage
+    if (!loading && homeCollageId && collages.length > 0 && !collages.find(c => c.id === homeCollageId)) {
+      saveHomeCollageId(null);
+      setHomeCollageId(null);
+    }
+  }, [loading, homeCollageId, collages]);
+
+  const homeCollage = collages.find(c => c.id === homeCollageId);
+
+  // Load preview photos for home collage
+  useEffect(() => {
+    if (!homeCollage) { setHomePreviewPhotos([]); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("family_photos")
+        .select("image_url")
+        .eq("collage_id", homeCollage.id)
+        .order("sort_order", { ascending: true })
+        .limit(9);
+      if (!cancelled) setHomePreviewPhotos((data ?? []).map(p => p.image_url));
+    })();
+    return () => { cancelled = true; };
+  }, [homeCollage?.id]);
 
   const active = collages.find(c => c.id === activeId);
   if (active) {
@@ -33,26 +63,14 @@ export default function FamilyHome() {
   const handleCreate = async () => {
     try {
       const c = await createCollage({ name: `קולאז׳ ${collages.length + 1}` });
+      // First collage becomes home automatically
+      if (!homeCollageId) {
+        saveHomeCollageId(c.id);
+        setHomeCollageId(c.id);
+      }
       setActiveId(c.id);
     } catch {
       toast.error("שגיאה ביצירת קולאז׳");
-    }
-  };
-
-  const handleJoin = async () => {
-    setJoining(true);
-    try {
-      const c = await joinByCode(joinCode);
-      if (c) {
-        toast.success(`הצטרפת לקולאז׳ "${c.name}"`);
-        setShowJoin(false);
-        setJoinCode("");
-        setActiveId(c.id);
-      } else {
-        toast.error("קוד לא נמצא");
-      }
-    } finally {
-      setJoining(false);
     }
   };
 
@@ -60,17 +78,27 @@ export default function FamilyHome() {
 
   return (
     <div className="min-h-screen relative">
-      {/* Theme decorations (floating bg elements) */}
       <FamilyDecorations type={theme.decoration ?? "none"} />
 
-      {/* Theme picker — top-left, after the global nav icons */}
-      <div className="fixed top-[max(0.5rem,env(safe-area-inset-top))] left-[140px] z-[91]">
-        <FamilyThemePicker current={theme} onChange={setTheme} />
+      {/* Theme/Collages icon — same style as other top-left nav icons */}
+      <div className="fixed top-[max(0.5rem,env(safe-area-inset-top))] left-[170px] z-[91]">
+        <FamilyThemePicker
+          current={theme}
+          onChange={setTheme}
+          collages={collages}
+          deviceId={deviceId}
+          homeCollageId={homeCollageId}
+          onSetHomeCollage={setHomeCollageId}
+          onOpenCollage={(id) => setActiveId(id)}
+          onCreateCollage={handleCreate}
+          onDeleteCollage={deleteCollage}
+          onJoinByCode={joinByCode}
+        />
       </div>
 
       <div className="relative z-10 pt-20 pb-12 px-4 max-w-5xl mx-auto">
         {/* Hero header */}
-        <header className="text-center mb-10">
+        <header className="text-center mb-8">
           <div className="inline-block mb-3 relative">
             <div className="text-6xl sm:text-7xl animate-float inline-block">🏠</div>
             <Heart className="absolute -top-1 -right-2 w-5 h-5 fill-rose-500 text-rose-500 animate-pulse" />
@@ -85,31 +113,9 @@ export default function FamilyHome() {
           </p>
         </header>
 
-        {/* Action buttons */}
-        <div className="flex justify-center gap-3 mb-10 flex-wrap">
-          <Button
-            onClick={handleCreate}
-            size="lg"
-            className="rounded-full shadow-lg hover:shadow-xl text-base px-7 h-14"
-            style={{ background: theme.accent, color: "white" }}
-          >
-            <Plus className="w-5 h-5 ml-1" /> קולאז׳ חדש
-          </Button>
-          <Button
-            onClick={() => setShowJoin(true)}
-            size="lg"
-            variant="outline"
-            className="rounded-full text-base px-7 h-14 backdrop-blur-sm bg-background/60 border-2"
-          >
-            <KeyRound className="w-5 h-5 ml-1" /> הצטרף עם קוד
-          </Button>
-        </div>
+        {loading && <div className="text-center text-foreground/60">טוען…</div>}
 
-        {loading && (
-          <div className="text-center text-foreground/60">טוען…</div>
-        )}
-
-        {/* Empty state with guidance */}
+        {/* Empty state */}
         {!loading && collages.length === 0 && (
           <div
             className="rounded-3xl p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-xl backdrop-blur-md border border-white/40"
@@ -120,42 +126,77 @@ export default function FamilyHome() {
               בואו נתחיל לבנות יחד!
             </h2>
             <p className={`mb-6 ${isDark ? "text-white/80" : "text-foreground/70"}`}>
-              צרו אלבום משפחתי דיגיטלי — כל אחד יכול להוסיף תמונות, לערוך, ולשתף את הזיכרונות הכי אהובים.
+              צרו את הקולאז׳ המשפחתי הראשון, או הצטרפו לקולאז׳ קיים עם קוד שיתוף.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-right">
-              <Step n={1} icon="✨" title="צרו קולאז׳" desc="לחצו על 'קולאז׳ חדש' ותתחילו לבנות אלבום" />
-              <Step n={2} icon="📤" title="הוסיפו תמונות" desc="העלו מהמכשיר, מהענן או גררו תמונות" />
-              <Step n={3} icon="❤️" title="שתפו עם המשפחה" desc="שלחו קוד שיתוף וכולם עורכים יחד בזמן אמת" />
-            </div>
+            <Button
+              onClick={handleCreate}
+              size="lg"
+              className="rounded-full shadow-lg text-base px-7 h-14"
+              style={{ background: theme.accent, color: "white" }}
+            >
+              <Plus className="w-5 h-5 ml-1" /> צור קולאז׳ ראשון
+            </Button>
+            <p className={`mt-4 text-xs ${isDark ? "text-white/60" : "text-foreground/60"}`}>
+              💡 לחץ על האייקון 🎨 בפינה השמאלית למעלה לניהול קולאז׳ים והצטרפות עם קוד
+            </p>
           </div>
         )}
 
-        {/* Collages grid */}
-        {collages.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {collages.map(c => (
-              <CollageCard
-                key={c.id}
-                collage={c}
-                isShared={c.device_id !== deviceId}
-                accent={theme.accent}
-                onOpen={() => setActiveId(c.id)}
-                onDelete={() => {
-                  const isShared = c.device_id !== deviceId;
-                  const msg = isShared ? `לעזוב את הקולאז׳ "${c.name}"?` : `למחוק את "${c.name}"?`;
-                  if (confirm(msg)) deleteCollage(c.id);
-                }}
-              />
-            ))}
-            {/* Add new card at the end */}
-            <button
-              onClick={handleCreate}
-              className="rounded-2xl border-2 border-dashed border-foreground/30 hover:border-foreground/60 transition-all active:scale-95 flex flex-col items-center justify-center gap-2 py-6 backdrop-blur-sm bg-background/30"
-              style={{ minHeight: 130 }}
-            >
-              <Plus className="w-8 h-8 text-foreground/60" />
-              <span className="text-sm font-bold text-foreground/70">קולאז׳ חדש</span>
-            </button>
+        {/* Home collage display */}
+        {!loading && homeCollage && (
+          <div
+            className="rounded-3xl p-6 sm:p-8 max-w-3xl mx-auto shadow-xl backdrop-blur-md border border-white/40"
+            style={{ background: theme.cardBg }}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <div className="text-right min-w-0 flex-1">
+                <div className="text-3xl mb-1">{homeCollage.emoji ?? "📸"}</div>
+                <h2 className={`text-xl sm:text-2xl font-bold truncate ${isDark ? "text-white" : "text-foreground"}`}>
+                  {homeCollage.name}
+                </h2>
+                <p className={`text-xs ${isDark ? "text-white/70" : "text-foreground/60"}`}>
+                  {homePreviewPhotos.length === 0 ? "אין עדיין תמונות" : `${homePreviewPhotos.length} תמונות אחרונות`}
+                </p>
+              </div>
+              <Button
+                onClick={() => setActiveId(homeCollage.id)}
+                size="lg"
+                className="rounded-full shadow-md flex-shrink-0"
+                style={{ background: theme.accent, color: "white" }}
+              >
+                <Settings2 className="w-4 h-4 ml-1" /> פתח / ערוך
+              </Button>
+            </div>
+
+            {/* Photos preview grid */}
+            {homePreviewPhotos.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                {homePreviewPhotos.map((url, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveId(homeCollage.id)}
+                    className="aspect-square rounded-xl overflow-hidden bg-white/50 hover:scale-[1.03] transition-transform shadow-md"
+                  >
+                    <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <button
+                onClick={() => setActiveId(homeCollage.id)}
+                className="w-full py-12 rounded-2xl border-2 border-dashed border-foreground/20 hover:border-foreground/40 transition-all text-center"
+              >
+                <ImageIcon className={`w-10 h-10 mx-auto mb-2 ${isDark ? "text-white/40" : "text-foreground/40"}`} />
+                <p className={`font-bold ${isDark ? "text-white/80" : "text-foreground/70"}`}>הוסף תמונות ראשונות</p>
+                <p className={`text-xs mt-1 ${isDark ? "text-white/50" : "text-foreground/50"}`}>לחץ כדי לפתוח את הקולאז׳</p>
+              </button>
+            )}
+
+            {collages.length > 1 && (
+              <p className={`text-center text-xs mt-4 ${isDark ? "text-white/60" : "text-foreground/60"}`}>
+                💡 יש לך {collages.length} קולאז׳ים — בחר את דף הבית באייקון 🎨
+              </p>
+            )}
           </div>
         )}
 
@@ -166,72 +207,6 @@ export default function FamilyHome() {
           </div>
         )}
       </div>
-
-      {/* Join dialog */}
-      <Dialog open={showJoin} onOpenChange={setShowJoin}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>הצטרף לקולאז׳ משפחתי</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-foreground/70">
-              הכנס את קוד השיתוף שקיבלת מבן משפחה כדי להוסיף תמונות ולערוך יחד.
-            </p>
-            <Input
-              placeholder="קוד שיתוף (8 תווים)"
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-              maxLength={8}
-              className="text-center text-xl font-mono tracking-[0.3em] uppercase"
-              autoFocus
-            />
-            <Button onClick={handleJoin} disabled={joining || joinCode.trim().length < 4} className="w-full">
-              {joining ? "מצטרף…" : "הצטרף"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-
-function Step({ n, icon, title, desc }: { n: number; icon: string; title: string; desc: string }) {
-  return (
-    <div className="bg-background/50 rounded-2xl p-4 backdrop-blur-sm border border-white/30">
-      <div className="text-3xl mb-2">{icon}</div>
-      <div className="text-xs font-bold text-foreground/50 mb-1">שלב {n}</div>
-      <div className="font-bold text-sm mb-1">{title}</div>
-      <div className="text-xs text-foreground/70">{desc}</div>
-    </div>
-  );
-}
-
-function CollageCard({ collage, isShared, accent, onOpen, onDelete }: { collage: FamilyCollage; isShared: boolean; accent: string; onOpen: () => void; onDelete: () => void }) {
-  return (
-    <div
-      className="group relative rounded-2xl p-4 cursor-pointer hover:shadow-xl transition-all active:scale-95 backdrop-blur-md border border-white/40 shadow-md"
-      onClick={onOpen}
-      style={{ background: collage.background ?? "rgba(255,255,255,0.7)", minHeight: 130 }}
-    >
-      {isShared && (
-        <div
-          className="absolute top-2 right-2 text-white rounded-full px-2 py-0.5 text-[10px] flex items-center gap-1 shadow"
-          style={{ background: accent }}
-        >
-          <Users className="w-2.5 h-2.5" /> משותף
-        </div>
-      )}
-      <div className="text-4xl text-center mb-2">{collage.emoji ?? "📸"}</div>
-      <div className="font-bold text-center text-sm truncate">{collage.name}</div>
-      <div className="text-[10px] text-center text-foreground/60 mt-1 flex items-center justify-center gap-1">
-        <ImageIcon className="w-2.5 h-2.5" />
-        <span>{collage.layout_type === "grid" ? "רשת" : collage.layout_type === "masonry" ? "פסיפס" : collage.layout_type === "freeform" ? "חופשי" : "תבנית"}</span>
-      </div>
-      <button
-        onClick={(e) => { e.stopPropagation(); onDelete(); }}
-        className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 bg-destructive text-destructive-foreground rounded-full p-1 transition-opacity shadow-md"
-      >
-        <Trash2 className="w-3 h-3" />
-      </button>
     </div>
   );
 }
