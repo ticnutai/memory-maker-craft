@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send, CalendarPlus } from "lucide-react";
+import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send, CalendarPlus, Home, Eye, EyeOff } from "lucide-react";
+import { loadHeartsConfig, saveHeartsConfig, HeartsDisplayConfig, HeartsFilterMode } from "@/lib/heartsDisplayConfig";
 import { format, differenceInDays, addYears, isBefore, parseISO, getMonth, getDate } from "date-fns";
 import { he } from "date-fns/locale";
 import BirthdayCalendarView from "./BirthdayCalendarView";
@@ -154,8 +155,10 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [editingEvent, setEditingEvent] = useState<boolean>(false); // true = editing family_events row
+  const [editingEvent, setEditingEvent] = useState<boolean>(false);
   const [inviteFor, setInviteFor] = useState<Birthday | null>(null);
+  const [heartsConfig, setHeartsConfig] = useState<HeartsDisplayConfig>(() => loadHeartsConfig());
+  const [showHomeSettings, setShowHomeSettings] = useState(false);
 
   const [formType, setFormType] = useState("birthday");
   const [formName, setFormName] = useState("");
