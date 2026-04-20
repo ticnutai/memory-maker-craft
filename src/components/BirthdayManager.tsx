@@ -554,7 +554,7 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
                       className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="הוספה ליומן גוגל">
                       <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
                     </a>
-                    <button onClick={() => deleteBirthday(b.id)} className="p-1.5 rounded-lg bg-muted hover:bg-destructive/10 transition-all active:scale-90">
+                    <button onClick={() => deleteEntry(b.id, false)} className="p-1.5 rounded-lg bg-muted hover:bg-destructive/10 transition-all active:scale-90">
                       <Trash2 className="w-3.5 h-3.5 text-destructive/60" />
                     </button>
                   </div>
