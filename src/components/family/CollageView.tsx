@@ -129,8 +129,9 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         {isVideo ? (
           <video
             src={p.image_url}
+            poster={p.thumbnail_url ?? undefined}
             style={{ filter }}
-            className="w-full h-full object-cover block"
+            className="w-full h-full object-cover block bg-black"
             autoPlay
             muted
             loop
@@ -304,7 +305,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
           {editingPhoto && (
             <div className="space-y-4">
               {editingPhoto.media_type === "video" ? (
-                <video src={editingPhoto.image_url} controls className="w-full max-h-60 rounded bg-black" style={{ filter: FILTERS.find(f => f.id === editingPhoto.filter_style)?.css ?? "" }} />
+                <video src={editingPhoto.image_url} poster={editingPhoto.thumbnail_url ?? undefined} controls className="w-full max-h-60 rounded bg-black" style={{ filter: FILTERS.find(f => f.id === editingPhoto.filter_style)?.css ?? "" }} />
               ) : (
                 <img src={editingPhoto.image_url} alt="" style={{ filter: FILTERS.find(f => f.id === editingPhoto.filter_style)?.css ?? "" }} className="w-full max-h-60 object-contain rounded" />
               )}
@@ -448,7 +449,8 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
             {isVid ? (
               <video
                 src={currentItem.image_url}
-                className="max-w-[95vw] max-h-[95vh] object-contain"
+                poster={currentItem.thumbnail_url ?? undefined}
+                className="max-w-[95vw] max-h-[95vh] object-contain bg-black"
                 autoPlay
                 controls
                 onClick={(e) => e.stopPropagation()}
