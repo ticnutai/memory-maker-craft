@@ -177,30 +177,46 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
   const accent = theme === "girl" ? "bg-game-pink" : "bg-game-blue";
 
   const loadBirthdays = useCallback(async () => {
-    const { data } = await supabase
-      .from("birthdays").select("*").eq("device_id", deviceId)
-      .order("birth_date", { ascending: true });
-    if (data) setBirthdays(data as Birthday[]);
+    const [{ data: bData }, { data: eData }] = await Promise.all([
+      supabase.from("birthdays").select("*").eq("device_id", deviceId).order("birth_date", { ascending: true }),
+      supabase.from("family_events").select("*").eq("device_id", deviceId).order("event_date", { ascending: true }),
+    ]);
+    if (bData) setBirthdays(bData as Birthday[]);
+    if (eData) setFamilyEvents(eData as FamilyEvent[]);
     setLoading(false);
   }, [deviceId]);
 
   useEffect(() => { loadBirthdays(); }, [loadBirthdays]);
 
   const resetForm = () => {
-    setFormName(""); setFormDate(""); setFormRelation("משפחה");
-    setFormEmoji("🎂"); setFormNotes(""); setFormColor("#f472b6");
-    setEditId(null); setShowForm(false);
+    setFormType("birthday"); setFormName(""); setFormDate(""); setFormRelation("משפחה");
+    setFormEmoji("🎂"); setFormNotes(""); setFormColor("#f472b6"); setFormRecurring(true);
+    setEditId(null); setEditingEvent(false); setShowForm(false);
     setDateMode("greg");
     setHebYear(getCurrentHebYear()); setHebMonth(7); setHebDay(1);
   };
 
   const editBirthday = (b: Birthday) => {
+    setFormType("birthday");
     setFormName(b.name); setFormDate(b.birth_date); setFormRelation(b.relation);
     setFormEmoji(b.emoji); setFormNotes(b.notes || ""); setFormColor(b.color);
-    setEditId(b.id); setShowForm(true);
+    setEditId(b.id); setEditingEvent(false); setShowForm(true);
     setDateMode("greg");
     try {
       const h = gregorianToHebrew(parseISO(b.birth_date));
+      setHebYear(h.hyear); setHebMonth(h.hmonth); setHebDay(h.hday);
+    } catch { /* ignore */ }
+  };
+
+  const editEvent = (ev: FamilyEvent) => {
+    setFormType(ev.event_type);
+    setFormName(ev.name); setFormDate(ev.event_date); setFormRelation("משפחה");
+    setFormEmoji(ev.emoji); setFormNotes(ev.notes || ""); setFormColor(ev.color);
+    setFormRecurring(ev.recurring);
+    setEditId(ev.id); setEditingEvent(true); setShowForm(true);
+    setDateMode("greg");
+    try {
+      const h = gregorianToHebrew(parseISO(ev.event_date));
       setHebYear(h.hyear); setHebMonth(h.hmonth); setHebDay(h.hday);
     } catch { /* ignore */ }
   };
@@ -214,23 +230,62 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
     } catch { /* invalid combo — leave formDate */ }
   }, [dateMode, hebYear, hebMonth, hebDay]);
 
-  const saveBirthday = async () => {
+  // Auto-set emoji & color when event type changes
+  const handleTypeChange = (typeId: string) => {
+    setFormType(typeId);
+    const t = EVENT_TYPES.find(e => e.id === typeId);
+    if (t) {
+      setFormEmoji(t.emoji);
+      setFormColor(t.defaultColor);
+    }
+  };
+
+  const saveEntry = async () => {
     if (!formName || !formDate) return;
-    const payload = {
-      device_id: deviceId, name: formName, birth_date: formDate,
-      relation: formRelation, emoji: formEmoji, notes: formNotes || null,
-      color: formColor, updated_at: new Date().toISOString(),
-    };
-    if (editId) {
-      await supabase.from("birthdays").update(payload).eq("id", editId);
+
+    if (formType === "birthday") {
+      // Save as birthday
+      const payload = {
+        device_id: deviceId, name: formName, birth_date: formDate,
+        relation: formRelation, emoji: formEmoji, notes: formNotes || null,
+        color: formColor, updated_at: new Date().toISOString(),
+      };
+      if (editId && !editingEvent) {
+        await supabase.from("birthdays").update(payload).eq("id", editId);
+      } else {
+        // If switching from event to birthday while editing, delete old event
+        if (editId && editingEvent) {
+          await supabase.from("family_events").delete().eq("id", editId);
+        }
+        await supabase.from("birthdays").insert(payload);
+      }
     } else {
-      await supabase.from("birthdays").insert(payload);
+      // Save as family event
+      const payload = {
+        device_id: deviceId, name: formName, event_date: formDate,
+        event_type: formType, emoji: formEmoji, color: formColor,
+        notes: formNotes || null, recurring: formRecurring,
+        updated_at: new Date().toISOString(),
+      };
+      if (editId && editingEvent) {
+        await supabase.from("family_events").update(payload).eq("id", editId);
+      } else {
+        // If switching from birthday to event while editing, delete old birthday
+        if (editId && !editingEvent) {
+          await supabase.from("birthdays").delete().eq("id", editId);
+        }
+        await supabase.from("family_events").insert(payload);
+      }
     }
     resetForm(); loadBirthdays();
   };
 
-  const deleteBirthday = async (id: string) => {
-    await supabase.from("birthdays").delete().eq("id", id);
+  const deleteEntry = async (id: string, isEvent: boolean) => {
+    if (isEvent) {
+      await supabase.from("family_events").delete().eq("id", id);
+    } else {
+      await supabase.from("birthdays").delete().eq("id", id);
+    }
     loadBirthdays();
   };
 
