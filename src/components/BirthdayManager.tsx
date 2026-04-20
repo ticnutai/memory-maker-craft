@@ -152,21 +152,25 @@ interface BirthdayManagerProps {
 
 export default function BirthdayManager({ theme }: BirthdayManagerProps) {
   const [birthdays, setBirthdays] = useState<Birthday[]>([]);
+  const [familyEvents, setFamilyEvents] = useState<FamilyEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("calendar");
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [editingEvent, setEditingEvent] = useState<boolean>(false); // true = editing family_events row
   const [inviteFor, setInviteFor] = useState<Birthday | null>(null);
 
+  const [formType, setFormType] = useState("birthday");
   const [formName, setFormName] = useState("");
   const [formDate, setFormDate] = useState("");
   const [formRelation, setFormRelation] = useState("משפחה");
   const [formEmoji, setFormEmoji] = useState("🎂");
   const [formNotes, setFormNotes] = useState("");
   const [formColor, setFormColor] = useState("#f472b6");
+  const [formRecurring, setFormRecurring] = useState(true);
   const [dateMode, setDateMode] = useState<"greg" | "heb">("greg");
   const [hebYear, setHebYear] = useState<number>(getCurrentHebYear());
-  const [hebMonth, setHebMonth] = useState<number>(7); // Tishrei default
+  const [hebMonth, setHebMonth] = useState<number>(7);
   const [hebDay, setHebDay] = useState<number>(1);
 
   const deviceId = getDeviceId();
