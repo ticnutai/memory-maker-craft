@@ -205,6 +205,7 @@ export type Database = {
           id: string
           layout_type: string
           name: string
+          share_code: string
           sort_order: number | null
           updated_at: string
         }
@@ -219,6 +220,7 @@ export type Database = {
           id?: string
           layout_type?: string
           name?: string
+          share_code?: string
           sort_order?: number | null
           updated_at?: string
         }
@@ -233,6 +235,7 @@ export type Database = {
           id?: string
           layout_type?: string
           name?: string
+          share_code?: string
           sort_order?: number | null
           updated_at?: string
         }
