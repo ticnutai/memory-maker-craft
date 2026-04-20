@@ -63,8 +63,12 @@ export async function extractMediaFromArchive(
   if (ext === "zip") {
     try {
       const files = await extractMediaFromZip(file);
+      if (files.length === 0) {
+        console.warn("[archiveExtract] ZIP opened but no media files found");
+      }
       return { files };
     } catch (e) {
+      console.error("[archiveExtract] ZIP extraction error:", e);
       return { files: [], error: "שגיאה בפתיחת קובץ ZIP" };
     }
   }
