@@ -535,6 +535,11 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
           )}
         </div>
       )}
+
+      {/* Invite Dialog */}
+      {inviteFor && (
+        <BirthdayInviteDialog birthday={inviteFor} onClose={() => setInviteFor(null)} />
+      )}
     </div>
   );
 }
