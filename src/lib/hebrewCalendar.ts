@@ -164,9 +164,9 @@ export function getHebDayInfo(date: Date): HebDayInfo {
   if (isShabbat) {
     try {
       const sedra = getSedra(hd.getFullYear());
-      const p = sedra.get(hd);
-      if (p && p.length) {
-        parsha = p.map(translateParsha).join(" - ");
+      const result = sedra.lookup(hd);
+      if (result && !result.chag && result.parsha && result.parsha.length) {
+        parsha = result.parsha.map(translateParsha).join(" - ");
       }
     } catch { /* ignore */ }
   }
