@@ -56,15 +56,13 @@ interface FamilyEvent {
 
 const COLORS = ["#f472b6", "#fb923c", "#facc15", "#4ade80", "#60a5fa", "#a78bfa", "#f87171", "#38bdf8"];
 
-// ─── Hebrew date helpers ───
+// ─── Hebrew date helpers (using proper gematria) ───
 function getHebrewDate(date: Date): string {
   try {
-    const formatter = new Intl.DateTimeFormat("he-IL-u-ca-hebrew", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-    return formatter.format(date);
+    const h = gregorianToHebrew(date);
+    const months = getHebMonthsForYear(h.hyear);
+    const monthName = months.find(m => m.index === h.hmonth)?.name ?? "";
+    return `${toHebrewNumeral(h.hday)} ${monthName} ${toHebrewYear(h.hyear)}`;
   } catch {
     return "";
   }
@@ -72,11 +70,10 @@ function getHebrewDate(date: Date): string {
 
 function getHebrewDateShort(date: Date): string {
   try {
-    const formatter = new Intl.DateTimeFormat("he-IL-u-ca-hebrew", {
-      day: "numeric",
-      month: "short",
-    });
-    return formatter.format(date);
+    const h = gregorianToHebrew(date);
+    const months = getHebMonthsForYear(h.hyear);
+    const monthName = months.find(m => m.index === h.hmonth)?.name ?? "";
+    return `${toHebrewNumeral(h.hday)} ${monthName}`;
   } catch {
     return "";
   }
