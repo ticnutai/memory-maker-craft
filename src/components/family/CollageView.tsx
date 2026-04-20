@@ -104,8 +104,10 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
       const archiveErrors: string[] = [];
 
       for (const file of Array.from(files)) {
+        console.log("[handleFiles] file:", file.name, "type:", file.type, "isArchive:", isArchiveFile(file));
         if (isArchiveFile(file)) {
           const { files: extracted, error } = await extractMediaFromArchive(file);
+          console.log("[handleFiles] extracted:", extracted.length, "error:", error);
           if (error) archiveErrors.push(error);
           allFiles.push(...extracted);
         } else {
