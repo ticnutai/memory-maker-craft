@@ -42,6 +42,12 @@ export interface FamilyCollage {
   share_code: string;
   created_at: string;
   updated_at: string;
+  parent_id: string | null;
+  is_folder: boolean;
+  category: string | null;
+  year_tag: number | null;
+  family_tag: string | null;
+  event_tag: string | null;
 }
 
 export interface FamilyPhoto {
