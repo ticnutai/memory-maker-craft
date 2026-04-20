@@ -139,6 +139,10 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
   const [formEmoji, setFormEmoji] = useState("🎂");
   const [formNotes, setFormNotes] = useState("");
   const [formColor, setFormColor] = useState("#f472b6");
+  const [dateMode, setDateMode] = useState<"greg" | "heb">("greg");
+  const [hebYear, setHebYear] = useState<number>(getCurrentHebYear());
+  const [hebMonth, setHebMonth] = useState<number>(7); // Tishrei default
+  const [hebDay, setHebDay] = useState<number>(1);
 
   const deviceId = getDeviceId();
   const accent = theme === "girl" ? "bg-game-pink" : "bg-game-blue";
