@@ -371,8 +371,31 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
       {showForm && (
         <div id="birthday-form" className="bg-card rounded-2xl p-5 border-2 border-muted shadow-lg space-y-4 bounce-in scroll-mt-20">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold text-sm">{editId ? "✏️ עריכת יום הולדת" : "🎂 הוספת יום הולדת"}</h3>
+            <h3 className="font-bold text-sm">
+              {editId ? "✏️ עריכה" : `${EVENT_TYPES.find(t => t.id === formType)?.emoji ?? "📅"} הוספת ${EVENT_TYPES.find(t => t.id === formType)?.label.split(" ").slice(1).join(" ") ?? "אירוע"}`}
+            </h3>
             <button onClick={resetForm} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
+          </div>
+
+          {/* Event type selector */}
+          <div>
+            <label className="text-xs font-bold text-muted-foreground mb-1.5 block">סוג אירוע</label>
+            <div className="flex flex-wrap gap-1.5">
+              {EVENT_TYPES.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => handleTypeChange(t.id)}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 border ${
+                    formType === t.id
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
