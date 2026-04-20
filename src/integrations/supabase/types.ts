@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      birthday_reminders: {
+        Row: {
+          birthday_id: string
+          channels: string[]
+          created_at: string
+          days_before: number[]
+          device_id: string
+          enabled: boolean
+          id: string
+          last_sent_at: string | null
+          last_sent_days_before: number | null
+          last_sent_for_year: number | null
+          recipient_id: string
+          updated_at: string
+        }
+        Insert: {
+          birthday_id: string
+          channels?: string[]
+          created_at?: string
+          days_before?: number[]
+          device_id: string
+          enabled?: boolean
+          id?: string
+          last_sent_at?: string | null
+          last_sent_days_before?: number | null
+          last_sent_for_year?: number | null
+          recipient_id: string
+          updated_at?: string
+        }
+        Update: {
+          birthday_id?: string
+          channels?: string[]
+          created_at?: string
+          days_before?: number[]
+          device_id?: string
+          enabled?: boolean
+          id?: string
+          last_sent_at?: string | null
+          last_sent_days_before?: number | null
+          last_sent_for_year?: number | null
+          recipient_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "birthday_reminders_birthday_id_fkey"
+            columns: ["birthday_id"]
+            isOneToOne: false
+            referencedRelation: "birthdays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "birthday_reminders_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "family_recipients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       birthdays: {
         Row: {
           birth_date: string
@@ -303,6 +363,42 @@ export type Database = {
           },
         ]
       }
+      family_recipients: {
+        Row: {
+          created_at: string
+          device_id: string
+          email: string | null
+          emoji: string | null
+          id: string
+          is_active: boolean
+          name: string
+          phone_whatsapp: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          email?: string | null
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          phone_whatsapp?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          email?: string | null
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone_whatsapp?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       game_settings: {
         Row: {
           animations_enabled: boolean | null
@@ -452,6 +548,39 @@ export type Database = {
           is_custom?: boolean
           name?: string
           pattern?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reminder_settings: {
+        Row: {
+          created_at: string
+          custom_message_template: string | null
+          device_id: string
+          enabled: boolean
+          id: string
+          message_style: string
+          send_hour_local: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom_message_template?: string | null
+          device_id: string
+          enabled?: boolean
+          id?: string
+          message_style?: string
+          send_hour_local?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom_message_template?: string | null
+          device_id?: string
+          enabled?: boolean
+          id?: string
+          message_style?: string
+          send_hour_local?: number
           updated_at?: string
         }
         Relationships: []
