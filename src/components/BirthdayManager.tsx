@@ -419,7 +419,6 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
       {viewMode === "calendar" && (
         <BirthdayCalendarView
           birthdays={birthdays}
-          holidays={JEWISH_HOLIDAYS}
           accent={accent}
           onAddOnDate={handleAddOnDate}
           onSendInvite={(b) => setInviteFor(b)}
