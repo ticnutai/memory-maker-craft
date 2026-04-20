@@ -105,6 +105,8 @@ export default function FamilyHome() {
           onCreateCollage={handleCreate}
           onDeleteCollage={deleteCollage}
           onJoinByCode={joinByCode}
+          slideshow={slideshow}
+          onSlideshowChange={setSlideshow}
         />
       </div>
 
