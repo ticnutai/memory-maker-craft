@@ -3,11 +3,12 @@ import CardSetSelect from "@/components/CardSetSelect";
 import GameBoard from "@/components/GameBoard";
 import TreasureHuntGame from "@/components/TreasureHuntGame";
 import TrainGame from "@/components/TrainGame";
+import FamilyHome from "@/components/family/FamilyHome";
 import { CardSetType, CardData, GameSettings } from "@/lib/gameData";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
-import { Gamepad2, Map, Train, Settings } from "lucide-react";
+import { Gamepad2, Map, Train, Settings, Home } from "lucide-react";
 
-type AppTab = "memory" | "treasure" | "train";
+type AppTab = "memory" | "treasure" | "train" | "family";
 type Screen = "home" | "game";
 
 const Index = () => {
