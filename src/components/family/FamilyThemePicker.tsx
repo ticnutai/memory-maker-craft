@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Palette, Plus, Check, KeyRound, Home as HomeIcon, Trash2, Users, Image as ImageIcon, Play } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Palette, Plus, Check, KeyRound, Home as HomeIcon, Trash2, Users, Image as ImageIcon, Play, FolderOpen, Folder, ChevronLeft, Filter, Tag, CalendarDays, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -14,19 +14,26 @@ import {
 import { FamilyCollage } from "@/hooks/useFamilyCollages";
 import { toast } from "sonner";
 
+const CATEGORIES = [
+  { id: "holidays", label: "🎉 חגים", emoji: "🎉" },
+  { id: "trips", label: "✈️ טיולים", emoji: "✈️" },
+  { id: "birthdays", label: "🎂 ימי הולדת", emoji: "🎂" },
+  { id: "daily", label: "📷 יום-יום", emoji: "📷" },
+  { id: "school", label: "🎓 בית ספר", emoji: "🎓" },
+  { id: "events", label: "🎊 אירועים", emoji: "🎊" },
+];
+
 interface ThemePickerProps {
   current: FamilyTheme;
   onChange: (theme: FamilyTheme) => void;
-  // Collages tab
   collages: FamilyCollage[];
   deviceId: string;
   homeCollageId: string | null;
   onSetHomeCollage: (id: string | null) => void;
   onOpenCollage: (id: string) => void;
-  onCreateCollage: () => Promise<void>;
+  onCreateCollage: (partial?: Partial<FamilyCollage>) => Promise<FamilyCollage>;
   onDeleteCollage: (id: string) => void;
   onJoinByCode: (code: string) => Promise<FamilyCollage | null>;
-  // Slideshow tab
   slideshow: SlideshowConfig;
   onSlideshowChange: (cfg: SlideshowConfig) => void;
 }
@@ -42,6 +49,15 @@ export default function FamilyThemePicker({
   const [showCustom, setShowCustom] = useState(false);
   const [joinCode, setJoinCode] = useState("");
   const [joining, setJoining] = useState(false);
+
+  // Folder navigation
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [filterYear, setFilterYear] = useState<number | null>(null);
+  const [filterFamily, setFilterFamily] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [showNewFolder, setShowNewFolder] = useState(false);
 
   const existing = loadCustomTheme();
   const [custom, setCustom] = useState<FamilyTheme>(existing ?? {
