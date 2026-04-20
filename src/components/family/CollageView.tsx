@@ -99,13 +99,35 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
     if (!files || files.length === 0) return;
     setUploading(true);
     try {
-      await uploadFiles(Array.from(files));
-      const vids = Array.from(files).filter(f => f.type.startsWith("video/")).length;
-      const imgs = files.length - vids;
-      const parts: string[] = [];
-      if (imgs > 0) parts.push(`${imgs} תמונות`);
-      if (vids > 0) parts.push(`${vids} סרטונים`);
-      toast.success(`הועלו ${parts.join(" + ")}`);
+      const { isArchiveFile, extractMediaFromArchive } = await import("@/lib/archiveExtract");
+      const allFiles: File[] = [];
+      const archiveErrors: string[] = [];
+
+      for (const file of Array.from(files)) {
+        if (isArchiveFile(file)) {
+          const { files: extracted, error } = await extractMediaFromArchive(file);
+          if (error) archiveErrors.push(error);
+          allFiles.push(...extracted);
+        } else {
+          allFiles.push(file);
+        }
+      }
+
+      if (archiveErrors.length > 0) {
+        archiveErrors.forEach(e => toast.error(e));
+      }
+
+      if (allFiles.length > 0) {
+        await uploadFiles(allFiles);
+        const vids = allFiles.filter(f => f.type.startsWith("video/")).length;
+        const imgs = allFiles.length - vids;
+        const parts: string[] = [];
+        if (imgs > 0) parts.push(`${imgs} תמונות`);
+        if (vids > 0) parts.push(`${vids} סרטונים`);
+        toast.success(`הועלו ${parts.join(" + ")}`);
+      } else if (archiveErrors.length === 0) {
+        toast.info("לא נמצאו תמונות או סרטונים בארכיון");
+      }
     } catch (e) {
       toast.error("שגיאה בהעלאה");
     } finally {
@@ -238,7 +260,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*,video/*"
+        accept="image/*,video/*,.zip,.rar,application/zip,application/x-rar-compressed"
         multiple
         className="hidden"
         onChange={(e) => { handleFiles(e.target.files); if (fileInputRef.current) fileInputRef.current.value = ""; }}
