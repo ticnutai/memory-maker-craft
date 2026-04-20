@@ -488,6 +488,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
       {/* Legend */}
       <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground px-1">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-pink-400" />יום הולדת</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400" />אירוע משפחתי</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-amber-100 border border-amber-400" />יום טוב</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-blue-50 border border-blue-300" />שבת</span>
         <span className="flex items-center gap-1"><Moon className="w-2.5 h-2.5 text-blue-600" />ראש חודש</span>
