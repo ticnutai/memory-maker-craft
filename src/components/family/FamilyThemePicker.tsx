@@ -78,7 +78,13 @@ export default function FamilyThemePicker({
   const setAsHome = (id: string) => {
     saveHomeCollageId(id);
     onSetHomeCollage(id);
-    toast.success("הקולאז׳ נקבע כדף הבית 🏠");
+    // Auto-enable slideshow when setting a home collage
+    if (!slideshow.enabled) {
+      const next = { ...slideshow, enabled: true };
+      saveSlideshowConfig(next);
+      onSlideshowChange(next);
+    }
+    toast.success("הקולאז׳ נקבע כדף הבית 🏠 + Slideshow הופעל");
   };
 
   const clearHome = () => {
