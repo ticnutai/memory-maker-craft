@@ -59,7 +59,12 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
     setUploading(true);
     try {
       await uploadFiles(Array.from(files));
-      toast.success(`הועלו ${files.length} תמונות`);
+      const vids = Array.from(files).filter(f => f.type.startsWith("video/")).length;
+      const imgs = files.length - vids;
+      const parts: string[] = [];
+      if (imgs > 0) parts.push(`${imgs} תמונות`);
+      if (vids > 0) parts.push(`${vids} סרטונים`);
+      toast.success(`הועלו ${parts.join(" + ")}`);
     } catch (e) {
       toast.error("שגיאה בהעלאה");
     } finally {
