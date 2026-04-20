@@ -205,6 +205,13 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
     resetForm();
     setFormDate(format(date, "yyyy-MM-dd"));
     setShowForm(true);
+    setTimeout(() => {
+      const formEl = document.getElementById("birthday-form");
+      if (formEl) formEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      else window.scrollTo({ top: 0, behavior: "smooth" });
+      const nameInput = document.getElementById("birthday-name-input") as HTMLInputElement | null;
+      nameInput?.focus();
+    }, 100);
   };
 
   if (loading) return <div className="flex justify-center py-8"><div className="animate-spin text-2xl">🎂</div></div>;
