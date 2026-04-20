@@ -22,19 +22,33 @@ interface Birthday {
   notes: string | null;
 }
 
+interface FamilyEvent {
+  id: string;
+  device_id: string;
+  name: string;
+  event_date: string;
+  event_type: string;
+  emoji: string;
+  color: string;
+  notes: string | null;
+  recurring: boolean;
+}
+
 interface Props {
   birthdays: Birthday[];
+  familyEvents?: FamilyEvent[];
   accent: string;
   onAddOnDate: (date: Date) => void;
   onSendInvite: (b: Birthday) => void;
   onEdit: (b: Birthday) => void;
+  onEditEvent?: (ev: FamilyEvent) => void;
 }
 
 type CalMode = "week" | "month" | "year";
 
 const HEBREW_DAYS = ["א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ש'"];
 
-export default function BirthdayCalendarView({ birthdays, accent, onAddOnDate, onSendInvite, onEdit }: Props) {
+export default function BirthdayCalendarView({ birthdays, familyEvents = [], accent, onAddOnDate, onSendInvite, onEdit, onEditEvent }: Props) {
   const [mode, setMode] = useState<CalMode>("month");
   const [cursor, setCursor] = useState(new Date());
   const today = new Date();
