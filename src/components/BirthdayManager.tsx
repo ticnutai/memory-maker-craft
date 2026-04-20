@@ -393,6 +393,9 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
                     {b.notes && <p className="text-[10px] text-muted-foreground mt-1 truncate">📝 {b.notes}</p>}
                   </div>
                   <div className="flex flex-col gap-1 shrink-0">
+                    <button onClick={() => setInviteFor(b)} className="p-1.5 rounded-lg transition-all active:scale-90" style={{ background: b.color + "30" }} title="שלח הזמנה">
+                      <Send className="w-3.5 h-3.5" style={{ color: b.color }} />
+                    </button>
                     <button onClick={() => editBirthday(b)} className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90">
                       <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
