@@ -56,12 +56,12 @@ export default function FamilyHome() {
       const limit = slideshow.enabled ? 50 : 9;
       const { data } = await supabase
         .from("family_photos")
-        .select("image_url, caption")
+        .select("image_url, caption, media_type")
         .eq("collage_id", displayCollageId)
         .order("sort_order", { ascending: true })
         .limit(limit);
       if (!cancelled) {
-        setHomePreviewPhotos((data ?? []).map(p => ({ url: p.image_url, caption: p.caption })));
+        setHomePreviewPhotos((data ?? []).map(p => ({ url: p.image_url, caption: p.caption, media_type: p.media_type ?? "image" })));
       }
     })();
     return () => { cancelled = true; };
