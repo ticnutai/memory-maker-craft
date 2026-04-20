@@ -303,7 +303,11 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
           <DialogHeader><DialogTitle>עריכת תמונה</DialogTitle></DialogHeader>
           {editingPhoto && (
             <div className="space-y-4">
-              <img src={editingPhoto.image_url} alt="" style={{ filter: FILTERS.find(f => f.id === editingPhoto.filter_style)?.css ?? "" }} className="w-full max-h-60 object-contain rounded" />
+              {editingPhoto.media_type === "video" ? (
+                <video src={editingPhoto.image_url} controls className="w-full max-h-60 rounded bg-black" style={{ filter: FILTERS.find(f => f.id === editingPhoto.filter_style)?.css ?? "" }} />
+              ) : (
+                <img src={editingPhoto.image_url} alt="" style={{ filter: FILTERS.find(f => f.id === editingPhoto.filter_style)?.css ?? "" }} className="w-full max-h-60 object-contain rounded" />
+              )}
               <div>
                 <Label>כותרת</Label>
                 <Input value={editingPhoto.caption ?? ""} onChange={(e) => setEditingPhoto({ ...editingPhoto, caption: e.target.value })} />
