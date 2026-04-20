@@ -201,6 +201,20 @@ export function useFamilyPhotos(collageId: string | null) {
     return uploaded;
   }, [collageId, deviceId, photos.length, refresh]);
 
+  const addFromUrls = useCallback(async (urls: string[]) => {
+    if (!collageId || urls.length === 0) return [];
+    const startOrder = photos.length;
+    const rows = urls.map((url, i) => ({
+      collage_id: collageId,
+      device_id: deviceId,
+      image_url: url,
+      sort_order: startOrder + i,
+    }));
+    const { data } = await supabase.from("family_photos").insert(rows).select();
+    await refresh();
+    return (data ?? []) as FamilyPhoto[];
+  }, [collageId, deviceId, photos.length, refresh]);
+
   const updatePhoto = useCallback(async (id: string, patch: Partial<FamilyPhoto>) => {
     await supabase.from("family_photos").update(patch).eq("id", id);
     await refresh();
