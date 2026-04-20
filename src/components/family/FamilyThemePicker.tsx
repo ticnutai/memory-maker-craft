@@ -26,6 +26,9 @@ interface ThemePickerProps {
   onCreateCollage: () => Promise<void>;
   onDeleteCollage: (id: string) => void;
   onJoinByCode: (code: string) => Promise<FamilyCollage | null>;
+  // Slideshow tab
+  slideshow: SlideshowConfig;
+  onSlideshowChange: (cfg: SlideshowConfig) => void;
 }
 
 export default function FamilyThemePicker({
