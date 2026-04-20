@@ -301,6 +301,48 @@ export type Database = {
         }
         Relationships: []
       }
+      family_events: {
+        Row: {
+          color: string | null
+          created_at: string
+          device_id: string
+          emoji: string | null
+          event_date: string
+          event_type: string
+          id: string
+          name: string
+          notes: string | null
+          recurring: boolean
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          device_id: string
+          emoji?: string | null
+          event_date: string
+          event_type?: string
+          id?: string
+          name: string
+          notes?: string | null
+          recurring?: boolean
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          device_id?: string
+          emoji?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          recurring?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       family_photos: {
         Row: {
           caption: string | null
