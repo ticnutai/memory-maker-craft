@@ -402,34 +402,38 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
           <div className="space-y-4">
             <div>
               <Label>שם</Label>
-              <Input value={collage.name} onChange={(e) => onUpdateCollage(collage.id, { name: e.target.value })} />
+              <Input value={settingsDraft.name} onChange={(e) => setSettingsDraft((prev) => ({ ...prev, name: e.target.value }))} />
             </div>
             <div>
               <Label>אימוג'י</Label>
-              <Input value={collage.emoji ?? ""} onChange={(e) => onUpdateCollage(collage.id, { emoji: e.target.value })} />
+              <Input value={settingsDraft.emoji} onChange={(e) => setSettingsDraft((prev) => ({ ...prev, emoji: e.target.value }))} />
             </div>
             <div>
               <Label>פריסה</Label>
               <div className="flex flex-wrap gap-2 mt-1">
                 {LAYOUTS.map(l => (
-                  <button key={l.id} onClick={() => onUpdateCollage(collage.id, { layout_type: l.id })}
-                    className={`px-3 py-1 text-xs rounded-full border ${collage.layout_type === l.id ? "bg-primary text-primary-foreground" : "bg-background"}`}>
+                  <button key={l.id} onClick={() => setSettingsDraft((prev) => ({ ...prev, layout_type: l.id }))}
+                    className={`px-3 py-1 text-xs rounded-full border ${settingsDraft.layout_type === l.id ? "bg-primary text-primary-foreground" : "bg-background"}`}>
                     {l.label}
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <Label>עמודות: {collage.cols}</Label>
-              <Slider min={1} max={6} step={1} value={[collage.cols]} onValueChange={(v) => onUpdateCollage(collage.id, { cols: v[0] })} />
+              <Label>עמודות: {settingsDraft.cols}</Label>
+              <Slider min={1} max={6} step={1} value={[settingsDraft.cols]} onValueChange={(v) => setSettingsDraft((prev) => ({ ...prev, cols: v[0] }))} />
             </div>
             <div>
-              <Label>מרווח: {collage.gap}px</Label>
-              <Slider min={0} max={32} step={2} value={[collage.gap]} onValueChange={(v) => onUpdateCollage(collage.id, { gap: v[0] })} />
+              <Label>מרווח: {settingsDraft.gap}px</Label>
+              <Slider min={0} max={32} step={2} value={[settingsDraft.gap]} onValueChange={(v) => setSettingsDraft((prev) => ({ ...prev, gap: v[0] }))} />
             </div>
             <div>
               <Label>צבע רקע</Label>
-              <Input type="color" value={collage.background ?? "#ffffff"} onChange={(e) => onUpdateCollage(collage.id, { background: e.target.value })} className="h-10" />
+              <Input type="color" value={settingsDraft.background} onChange={(e) => setSettingsDraft((prev) => ({ ...prev, background: e.target.value }))} className="h-10" />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" className="flex-1" onClick={() => setShowSettings(false)} disabled={savingSettings}>ביטול</Button>
+              <Button className="flex-1" onClick={handleSaveSettings} disabled={savingSettings}>{savingSettings ? "שומר..." : "שמור ✓"}</Button>
             </div>
           </div>
         </DialogContent>
