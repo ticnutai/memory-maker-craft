@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Plus, Upload, Download, Play, Trash2, Settings, ArrowLeft, GripVertical, Pencil } from "lucide-react";
+import { Plus, Upload, Download, Play, Trash2, Settings, ArrowLeft, GripVertical, Pencil, Share2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
