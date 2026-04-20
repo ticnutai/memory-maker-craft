@@ -128,10 +128,11 @@ export default function FamilyThemePicker({
             <DialogTitle>בית משפחת טננבאום 🏠</DialogTitle>
           </DialogHeader>
 
-          <Tabs value={tab} onValueChange={(v) => setTab(v as "collages" | "themes")}>
-            <TabsList className="grid grid-cols-2 w-full">
-              <TabsTrigger value="collages">📸 קולאז׳ים</TabsTrigger>
-              <TabsTrigger value="themes">🎨 ערכות נושא</TabsTrigger>
+          <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+            <TabsList className="grid grid-cols-3 w-full">
+              <TabsTrigger value="collages" className="text-xs">📸 קולאז׳ים</TabsTrigger>
+              <TabsTrigger value="slideshow" className="text-xs">▶️ Slideshow</TabsTrigger>
+              <TabsTrigger value="themes" className="text-xs">🎨 ערכות</TabsTrigger>
             </TabsList>
 
             {/* Collages tab */}
