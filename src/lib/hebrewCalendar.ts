@@ -189,3 +189,60 @@ export function getHebMonthLabel(date: Date): string {
   const monthName = hd.getMonthName();
   return HEB_MONTH_NAMES[monthName] || monthName;
 }
+
+// ── Hebrew month options ──
+export interface HebMonthOption {
+  index: number;
+  name: string;
+}
+
+const HEB_MONTHS_ORDER: { idx: number; name: string }[] = [
+  { idx: 7, name: "תשרי" },
+  { idx: 8, name: "חשון" },
+  { idx: 9, name: "כסלו" },
+  { idx: 10, name: "טבת" },
+  { idx: 11, name: "שבט" },
+  { idx: 12, name: "אדר" },
+  { idx: 13, name: "אדר ב׳" },
+  { idx: 1, name: "ניסן" },
+  { idx: 2, name: "אייר" },
+  { idx: 3, name: "סיון" },
+  { idx: 4, name: "תמוז" },
+  { idx: 5, name: "אב" },
+  { idx: 6, name: "אלול" },
+];
+
+export function getHebMonthsForYear(hyear: number): HebMonthOption[] {
+  const isLeap = HDate.isLeapYear(hyear);
+  return HEB_MONTHS_ORDER
+    .filter(m => {
+      if (!isLeap && m.idx === 13) return false;
+      return true;
+    })
+    .map(m => ({
+      index: m.idx,
+      name: isLeap && m.idx === 12 ? "אדר א׳" : m.name,
+    }));
+}
+
+export function hebrewToGregorian(hyear: number, hmonth: number, hday: number): Date {
+  const hd = new HDate(hday, hmonth, hyear);
+  return hd.greg();
+}
+
+export function getCurrentHebYear(): number {
+  return new HDate(new Date()).getFullYear();
+}
+
+export function daysInHebMonth(hyear: number, hmonthIdx: number): number {
+  try {
+    return HDate.daysInMonth(hmonthIdx, hyear);
+  } catch {
+    return 30;
+  }
+}
+
+export function gregorianToHebrew(date: Date): { hyear: number; hmonth: number; hday: number } {
+  const hd = new HDate(date);
+  return { hyear: hd.getFullYear(), hmonth: hd.getMonth(), hday: hd.getDate() };
+}
