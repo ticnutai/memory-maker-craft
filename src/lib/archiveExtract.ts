@@ -34,12 +34,16 @@ export function isArchiveFile(file: File): boolean {
  * Returns an array of File objects ready for upload.
  */
 export async function extractMediaFromZip(file: File): Promise<File[]> {
+  console.log("[archiveExtract] Loading ZIP, size:", file.size, "name:", file.name);
   const zip = await JSZip.loadAsync(file);
+  const allNames = Object.keys(zip.files);
+  console.log("[archiveExtract] ZIP entries:", allNames.length, allNames.slice(0, 5));
   const results: File[] = [];
 
   const entries = Object.entries(zip.files).filter(
     ([name, entry]) => !entry.dir && isMediaFile(name) && !name.startsWith("__MACOSX")
   );
+  console.log("[archiveExtract] Media entries after filter:", entries.length);
 
   for (const [name, entry] of entries) {
     const blob = await entry.async("blob");
