@@ -951,9 +951,14 @@ export default function FamilyAlbums() {
                   {visibleItems.map(c => {
                     const { isShared, isHome, childCount, canManage } = getItemInfo(c);
                     return (
-                      <div key={c.id} {...dragProps(c)} className={`rounded-xl border p-4 transition-all cursor-pointer group ${dragClass(c, isHome)}`} onClick={() => itemClick(c)}>
+                      <div key={c.id} {...dragProps(c)} className={`rounded-xl border p-4 transition-all cursor-pointer group ${dragClass(c, isHome)} ${selectMode && selectedIds.has(c.id) ? "ring-2 ring-primary bg-primary/10" : ""}`} onClick={() => itemClick(c)}>
                         <div className="flex items-start gap-3">
-                          {user && <GripVertical className="w-4 h-4 mt-3 text-muted-foreground/50 flex-shrink-0 cursor-grab active:cursor-grabbing" />}
+                          {selectMode && (
+                            <span className="mt-3 flex-shrink-0">
+                              {selectedIds.has(c.id) ? <CheckSquare className="w-4 h-4 text-primary" /> : <Square className="w-4 h-4 text-muted-foreground" />}
+                            </span>
+                          )}
+                          {!selectMode && user && <GripVertical className="w-4 h-4 mt-3 text-muted-foreground/50 flex-shrink-0 cursor-grab active:cursor-grabbing" />}
                           <span className="text-4xl flex-shrink-0">{c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}</span>
                           <div className="flex-1 min-w-0">
                             <div className="font-bold text-sm truncate flex items-center gap-1">
