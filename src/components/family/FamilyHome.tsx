@@ -50,7 +50,7 @@ export default function FamilyHome({
 
   const saveCloudSlideshow = async (cfg: SlideshowConfig) => {
     if (!user) return;
-    const { error } = await supabase.from("user_preferences").upsert({
+    const { error } = await (supabase as any).from("user_preferences").upsert({
       user_id: user.id,
       slideshow_config: cfg as unknown as Json,
       updated_at: cfg.updatedAt,
@@ -84,7 +84,7 @@ export default function FamilyHome({
 
     (async () => {
       const localCfg = loadSlideshowConfig();
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("user_preferences")
         .select("slideshow_config, updated_at")
         .eq("user_id", user.id)
