@@ -7,6 +7,7 @@ import FamilyHome from "@/components/family/FamilyHome";
 import FamilyAlbums from "@/components/family/FamilyAlbums";
 import BirthdayManager from "@/components/BirthdayManager";
 import AppSidebar, { SidebarSection } from "@/components/AppSidebar";
+import HomeNav from "@/components/HomeNav";
 import { CardSetType, CardData, GameSettings } from "@/lib/gameData";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { useFamily } from "@/hooks/useFamily";
