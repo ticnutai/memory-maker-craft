@@ -26,7 +26,7 @@ const VIEW_MODES: { id: AlbumViewMode; label: string; icon: typeof LayoutGrid }[
   { id: "gallery", label: "גלריה", icon: GalleryHorizontalEnd },
 ];
 
-
+const CATEGORIES = [
   { id: "holidays", label: "🎉 חגים", emoji: "🎉" },
   { id: "trips", label: "✈️ טיולים", emoji: "✈️" },
   { id: "birthdays", label: "🎂 ימי הולדת", emoji: "🎂" },
