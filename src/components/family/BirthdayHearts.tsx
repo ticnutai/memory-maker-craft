@@ -88,7 +88,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
       const timeFilter = (daysUntil: number, date: Date) => {
         switch (filterMode) {
           case "all": return true;
-          case "month": return date.getMonth() === currentMonth || daysUntil <= 30;
+          case "month": return date.getMonth() === currentMonth && date.getFullYear() === now.getFullYear();
           case "30days": return daysUntil <= 30;
           case "7days": return daysUntil <= 7;
           default: return true;
