@@ -3,7 +3,7 @@ import {
   Plus, FolderPlus, KeyRound, Trash2, Users, ChevronLeft,
   Home as HomeIcon, FolderOpen, Image as ImageIcon, Filter, Tag, CalendarDays, User,
   Pencil, Eye, Search, Archive, RotateCcw, GripVertical,
-  LayoutGrid, List, Table2, GalleryHorizontalEnd, Upload,
+  LayoutGrid, List, Table2, GalleryHorizontalEnd, Upload, CheckSquare, Square, X, Move,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +73,8 @@ export default function FamilyAlbums() {
   const [externalDragOver, setExternalDragOver] = useState(false);
   const [externalDropTarget, setExternalDropTarget] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectMode, setSelectMode] = useState(false);
   const dropCounterRef = useRef(0);
 
   // Persist view mode to cloud + localStorage
@@ -248,12 +250,63 @@ export default function FamilyAlbums() {
 
   const toggleFolder = (id: string) => setExpandedFolders((prev) => ({ ...prev, [id]: !prev[id] }));
 
+  // ─── Selection ───
+  const toggleSelect = useCallback((id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelectedIds(new Set(visibleItems.map(c => c.id)));
+  }, [visibleItems]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+    setSelectMode(false);
+  }, []);
+
+  const moveSelectedTo = useCallback(async (targetFolderId: string | null) => {
+    if (selectedIds.size === 0) return;
+    const items = collages.filter(c => selectedIds.has(c.id));
+    let moved = 0;
+    for (const item of items) {
+      if (item.id === targetFolderId) continue;
+      if (item.parent_id === targetFolderId) continue;
+      // cycle check
+      if (targetFolderId) {
+        let parentId: string | null = targetFolderId;
+        let cycle = false;
+        while (parentId) {
+          if (parentId === item.id) { cycle = true; break; }
+          const parent = collages.find(c => c.id === parentId);
+          parentId = parent?.parent_id ?? null;
+        }
+        if (cycle) continue;
+      }
+      try {
+        await updateCollage(item.id, { parent_id: targetFolderId } as Partial<FamilyCollage>);
+        moved++;
+      } catch { /* skip */ }
+    }
+    if (moved > 0) toast.success(`${moved} פריטים הועברו`);
+    clearSelection();
+  }, [selectedIds, collages, updateCollage, clearSelection]);
+
   // ─── Drag & Drop ───
   const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
-    e.dataTransfer.setData("text/plain", id);
+    // If dragging a selected item, carry all selected
+    const ids = selectedIds.has(id) && selectedIds.size > 1
+      ? Array.from(selectedIds)
+      : [id];
+    e.dataTransfer.setData("text/plain", JSON.stringify(ids));
     e.dataTransfer.effectAllowed = "move";
     setDragItemId(id);
-  }, []);
+  }, [selectedIds]);
 
   const handleDragOver = useCallback((e: React.DragEvent, targetId: string | null) => {
     e.preventDefault();
@@ -269,36 +322,46 @@ export default function FamilyAlbums() {
     e.preventDefault();
     setDragOverId(null);
     setDragItemId(null);
-    const itemId = e.dataTransfer.getData("text/plain");
-    if (!itemId || itemId === targetFolderId) return;
-    
-    const item = collages.find(c => c.id === itemId);
-    if (!item) return;
-    if (item.parent_id === targetFolderId) return; // already there
+    const raw = e.dataTransfer.getData("text/plain");
+    if (!raw) return;
 
-    // Prevent dropping a folder into itself or its descendant
-    if (targetFolderId) {
-      let parentId: string | null = targetFolderId;
-      while (parentId) {
-        if (parentId === itemId) {
-          toast.error("לא ניתן להעביר תיקייה לתוך עצמה");
-          return;
+    // Parse multi-item or single-item payload
+    let itemIds: string[];
+    try { itemIds = JSON.parse(raw); } catch { itemIds = [raw]; }
+    if (!Array.isArray(itemIds)) itemIds = [raw];
+    itemIds = itemIds.filter(id => id !== targetFolderId);
+    if (itemIds.length === 0) return;
+
+    let moved = 0;
+    for (const itemId of itemIds) {
+      const item = collages.find(c => c.id === itemId);
+      if (!item || item.parent_id === targetFolderId) continue;
+      // Cycle check
+      if (targetFolderId) {
+        let parentId: string | null = targetFolderId;
+        let cycle = false;
+        while (parentId) {
+          if (parentId === itemId) { cycle = true; break; }
+          const parent = collages.find(c => c.id === parentId);
+          parentId = parent?.parent_id ?? null;
         }
-        const parent = collages.find(c => c.id === parentId);
-        parentId = parent?.parent_id ?? null;
+        if (cycle) { if (itemIds.length === 1) toast.error("לא ניתן להעביר תיקייה לתוך עצמה"); continue; }
       }
+      try {
+        await updateCollage(itemId, { parent_id: targetFolderId } as Partial<FamilyCollage>);
+        moved++;
+      } catch { /* skip */ }
     }
-
-    try {
-      await updateCollage(itemId, { parent_id: targetFolderId } as Partial<FamilyCollage>);
-      const targetName = targetFolderId
-        ? collages.find(c => c.id === targetFolderId)?.name ?? "תיקייה"
-        : "שורש";
-      toast.success(`"${item.name}" הועבר ל-${targetName}`);
-    } catch {
-      toast.error("שגיאה בהעברה");
+    const targetName = targetFolderId
+      ? collages.find(c => c.id === targetFolderId)?.name ?? "תיקייה"
+      : "שורש";
+    if (moved > 0) {
+      toast.success(moved === 1
+        ? `"${collages.find(c => c.id === itemIds[0])?.name ?? ""}" הועבר ל-${targetName}`
+        : `${moved} פריטים הועברו ל-${targetName}`);
     }
-  }, [collages, updateCollage]);
+    if (selectedIds.size > 0) clearSelection();
+  }, [collages, updateCollage, selectedIds, clearSelection]);
 
   // ─── External File Drop (from OS) ───
   const isExternalFileDrag = useCallback((e: React.DragEvent) => {
@@ -606,6 +669,10 @@ export default function FamilyAlbums() {
                 );
               })}
             </div>
+            <Button size="sm" variant={selectMode ? "default" : "outline"} onClick={() => { setSelectMode(m => !m); if (selectMode) clearSelection(); }} disabled={!user}>
+              <CheckSquare className="w-4 h-4 ml-1" />
+              בחירה
+            </Button>
             <Button size="sm" variant={showArchived ? "default" : "outline"} onClick={() => setShowArchived((v) => !v)}>
               <Archive className="w-4 h-4 ml-1" />
               {showArchived ? "מצב ארכיון" : "ארכיון"}
@@ -773,13 +840,50 @@ export default function FamilyAlbums() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="mb-3 text-xs text-muted-foreground">
-          {visibleItems.length === 0 ? "ריק" : `${folderCount} תיקיות · ${albumCount} אלבומים`}
+        {/* Stats + Selection toolbar */}
+        <div className="mb-3 text-xs text-muted-foreground flex items-center gap-3 flex-wrap">
+          <span>{visibleItems.length === 0 ? "ריק" : `${folderCount} תיקיות · ${albumCount} אלבומים`}</span>
           {homeCollageId && !currentFolderId && (
-            <button onClick={clearHome} className="mr-3 underline hover:text-foreground">נקה דף בית</button>
+            <button onClick={clearHome} className="underline hover:text-foreground">נקה דף בית</button>
           )}
         </div>
+        {selectMode && (
+          <div className="mb-3 p-2.5 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-medium text-foreground">
+              {selectedIds.size > 0 ? `${selectedIds.size} נבחרו` : "לחץ על פריטים לבחירה"}
+            </span>
+            <Button size="sm" variant="ghost" onClick={selectAll} className="text-xs h-7">
+              בחר הכל
+            </Button>
+            {selectedIds.size > 0 && (
+              <>
+                <Button size="sm" variant="ghost" onClick={clearSelection} className="text-xs h-7">
+                  <X className="w-3 h-3 ml-1" />
+                  נקה בחירה
+                </Button>
+                <div className="flex items-center gap-1 mr-auto">
+                  <Move className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">העבר ל:</span>
+                  <button
+                    onClick={() => moveSelectedTo(null)}
+                    className="text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors"
+                  >
+                    🏠 שורש
+                  </button>
+                  {folderItems.filter(f => !selectedIds.has(f.id)).slice(0, 5).map(f => (
+                    <button
+                      key={f.id}
+                      onClick={() => moveSelectedTo(f.id)}
+                      className="text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors truncate max-w-[120px]"
+                    >
+                      {f.emoji ?? "📁"} {f.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4">
           <aside className="border rounded-xl bg-muted/20 p-2 h-fit">
@@ -856,6 +960,8 @@ export default function FamilyAlbums() {
                 },
               });
 
+              const isSelected = (id: string) => selectedIds.has(id);
+
               const dragClass = (c: FamilyCollage, isHome: boolean) =>
                 externalDropTarget === c.id
                   ? "ring-2 ring-primary border-primary bg-primary/15 scale-[1.02]"
@@ -863,12 +969,30 @@ export default function FamilyAlbums() {
                     ? "ring-2 ring-primary border-primary bg-primary/15 scale-[1.02]"
                     : dragItemId === c.id
                       ? "opacity-40 scale-95"
-                      : isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md";
+                      : isSelected(c.id)
+                        ? "ring-2 ring-primary/50 bg-primary/10"
+                        : isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md";
 
               const itemClick = (c: FamilyCollage) => {
+                if (selectMode) {
+                  toggleSelect(c.id);
+                  return;
+                }
                 if (c.is_folder) setCurrentFolderId(c.id);
                 else setActiveId(c.id);
               };
+
+              const renderCheckbox = (c: FamilyCollage) => selectMode ? (
+                <button
+                  onClick={(e) => toggleSelect(c.id, e)}
+                  className="p-0.5 flex-shrink-0 transition-colors"
+                >
+                  {isSelected(c.id)
+                    ? <CheckSquare className="w-4 h-4 text-primary" />
+                    : <Square className="w-4 h-4 text-muted-foreground" />
+                  }
+                </button>
+              ) : null;
 
               const renderActions = (c: FamilyCollage, isHome: boolean, isShared: boolean, canManage: boolean) => (
                 <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
@@ -900,7 +1024,8 @@ export default function FamilyAlbums() {
                     return (
                       <div key={c.id} {...dragProps(c)} className={`rounded-xl border p-4 transition-all cursor-pointer group ${dragClass(c, isHome)}`} onClick={() => itemClick(c)}>
                         <div className="flex items-start gap-3">
-                          {user && <GripVertical className="w-4 h-4 mt-3 text-muted-foreground/50 flex-shrink-0 cursor-grab active:cursor-grabbing" />}
+                          {renderCheckbox(c)}
+                          {user && !selectMode && <GripVertical className="w-4 h-4 mt-3 text-muted-foreground/50 flex-shrink-0 cursor-grab active:cursor-grabbing" />}
                           <span className="text-4xl flex-shrink-0">{c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}</span>
                           <div className="flex-1 min-w-0">
                             <div className="font-bold text-sm truncate flex items-center gap-1">
@@ -934,7 +1059,8 @@ export default function FamilyAlbums() {
                     const { isShared, isHome, childCount, canManage } = getItemInfo(c);
                     return (
                       <div key={c.id} {...dragProps(c)} className={`flex items-center gap-3 rounded-xl border px-3 py-2 transition-all cursor-pointer group ${dragClass(c, isHome)}`} onClick={() => itemClick(c)}>
-                        {user && <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 flex-shrink-0 cursor-grab" />}
+                        {renderCheckbox(c)}
+                        {user && !selectMode && <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 flex-shrink-0 cursor-grab" />}
                         <span className="text-2xl flex-shrink-0">{c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}</span>
                         <div className="flex-1 min-w-0">
                           <div className="font-bold text-sm truncate flex items-center gap-1">
@@ -976,8 +1102,8 @@ export default function FamilyAlbums() {
                       {visibleItems.map(c => {
                         const { isShared, isHome, childCount, canManage } = getItemInfo(c);
                         return (
-                          <tr key={c.id} {...dragProps(c)} className={`border-t cursor-pointer group transition-colors hover:bg-muted/30 ${dragOverId === c.id && c.is_folder ? "bg-primary/10" : dragItemId === c.id ? "opacity-40" : ""}`} onClick={() => itemClick(c)}>
-                            <td className="p-2">{user && <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 cursor-grab" />}</td>
+                          <tr key={c.id} {...dragProps(c)} className={`border-t cursor-pointer group transition-colors hover:bg-muted/30 ${isSelected(c.id) ? "bg-primary/10" : ""} ${dragOverId === c.id && c.is_folder ? "bg-primary/10" : dragItemId === c.id ? "opacity-40" : ""}`} onClick={() => itemClick(c)}>
+                            <td className="p-2">{selectMode ? renderCheckbox(c) : user && <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 cursor-grab" />}</td>
                             <td className="p-2">
                               <div className="flex items-center gap-2">
                                 <span className="text-lg">{c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}</span>
@@ -1017,7 +1143,10 @@ export default function FamilyAlbums() {
                           ) : (
                             <span className="text-5xl">{c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}</span>
                           )}
-                          {user && <GripVertical className="absolute top-1 right-1 w-4 h-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />}
+                          {selectMode && (
+                            <div className="absolute top-1 right-1">{renderCheckbox(c)}</div>
+                          )}
+                          {user && !selectMode && <GripVertical className="absolute top-1 right-1 w-4 h-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />}
                           {isHome && <HomeIcon className="absolute top-1 left-1 w-4 h-4 text-primary" />}
                         </div>
                         <div className="p-2">
