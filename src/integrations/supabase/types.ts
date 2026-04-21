@@ -282,15 +282,11 @@ export type Database = {
       }
       family_collages: {
         Row: {
-          archived_at: string | null
-          archived_by: string | null
           background: string | null
           background_image: string | null
           category: string | null
           cols: number
-          cover_url: string | null
           created_at: string
-          description: string | null
           device_id: string
           emoji: string | null
           event_tag: string | null
@@ -301,24 +297,17 @@ export type Database = {
           layout_type: string
           name: string
           parent_id: string | null
-          purge_after: string | null
           share_code: string
           sort_order: number | null
-          tags: string[]
           updated_at: string
-          location_tag: string | null
           year_tag: number | null
         }
         Insert: {
-          archived_at?: string | null
-          archived_by?: string | null
           background?: string | null
           background_image?: string | null
           category?: string | null
           cols?: number
-          cover_url?: string | null
           created_at?: string
-          description?: string | null
           device_id: string
           emoji?: string | null
           event_tag?: string | null
@@ -329,24 +318,17 @@ export type Database = {
           layout_type?: string
           name?: string
           parent_id?: string | null
-          purge_after?: string | null
           share_code?: string
           sort_order?: number | null
-          tags?: string[]
           updated_at?: string
-          location_tag?: string | null
           year_tag?: number | null
         }
         Update: {
-          archived_at?: string | null
-          archived_by?: string | null
           background?: string | null
           background_image?: string | null
           category?: string | null
           cols?: number
-          cover_url?: string | null
           created_at?: string
-          description?: string | null
           device_id?: string
           emoji?: string | null
           event_tag?: string | null
@@ -357,12 +339,9 @@ export type Database = {
           layout_type?: string
           name?: string
           parent_id?: string | null
-          purge_after?: string | null
           share_code?: string
           sort_order?: number | null
-          tags?: string[]
           updated_at?: string
-          location_tag?: string | null
           year_tag?: number | null
         }
         Relationships: [
@@ -828,27 +807,6 @@ export type Database = {
           message_style?: string
           send_hour_local?: number
           updated_at?: string
-        }
-        Relationships: []
-      }
-      user_preferences: {
-        Row: {
-          created_at: string
-          slideshow_config: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          slideshow_config?: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          slideshow_config?: Json
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
