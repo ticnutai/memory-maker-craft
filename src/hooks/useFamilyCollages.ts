@@ -137,7 +137,7 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
     all.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || b.created_at.localeCompare(a.created_at));
     setCollages(all);
     setLoading(false);
-  }, [deviceId, queryDeviceIds.join(",")]);
+  }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
 
