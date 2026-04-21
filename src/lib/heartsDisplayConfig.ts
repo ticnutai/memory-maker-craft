@@ -2,7 +2,9 @@ const STORAGE_KEY = "family-hearts-display-config";
 export const HEARTS_CONFIG_UPDATED_EVENT = "family-hearts-config-updated";
 
 export type HeartsFilterMode = "all" | "month" | "30days" | "7days";
-export type HeartsDisplayStyle = "hearts" | "bubbles" | "cards" | "compact";
+export type HeartsDisplayStyle = "hearts" | "bubbles" | "cards" | "compact" | "floating";
+export type FloatingEffect = "sparkles" | "confetti" | "pop";
+
 export type FloatPresetId = "soft" | "balanced" | "rich";
 export type FloatPresetSelection = FloatPresetId | "custom";
 export type FloatAnimationType = "bounce" | "drift" | "pulse" | "swing" | "wander";
@@ -40,6 +42,10 @@ export interface HeartsDisplayConfig {
   floatPreset: FloatPresetSelection;
   /** Which event types to show (empty = all) */
   eventTypes: string[];
+  /** Floating effects to play on click */
+  floatingEffects: FloatingEffect[];
+  /** Whether floating items move together or independently */
+  floatingIndependent: boolean;
 }
 
 const DEFAULTS: HeartsDisplayConfig = {
@@ -55,6 +61,8 @@ const DEFAULTS: HeartsDisplayConfig = {
   reducedMotion: false,
   floatPreset: "balanced",
   eventTypes: [],
+  floatingEffects: ["sparkles", "confetti", "pop"],
+  floatingIndependent: true,
 };
 
 export function loadHeartsConfig(): HeartsDisplayConfig {

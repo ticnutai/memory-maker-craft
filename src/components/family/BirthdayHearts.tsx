@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { differenceInDays, addYears, isBefore, parseISO, format } from "date-fns";
 import { he } from "date-fns/locale";
 import { HDate } from "@hebcal/core";
 import { toHebrewNumeral } from "@/lib/hebrewCalendar";
 import { getDeviceId } from "@/lib/deviceId";
-import { HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, HeartsDisplayStyle, FloatAnimationType } from "@/lib/heartsDisplayConfig";
+import { HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, HeartsDisplayStyle, FloatAnimationType, FloatingEffect } from "@/lib/heartsDisplayConfig";
 
 const HEB_MONTH_NAMES: Record<string, string> = {
   Nisan: "ניסן", Iyyar: "אייר", Sivan: "סיון", Tamuz: "תמוז",
@@ -89,6 +89,32 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
   const [floatDensityScale, setFloatDensityScale] = useState(1);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const [floatingEffects, setFloatingEffects] = useState<FloatingEffect[]>(["sparkles", "confetti", "pop"]);
+  const [floatingIndependent, setFloatingIndependent] = useState(true);
+  const [clickBurst, setClickBurst] = useState<{ x: number; y: number; color: string } | null>(null);
+  const burstTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const triggerClickBurst = useCallback((e: React.MouseEvent, color: string) => {
+    if (floatingEffects.length === 0) return;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setClickBurst({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, color });
+    if (burstTimer.current) clearTimeout(burstTimer.current);
+    burstTimer.current = setTimeout(() => setClickBurst(null), 1200);
+    if (floatingEffects.includes("pop")) {
+      try {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.2);
+      } catch {}
+    }
+  }, [floatingEffects]);
 
   useEffect(() => {
     const applyConfig = () => {
@@ -101,6 +127,8 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
       setFloatSpeedScale(Math.min(2.5, Math.max(0.4, config.floatSpeedScale || 1)));
       setFloatDensityScale(Math.min(2.5, Math.max(0.4, config.floatDensityScale || 1)));
       setReducedMotion(!!config.reducedMotion);
+      setFloatingEffects(config.floatingEffects ?? ["sparkles", "confetti", "pop"]);
+      setFloatingIndependent(config.floatingIndependent !== false);
       return config;
     };
 
@@ -377,6 +405,185 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
           @keyframes heartWander { 0% { transform: translate(0,0) rotate(0); } 20% { transform: translate(15px,-10px) rotate(3deg); } 40% { transform: translate(-10px,-18px) rotate(-2deg); } 60% { transform: translate(8px,-6px) rotate(4deg); } 80% { transform: translate(-12px,-12px) rotate(-3deg); } 100% { transform: translate(0,0) rotate(0); } }
         `}</style>
       </div>
+      </>
+    );
+  }
+
+  // ─── FLOATING (fullscreen balloons) ───
+  if (displayStyle === "floating") {
+    // Generate stable random positions for each item
+    const positions = renderedItems.map((_, i) => ({
+      x: 5 + ((i * 37 + 13) % 80),
+      y: 5 + ((i * 53 + 7) % 75),
+      delay: (i * 0.6) % 4,
+      duration: (8 + (i % 5) * 2) / floatSpeedScale,
+      drift: floatingIndependent ? i : 0,
+    }));
+
+    return (
+      <>
+        {monthShowcase}
+        {/* Floating items across the page */}
+        <div className="fixed inset-0 pointer-events-none z-[15]" aria-hidden="false">
+          {renderedItems.map((item, i) => {
+            const key = `${item.eventType}-${item.name}-${i}`;
+            const bubbleSize = 80 * floatSizeScale;
+            const pos = positions[i];
+            const animName = floatingIndependent
+              ? `floatingBalloon${i % 4}`
+              : "floatingBalloonGroup";
+            return (
+              <button
+                key={key}
+                type="button"
+                className="absolute pointer-events-auto cursor-pointer transition-transform hover:scale-125 group"
+                style={{
+                  left: `${pos.x}%`,
+                  top: `${pos.y}%`,
+                  width: `${bubbleSize}px`,
+                  height: `${bubbleSize}px`,
+                  animation: reducedMotion ? undefined : `${animName} ${pos.duration}s ease-in-out infinite`,
+                  animationDelay: `${pos.delay}s`,
+                  filter: `drop-shadow(0 6px 20px ${item.color}50)`,
+                  zIndex: 15,
+                }}
+                onClick={(e) => {
+                  triggerClickBurst(e, item.color);
+                  setExpandedKey((prev) => (prev === key ? null : key));
+                }}
+                title={`${item.name} · ${item.eventLabel} · ${daysLabel(item.daysUntil)}`}
+              >
+                <div
+                  className="rounded-full w-full h-full flex flex-col items-center justify-center text-white border-2 border-white/40 shadow-xl"
+                  style={{ background: `linear-gradient(135deg, ${item.color}, ${item.color}bb)` }}
+                >
+                  <span className="text-xl leading-none">{item.emoji}</span>
+                  <span
+                    className="text-[8px] font-bold leading-tight mt-0.5 px-1 text-center"
+                    style={{
+                      maxWidth: `${bubbleSize * 0.7}px`,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {shortDisplayName(item.name)}
+                  </span>
+                  <span className="text-[7px] opacity-80">{item.hebDate}</span>
+                </div>
+                {/* Days badge */}
+                <div
+                  className="absolute -top-1 -right-1 text-[9px] font-black rounded-full px-1.5 py-0.5 shadow-md"
+                  style={{
+                    background: item.daysUntil === 0 ? "#fbbf24" : isDark ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.92)",
+                    color: item.daysUntil === 0 ? "#000" : isDark ? "#fff" : "#333",
+                  }}
+                >
+                  {item.daysUntil === 0 ? "🎉" : item.daysUntil}
+                </div>
+
+                {/* Expanded tooltip */}
+                {expandedKey === key && (
+                  <div
+                    className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-30 min-w-[170px] max-w-[220px] rounded-xl border p-2 text-center shadow-lg pointer-events-auto"
+                    style={{
+                      background: isDark ? "rgba(20,20,20,0.92)" : "rgba(255,255,255,0.95)",
+                      borderColor: `${item.color}60`,
+                    }}
+                  >
+                    <div className={`text-xs font-black ${isDark ? "text-white" : "text-foreground"}`}>{item.name}</div>
+                    <div className={`text-[10px] mt-1 ${isDark ? "text-white/70" : "text-muted-foreground"}`}>
+                      {item.eventLabel} · {daysLabel(item.daysUntil)}
+                    </div>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Click burst effects */}
+        {clickBurst && (
+          <div className="fixed inset-0 pointer-events-none z-[100]" aria-hidden="true">
+            {floatingEffects.includes("sparkles") &&
+              Array.from({ length: 12 }).map((_, i) => {
+                const angle = (i / 12) * Math.PI * 2;
+                const dist = 30 + Math.random() * 40;
+                return (
+                  <span
+                    key={`sp-${i}`}
+                    className="absolute text-lg"
+                    style={{
+                      left: clickBurst.x,
+                      top: clickBurst.y,
+                      animation: `burstParticle 0.8s ease-out forwards`,
+                      transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px)`,
+                      opacity: 0,
+                    }}
+                  >
+                    ✨
+                  </span>
+                );
+              })}
+            {floatingEffects.includes("confetti") &&
+              Array.from({ length: 16 }).map((_, i) => (
+                <span
+                  key={`cf-${i}`}
+                  className="absolute w-2 h-2 rounded-full"
+                  style={{
+                    left: clickBurst.x,
+                    top: clickBurst.y,
+                    background: ["#f472b6", "#60a5fa", "#34d399", "#fbbf24", "#a78bfa", "#fb923c"][i % 6],
+                    animation: `burstConfetti 1s ease-out forwards`,
+                    animationDelay: `${i * 0.03}s`,
+                    opacity: 0,
+                    ["--burst-x" as any]: `${(Math.random() - 0.5) * 120}px`,
+                    ["--burst-y" as any]: `${-40 - Math.random() * 80}px`,
+                  }}
+                />
+              ))}
+          </div>
+        )}
+
+        <style>{`
+          @keyframes floatingBalloon0 {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(20px, -30px) rotate(3deg); }
+            50% { transform: translate(-15px, -50px) rotate(-2deg); }
+            75% { transform: translate(10px, -20px) rotate(4deg); }
+          }
+          @keyframes floatingBalloon1 {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            30% { transform: translate(-25px, -20px) rotate(-4deg); }
+            60% { transform: translate(18px, -45px) rotate(3deg); }
+            80% { transform: translate(-8px, -15px) rotate(-1deg); }
+          }
+          @keyframes floatingBalloon2 {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(15px, -40px) rotate(2deg); }
+            50% { transform: translate(-20px, -25px) rotate(-3deg); }
+            70% { transform: translate(12px, -35px) rotate(5deg); }
+          }
+          @keyframes floatingBalloon3 {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            35% { transform: translate(-12px, -35px) rotate(-2deg); }
+            55% { transform: translate(22px, -18px) rotate(4deg); }
+            85% { transform: translate(-5px, -40px) rotate(-3deg); }
+          }
+          @keyframes floatingBalloonGroup {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-30px); }
+          }
+          @keyframes burstParticle {
+            0% { opacity: 1; transform: translate(0,0) scale(0.5); }
+            100% { opacity: 0; transform: translate(var(--burst-x, 30px), var(--burst-y, -60px)) scale(1.2); }
+          }
+          @keyframes burstConfetti {
+            0% { opacity: 1; transform: translate(0,0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--burst-x, 30px), var(--burst-y, -60px)) scale(0.5); }
+          }
+        `}</style>
       </>
     );
   }
