@@ -256,6 +256,7 @@ export type Database = {
       families: {
         Row: {
           admin_device_id: string
+          admin_user_id: string | null
           code: string
           created_at: string
           id: string
@@ -264,6 +265,7 @@ export type Database = {
         }
         Insert: {
           admin_device_id: string
+          admin_user_id?: string | null
           code?: string
           created_at?: string
           id?: string
@@ -272,6 +274,7 @@ export type Database = {
         }
         Update: {
           admin_device_id?: string
+          admin_user_id?: string | null
           code?: string
           created_at?: string
           id?: string
@@ -290,6 +293,8 @@ export type Database = {
           cols: number
           cover_url: string | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           description: string | null
           device_id: string
           emoji: string | null
@@ -300,6 +305,11 @@ export type Database = {
           is_folder: boolean
           layout_type: string
           location_tag: string | null
+          lock_reason: string | null
+          locked_at: string | null
+          locked_by_admin: boolean
+          locked_by_user_id: string | null
+          owner_user_id: string | null
           name: string
           parent_id: string | null
           purge_after: string | null
@@ -307,6 +317,7 @@ export type Database = {
           sort_order: number | null
           tags: string[]
           updated_at: string
+          visibility: string
           year_tag: number | null
         }
         Insert: {
@@ -318,6 +329,8 @@ export type Database = {
           cols?: number
           cover_url?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           description?: string | null
           device_id: string
           emoji?: string | null
@@ -328,6 +341,11 @@ export type Database = {
           is_folder?: boolean
           layout_type?: string
           location_tag?: string | null
+          lock_reason?: string | null
+          locked_at?: string | null
+          locked_by_admin?: boolean
+          locked_by_user_id?: string | null
+          owner_user_id?: string | null
           name?: string
           parent_id?: string | null
           purge_after?: string | null
@@ -335,6 +353,7 @@ export type Database = {
           sort_order?: number | null
           tags?: string[]
           updated_at?: string
+          visibility?: string
           year_tag?: number | null
         }
         Update: {
@@ -346,6 +365,8 @@ export type Database = {
           cols?: number
           cover_url?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           description?: string | null
           device_id?: string
           emoji?: string | null
@@ -356,6 +377,11 @@ export type Database = {
           is_folder?: boolean
           layout_type?: string
           location_tag?: string | null
+          lock_reason?: string | null
+          locked_at?: string | null
+          locked_by_admin?: boolean
+          locked_by_user_id?: string | null
+          owner_user_id?: string | null
           name?: string
           parent_id?: string | null
           purge_after?: string | null
@@ -363,6 +389,7 @@ export type Database = {
           sort_order?: number | null
           tags?: string[]
           updated_at?: string
+          visibility?: string
           year_tag?: number | null
         }
         Relationships: [
@@ -424,6 +451,7 @@ export type Database = {
           id: string
           joined_at: string
           nickname: string | null
+          user_id: string | null
         }
         Insert: {
           device_id: string
@@ -431,6 +459,7 @@ export type Database = {
           id?: string
           joined_at?: string
           nickname?: string | null
+          user_id?: string | null
         }
         Update: {
           device_id?: string
@@ -438,6 +467,7 @@ export type Database = {
           id?: string
           joined_at?: string
           nickname?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -454,6 +484,8 @@ export type Database = {
           caption: string | null
           collage_id: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           device_id: string
           duration_ms: number | null
           filter_style: string | null
@@ -461,19 +493,27 @@ export type Database = {
           height: number | null
           id: string
           image_url: string
+          lock_reason: string | null
+          locked_at: string | null
+          locked_by_admin: boolean
+          locked_by_user_id: string | null
           media_type: string
+          owner_user_id: string | null
           photo_date: string | null
           pos_x: number | null
           pos_y: number | null
           rotation: number | null
           sort_order: number | null
           thumbnail_url: string | null
+          visibility: string
           width: number | null
         }
         Insert: {
           caption?: string | null
           collage_id: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           device_id: string
           duration_ms?: number | null
           filter_style?: string | null
@@ -481,19 +521,27 @@ export type Database = {
           height?: number | null
           id?: string
           image_url: string
+          lock_reason?: string | null
+          locked_at?: string | null
+          locked_by_admin?: boolean
+          locked_by_user_id?: string | null
           media_type?: string
+          owner_user_id?: string | null
           photo_date?: string | null
           pos_x?: number | null
           pos_y?: number | null
           rotation?: number | null
           sort_order?: number | null
           thumbnail_url?: string | null
+          visibility?: string
           width?: number | null
         }
         Update: {
           caption?: string | null
           collage_id?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           device_id?: string
           duration_ms?: number | null
           filter_style?: string | null
@@ -501,13 +549,19 @@ export type Database = {
           height?: number | null
           id?: string
           image_url?: string
+          lock_reason?: string | null
+          locked_at?: string | null
+          locked_by_admin?: boolean
+          locked_by_user_id?: string | null
           media_type?: string
+          owner_user_id?: string | null
           photo_date?: string | null
           pos_x?: number | null
           pos_y?: number | null
           rotation?: number | null
           sort_order?: number | null
           thumbnail_url?: string | null
+          visibility?: string
           width?: number | null
         }
         Relationships: [

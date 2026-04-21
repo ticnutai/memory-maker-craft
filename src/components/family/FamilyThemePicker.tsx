@@ -167,7 +167,7 @@ export default function FamilyThemePicker({
 
   const handleCreate = async () => {
     if (!isAdmin) {
-      toast.error("רק אדמין משפחה יכול ליצור אלבומים/תיקיות");
+      toast.error("יש להתחבר כדי ליצור אלבומים/תיקיות");
       return;
     }
     await onCreateCollage({ parent_id: currentFolderId } as Partial<FamilyCollage>);
@@ -176,7 +176,7 @@ export default function FamilyThemePicker({
 
   const handleCreateFolder = async () => {
     if (!isAdmin) {
-      toast.error("רק אדמין משפחה יכול ליצור תתי-תיקיות");
+      toast.error("יש להתחבר כדי ליצור תתי-תיקיות");
       return;
     }
     if (!newFolderName.trim()) return;
@@ -441,7 +441,7 @@ export default function FamilyThemePicker({
                       <button
                         onClick={() => {
                           if (!isAdmin) {
-                            toast.error("רק אדמין משפחה יכול למחוק");
+                            toast.error("יש להתחבר כדי למחוק");
                             return;
                           }
                           const msg = c.is_folder ? `למחוק את התיקייה "${c.name}" וכל תוכנה?` : isShared ? `לעזוב את "${c.name}"?` : `למחוק את "${c.name}"?`;

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getDeviceId } from "@/lib/deviceId";
+import { useAuth } from "@/hooks/useAuth";
 
 const FAMILY_ID_KEY = "family-active-id";
 
@@ -31,6 +32,7 @@ function saveFamilyId(id: string | null) {
 
 export function useFamily() {
   const deviceId = getDeviceId();
+  const { user, isAdmin: isPlatformAdmin } = useAuth();
   const [family, setFamily] = useState<Family | null>(null);
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,16 +45,31 @@ export function useFamily() {
     return ids;
   }, [family, members, deviceId]);
 
-  const isAdmin = family ? family.admin_device_id === deviceId : true;
+  const isAdmin = family ? (isPlatformAdmin || family.admin_device_id === deviceId) : !!user;
 
   const refresh = useCallback(async () => {
     // Check if device belongs to any family
-    const { data: membership } = await supabase
-      .from("family_members")
-      .select("family_id")
-      .eq("device_id", deviceId)
-      .limit(1)
-      .maybeSingle();
+    let membership: { family_id: string } | null = null;
+
+    if (user) {
+      const { data: byUser } = await supabase
+        .from("family_members")
+        .select("family_id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      membership = byUser as { family_id: string } | null;
+    }
+
+    if (!membership) {
+      const { data: byDevice } = await supabase
+        .from("family_members")
+        .select("family_id")
+        .eq("device_id", deviceId)
+        .limit(1)
+        .maybeSingle();
+      membership = byDevice as { family_id: string } | null;
+    }
 
     if (!membership) {
       // Also check saved family ID
@@ -67,7 +84,7 @@ export function useFamily() {
         if (fam) {
           // Auto-rejoin
           await supabase.from("family_members").upsert(
-            { family_id: savedId, device_id: deviceId },
+            { family_id: savedId, device_id: deviceId, user_id: user?.id ?? null },
             { onConflict: "family_id,device_id" }
           );
         } else {
@@ -102,14 +119,15 @@ export function useFamily() {
     }
     setMembers((mems ?? []) as FamilyMember[]);
     setLoading(false);
-  }, [deviceId]);
+  }, [deviceId, user]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   const createFamily = useCallback(async (name: string): Promise<Family> => {
+    if (!user) throw new Error("auth-required");
     const { data, error } = await supabase
       .from("families")
-      .insert({ name, admin_device_id: deviceId } as never)
+      .insert({ name, admin_device_id: deviceId, admin_user_id: user.id } as never)
       .select()
       .single();
     if (error) throw error;
@@ -117,13 +135,15 @@ export function useFamily() {
     await supabase.from("family_members").insert({
       family_id: data.id,
       device_id: deviceId,
+      user_id: user.id,
     } as never);
     saveFamilyId(data.id);
     await refresh();
     return data as Family;
-  }, [deviceId, refresh]);
+  }, [deviceId, refresh, user]);
 
   const joinByCode = useCallback(async (code: string): Promise<Family | null> => {
+    if (!user) throw new Error("auth-required");
     const clean = code.trim().toLowerCase();
     if (!clean) return null;
     const { data: fam } = await supabase
@@ -133,22 +153,27 @@ export function useFamily() {
       .maybeSingle();
     if (!fam) return null;
     await supabase.from("family_members").upsert(
-      { family_id: fam.id, device_id: deviceId } as never,
+      { family_id: fam.id, device_id: deviceId, user_id: user.id } as never,
       { onConflict: "family_id,device_id" }
     );
     saveFamilyId(fam.id);
     await refresh();
     return fam as Family;
-  }, [deviceId, refresh]);
+  }, [deviceId, refresh, user]);
 
   const leaveFamily = useCallback(async () => {
     if (!family) return;
-    await supabase.from("family_members").delete()
-      .eq("family_id", family.id).eq("device_id", deviceId);
+    if (user) {
+      await supabase.from("family_members").delete()
+        .eq("family_id", family.id).eq("user_id", user.id);
+    } else {
+      await supabase.from("family_members").delete()
+        .eq("family_id", family.id).eq("device_id", deviceId);
+    }
     saveFamilyId(null);
     setFamily(null);
     setMembers([]);
-  }, [family, deviceId]);
+  }, [family, deviceId, user]);
 
   const updateFamily = useCallback(async (patch: Partial<Family>) => {
     if (!family) return;
@@ -158,12 +183,14 @@ export function useFamily() {
 
   const updateNickname = useCallback(async (nickname: string) => {
     if (!family) return;
-    await supabase.from("family_members")
+    const q = supabase.from("family_members")
       .update({ nickname })
-      .eq("family_id", family.id)
-      .eq("device_id", deviceId);
+      .eq("family_id", family.id);
+    if (user) q.eq("user_id", user.id);
+    else q.eq("device_id", deviceId);
+    await q;
     await refresh();
-  }, [family, deviceId, refresh]);
+  }, [family, deviceId, refresh, user]);
 
   return {
     family, members, loading, isAdmin, deviceId,

@@ -12,11 +12,13 @@ import { getDeviceId } from "@/lib/deviceId";
 import CloudGallery from "@/components/CloudGallery";
 import * as htmlToImage from "html-to-image";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CollageViewProps {
   collage: FamilyCollage;
   onBack: () => void;
   onUpdateCollage: (id: string, patch: Partial<FamilyCollage>) => Promise<void>;
+  canEdit?: boolean;
 }
 
 type ZipImportJobState = {
@@ -53,7 +55,8 @@ const FRAMES = [
   { id: "circle", label: "עיגול", className: "rounded-full overflow-hidden shadow-lg" },
 ];
 
-export default function CollageView({ collage, onBack, onUpdateCollage }: CollageViewProps) {
+export default function CollageView({ collage, onBack, onUpdateCollage, canEdit = false }: CollageViewProps) {
+  const { user, isAdmin } = useAuth();
   const { photos, uploadFiles, addFromUrls, updatePhoto, deletePhoto, reorderPhotos, refresh } = useFamilyPhotos(collage.id);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const collageRef = useRef<HTMLDivElement>(null);
@@ -69,6 +72,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
   const [zipImportJob, setZipImportJob] = useState<ZipImportJobState | null>(null);
   const [showShare, setShowShare] = useState(false);
   const [showCloud, setShowCloud] = useState(false);
+  const [uploadVisibility, setUploadVisibility] = useState<"public" | "private">("public");
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsDraft, setSettingsDraft] = useState({
     name: collage.name,
@@ -198,6 +202,10 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    if (!canEdit) {
+      toast.error("אין לך הרשאה לערוך קולאז׳ זה");
+      return;
+    }
     setUploading(true);
 
     try {
@@ -206,7 +214,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
       const regularFiles = Array.from(files).filter((file) => !isArchiveFile(file));
 
       if (regularFiles.length > 0) {
-        await uploadFiles(regularFiles);
+        await uploadFiles(regularFiles, uploadVisibility);
         const vids = regularFiles.filter((f) => f.type.startsWith("video/")).length;
         const imgs = regularFiles.length - vids;
         const parts: string[] = [];
@@ -289,8 +297,8 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
     return (
       <div
         key={p.id}
-        draggable
-        onDragStart={() => onDragStart(p.id)}
+        draggable={canEdit}
+        onDragStart={() => canEdit && onDragStart(p.id)}
         onDragOver={(e) => e.preventDefault()}
         onDrop={() => onDropOn(p.id)}
         className={`group relative ${frame.className} ${extraClass}`}
@@ -318,8 +326,8 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
           </div>
         )}
         <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-          <button onClick={() => setEditingPhoto(p)} className="bg-background/90 rounded-full p-1 shadow"><Pencil className="w-3 h-3" /></button>
-          <button onClick={() => deletePhoto(p.id)} className="bg-destructive/90 text-destructive-foreground rounded-full p-1 shadow"><Trash2 className="w-3 h-3" /></button>
+          {canEdit && <button onClick={() => setEditingPhoto(p)} className="bg-background/90 rounded-full p-1 shadow"><Pencil className="w-3 h-3" /></button>}
+          {canEdit && <button onClick={() => deletePhoto(p.id)} className="bg-destructive/90 text-destructive-foreground rounded-full p-1 shadow"><Trash2 className="w-3 h-3" /></button>}
         </div>
         <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <GripVertical className="w-4 h-4 text-foreground/60" />
@@ -356,13 +364,13 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         <span className="font-bold text-sm truncate max-w-[40vw]">{collage.emoji} {collage.name}</span>
       </div>
       <div className="fixed top-[max(0.5rem,env(safe-area-inset-top))] left-3 z-[80] flex items-center gap-2">
-        <Button size="sm" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={uploading} title="הוסף תמונות">
+        <Button size="sm" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={uploading || !canEdit} title="הוסף תמונות">
           <Plus className="w-4 h-4" />
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={uploading} title="העלאת קובץ מרובה">
+        <Button size="sm" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={uploading || !canEdit} title="העלאת קובץ מרובה">
           <Upload className="w-4 h-4" />
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => setShowCloud(true)} title="בחר מהענן">
+        <Button size="sm" variant="ghost" onClick={() => setShowCloud(true)} title="בחר מהענן" disabled={!canEdit}>
           <Cloud className="w-4 h-4" />
         </Button>
         <Button size="sm" variant="ghost" onClick={() => { setSlideIndex(0); setSlideshow(true); }} title="מצגת" disabled={photos.length === 0}>
@@ -374,10 +382,28 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
         <Button size="sm" variant="ghost" onClick={() => setShowShare(true)} title="שתף עם משפחה">
           <Share2 className="w-4 h-4" />
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} title="הגדרות">
+        <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} title="הגדרות" disabled={!canEdit}>
           <Settings className="w-4 h-4" />
         </Button>
       </div>
+
+      {canEdit && (
+        <div className="fixed top-[max(3.2rem,calc(env(safe-area-inset-top)+2.8rem))] left-3 z-[80] bg-background/90 border rounded-md px-2 py-1 text-xs flex items-center gap-2">
+          <span>פרטיות העלאה:</span>
+          <button
+            onClick={() => setUploadVisibility("public")}
+            className={`px-2 py-0.5 rounded ${uploadVisibility === "public" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+          >
+            כללי
+          </button>
+          <button
+            onClick={() => setUploadVisibility("private")}
+            className={`px-2 py-0.5 rounded ${uploadVisibility === "private" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+          >
+            פרטי
+          </button>
+        </div>
+      )}
 
       <input
         ref={fileInputRef}
@@ -397,7 +423,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
             onSelect={async (urls) => {
               setShowCloud(false);
               if (urls.length === 0) return;
-              await addFromUrls(urls);
+              await addFromUrls(urls, uploadVisibility);
               toast.success(`נוספו ${urls.length} תמונות מהענן`);
             }}
           />
@@ -408,7 +434,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
       {photos.length === 0 && (
         <div
           className="border-2 border-dashed border-foreground/20 rounded-2xl p-12 text-center mt-12 cursor-pointer hover:border-foreground/40 transition-colors"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => canEdit && fileInputRef.current?.click()}
         >
           <Upload className="w-12 h-12 mx-auto mb-3 text-foreground/40" />
           <div className="font-bold mb-1">גרור תמונות או סרטונים לכאן 📸 🎬</div>
@@ -520,6 +546,52 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
                 <Input value={editingPhoto.photo_date ?? ""} onChange={(e) => setEditingPhoto({ ...editingPhoto, photo_date: e.target.value })} placeholder="לדוגמה: קיץ 2024" />
               </div>
               <div>
+                <Label>פרטיות</Label>
+                <div className="flex gap-2 mt-1">
+                  <button
+                    onClick={() => setEditingPhoto({ ...editingPhoto, visibility: "public" })}
+                    className={`px-3 py-1 text-xs rounded-full border ${editingPhoto.visibility === "public" ? "bg-primary text-primary-foreground" : "bg-background"}`}
+                  >
+                    כללי
+                  </button>
+                  <button
+                    onClick={() => setEditingPhoto({ ...editingPhoto, visibility: "private" })}
+                    className={`px-3 py-1 text-xs rounded-full border ${editingPhoto.visibility === "private" ? "bg-primary text-primary-foreground" : "bg-background"}`}
+                  >
+                    פרטי
+                  </button>
+                </div>
+              </div>
+              {isAdmin && (
+                <>
+                  <div>
+                    <Label>Owner User ID</Label>
+                    <Input
+                      value={editingPhoto.owner_user_id ?? ""}
+                      onChange={(e) => setEditingPhoto({ ...editingPhoto, owner_user_id: e.target.value || null })}
+                      placeholder="UUID של הבעלים"
+                    />
+                  </div>
+                  <div>
+                    <Label>נעילת אדמין</Label>
+                    <div className="flex gap-2 mt-1">
+                      <button
+                        onClick={() => setEditingPhoto({ ...editingPhoto, locked_by_admin: false })}
+                        className={`px-3 py-1 text-xs rounded-full border ${!editingPhoto.locked_by_admin ? "bg-primary text-primary-foreground" : "bg-background"}`}
+                      >
+                        פתוח
+                      </button>
+                      <button
+                        onClick={() => setEditingPhoto({ ...editingPhoto, locked_by_admin: true })}
+                        className={`px-3 py-1 text-xs rounded-full border ${editingPhoto.locked_by_admin ? "bg-primary text-primary-foreground" : "bg-background"}`}
+                      >
+                        נעול
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+              <div>
                 <Label>מסגרת</Label>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {FRAMES.map(f => (
@@ -545,6 +617,14 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
                 await updatePhoto(editingPhoto.id, {
                   caption: editingPhoto.caption,
                   photo_date: editingPhoto.photo_date,
+                  visibility: editingPhoto.visibility,
+                  ...(isAdmin ? {
+                    owner_user_id: editingPhoto.owner_user_id,
+                    locked_by_admin: editingPhoto.locked_by_admin,
+                    lock_reason: editingPhoto.lock_reason,
+                    locked_by_user_id: editingPhoto.locked_by_admin ? user?.id ?? null : null,
+                    locked_at: editingPhoto.locked_by_admin ? new Date().toISOString() : null,
+                  } : {}),
                   frame_style: editingPhoto.frame_style,
                   filter_style: editingPhoto.filter_style,
                 });
@@ -594,7 +674,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
             </div>
             <div className="flex gap-2 pt-2">
               <Button variant="outline" className="flex-1" onClick={() => setShowSettings(false)} disabled={savingSettings}>ביטול</Button>
-              <Button className="flex-1" onClick={handleSaveSettings} disabled={savingSettings}>{savingSettings ? "שומר..." : "שמור ✓"}</Button>
+              <Button className="flex-1" onClick={handleSaveSettings} disabled={savingSettings || !canEdit}>{savingSettings ? "שומר..." : "שמור ✓"}</Button>
             </div>
           </div>
         </DialogContent>
@@ -641,7 +721,7 @@ export default function CollageView({ collage, onBack, onUpdateCollage }: Collag
               </Button>
             </div>
             <div className="text-xs text-foreground/50 text-center">
-              💡 כל מי שיש לו את הקוד יכול לערוך — כולל הוספה ומחיקה של תמונות
+              💡 כל מי שיש לו קישור יכול לצפות, ורק בעלי תוכן או אדמין יכולים לערוך
             </div>
           </div>
         </DialogContent>

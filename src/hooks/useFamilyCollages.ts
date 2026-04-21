@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { captureVideoThumbnail } from "@/lib/videoThumbnail";
+import { useAuth } from "@/hooks/useAuth";
 
 function getDeviceId(): string {
   const key = "memory-game-device-id";
@@ -42,6 +43,14 @@ function stripExtendedCollageFields<T extends Record<string, any>>(payload: T): 
     archived_at,
     archived_by,
     purge_after,
+    owner_user_id,
+    visibility,
+    locked_by_admin,
+    lock_reason,
+    locked_at,
+    locked_by_user_id,
+    deleted_at,
+    deleted_by,
     ...legacy
   } = payload;
   return legacy;
@@ -50,6 +59,14 @@ function stripExtendedCollageFields<T extends Record<string, any>>(payload: T): 
 export interface FamilyCollage {
   id: string;
   device_id: string;
+  owner_user_id: string | null;
+  visibility: "public" | "private";
+  locked_by_admin: boolean;
+  lock_reason: string | null;
+  locked_at: string | null;
+  locked_by_user_id: string | null;
+  deleted_at: string | null;
+  deleted_by: string | null;
   name: string;
   emoji: string | null;
   layout_type: string;
@@ -80,6 +97,14 @@ export interface FamilyPhoto {
   id: string;
   collage_id: string;
   device_id: string;
+  owner_user_id: string | null;
+  visibility: "public" | "private";
+  locked_by_admin: boolean;
+  lock_reason: string | null;
+  locked_at: string | null;
+  locked_by_user_id: string | null;
+  deleted_at: string | null;
+  deleted_by: string | null;
   image_url: string;
   caption: string | null;
   photo_date: string | null;
@@ -98,10 +123,16 @@ export interface FamilyPhoto {
 }
 
 export function useFamilyCollages(familyDeviceIds?: string[]) {
+  const { user, isAdmin } = useAuth();
   const deviceId = getDeviceId();
   const queryDeviceIds = familyDeviceIds && familyDeviceIds.length > 0 ? familyDeviceIds : [deviceId];
   const [collages, setCollages] = useState<FamilyCollage[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const requireAuthenticatedUser = useCallback(() => {
+    if (!user) throw new Error("auth-required");
+    return user.id;
+  }, [user]);
 
   const getDepth = useCallback((items: FamilyCollage[], parentId: string | null): number => {
     let depth = 0;
@@ -142,6 +173,7 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
   useEffect(() => { refresh(); }, [refresh]);
 
   const createCollage = useCallback(async (partial: Partial<FamilyCollage> = {}) => {
+    const userId = requireAuthenticatedUser();
     const depth = getDepth(collages, partial.parent_id ?? null);
     if (depth >= 5) throw new Error("max-depth-reached");
 
@@ -163,6 +195,8 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
       tags: partial.tags ?? [],
       location_tag: partial.location_tag ?? null,
       cover_url: partial.cover_url ?? null,
+      owner_user_id: partial.owner_user_id ?? userId,
+      visibility: partial.visibility ?? "public",
     };
 
     let { data, error } = await supabase
@@ -182,9 +216,15 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
     if (error) throw error;
     await refresh();
     return data as FamilyCollage;
-  }, [deviceId, refresh, collages, getDepth]);
+  }, [deviceId, refresh, collages, getDepth, requireAuthenticatedUser]);
 
   const updateCollage = useCallback(async (id: string, patch: Partial<FamilyCollage>) => {
+    const userId = requireAuthenticatedUser();
+    const target = collages.find((c) => c.id === id);
+    const canManage = !!target && (isAdmin || target.owner_user_id === userId);
+    if (!canManage) throw new Error("forbidden");
+    if (target?.locked_by_admin && !isAdmin) throw new Error("locked-by-admin");
+
     if (patch.parent_id !== undefined) {
       if (wouldCreateCycle(collages, id, patch.parent_id ?? null)) {
         throw new Error("invalid-folder-cycle");
@@ -204,21 +244,27 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
 
     if (error) throw error;
     await refresh();
-  }, [refresh, collages, wouldCreateCycle, getDepth]);
+  }, [refresh, collages, wouldCreateCycle, getDepth, requireAuthenticatedUser, isAdmin]);
 
   const deleteCollage = useCallback(async (id: string, options?: { permanent?: boolean }) => {
+    const userId = requireAuthenticatedUser();
     const c = collages.find(x => x.id === id);
+    const canManage = !!c && (isAdmin || c.owner_user_id === userId);
+    if (!canManage) throw new Error("forbidden");
+    if (c?.locked_by_admin && !isAdmin) throw new Error("locked-by-admin");
+
     if (c && c.device_id !== deviceId) {
       // Joined collage — just leave it locally
       removeJoinedCollageId(id);
     } else if (options?.permanent) {
+      if (!isAdmin) throw new Error("admin-only");
       await supabase.from("family_collages").delete().eq("id", id);
     } else {
       const now = new Date();
       const purgeAfter = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
       let { error } = await supabase.from("family_collages").update({
         archived_at: now.toISOString(),
-        archived_by: deviceId,
+        archived_by: userId,
         purge_after: purgeAfter,
         updated_at: now.toISOString(),
       }).eq("id", id);
@@ -230,27 +276,35 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
       if (error) throw error;
     }
     await refresh();
-  }, [collages, deviceId, refresh]);
+  }, [collages, deviceId, refresh, requireAuthenticatedUser, isAdmin]);
 
   const restoreCollage = useCallback(async (id: string) => {
+    const userId = requireAuthenticatedUser();
+    const target = collages.find((c) => c.id === id);
+    const canManage = !!target && (isAdmin || target.owner_user_id === userId);
+    if (!canManage) throw new Error("forbidden");
+
     let { error } = await supabase.from("family_collages").update({
       archived_at: null,
       archived_by: null,
       purge_after: null,
+      deleted_at: null,
+      deleted_by: null,
       updated_at: new Date().toISOString(),
     }).eq("id", id);
     if (error && isMissingColumnError(error)) return;
     if (error) throw error;
     await refresh();
-  }, [refresh]);
+  }, [refresh, requireAuthenticatedUser, collages, isAdmin]);
 
   const purgeExpiredArchived = useCallback(async () => {
+    if (!isAdmin) return;
     const nowIso = new Date().toISOString();
     const { error } = await supabase.from("family_collages").delete().not("purge_after", "is", null).lte("purge_after", nowIso);
     if (error && isMissingColumnError(error)) return;
     if (error) throw error;
     await refresh();
-  }, [refresh]);
+  }, [refresh, isAdmin]);
 
   const joinByCode = useCallback(async (code: string): Promise<FamilyCollage | null> => {
     const cleanCode = code.trim().toLowerCase();
@@ -281,9 +335,15 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
 }
 
 export function useFamilyPhotos(collageId: string | null) {
+  const { user, isAdmin } = useAuth();
   const deviceId = getDeviceId();
   const [photos, setPhotos] = useState<FamilyPhoto[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const requireAuthenticatedUser = useCallback(() => {
+    if (!user) throw new Error("auth-required");
+    return user.id;
+  }, [user]);
 
   const refresh = useCallback(async () => {
     if (!collageId) { setPhotos([]); setLoading(false); return; }
@@ -313,7 +373,8 @@ export function useFamilyPhotos(collageId: string | null) {
     return () => { supabase.removeChannel(channel); };
   }, [collageId, refresh]);
 
-  const uploadFiles = useCallback(async (files: File[]) => {
+  const uploadFiles = useCallback(async (files: File[], visibility: "public" | "private" = "public") => {
+    const userId = requireAuthenticatedUser();
     if (!collageId) return [];
     const uploaded: FamilyPhoto[] = [];
     const startOrder = photos.length;
@@ -321,7 +382,7 @@ export function useFamilyPhotos(collageId: string | null) {
       const file = files[i];
       const isVideo = file.type.startsWith("video/");
       const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
-      const path = `${deviceId}/${collageId}/${Date.now()}-${i}.${ext}`;
+      const path = `${userId}/${collageId}/${Date.now()}-${i}.${ext}`;
       const { error: upErr } = await supabase.storage.from("family-photos").upload(path, file, {
         upsert: false,
         contentType: file.type || undefined,
@@ -348,7 +409,7 @@ export function useFamilyPhotos(collageId: string | null) {
           const seekTo = durationMs && durationMs < 1000 ? (durationMs / 2000) : 0.5;
           const thumbBlob = await captureVideoThumbnail(file, { seekTo, maxWidth: 800 });
           if (thumbBlob) {
-            const thumbPath = `${deviceId}/${collageId}/${Date.now()}-${i}-thumb.jpg`;
+            const thumbPath = `${userId}/${collageId}/${Date.now()}-${i}-thumb.jpg`;
             const { error: thErr } = await supabase.storage
               .from("family-photos")
               .upload(thumbPath, thumbBlob, { upsert: false, contentType: "image/jpeg" });
@@ -366,6 +427,8 @@ export function useFamilyPhotos(collageId: string | null) {
         .insert({
           collage_id: collageId,
           device_id: deviceId,
+          owner_user_id: userId,
+          visibility,
           image_url: pub.publicUrl,
           sort_order: startOrder + i,
           media_type: isVideo ? "video" : "image",
@@ -378,38 +441,59 @@ export function useFamilyPhotos(collageId: string | null) {
     }
     await refresh();
     return uploaded;
-  }, [collageId, deviceId, photos.length, refresh]);
+  }, [collageId, deviceId, photos.length, refresh, requireAuthenticatedUser]);
 
-  const addFromUrls = useCallback(async (urls: string[]) => {
+  const addFromUrls = useCallback(async (urls: string[], visibility: "public" | "private" = "public") => {
+    const userId = requireAuthenticatedUser();
     if (!collageId || urls.length === 0) return [];
     const startOrder = photos.length;
     const rows = urls.map((url, i) => ({
       collage_id: collageId,
       device_id: deviceId,
+      owner_user_id: userId,
+      visibility,
       image_url: url,
       sort_order: startOrder + i,
     }));
     const { data } = await supabase.from("family_photos").insert(rows).select();
     await refresh();
     return (data ?? []) as FamilyPhoto[];
-  }, [collageId, deviceId, photos.length, refresh]);
+  }, [collageId, deviceId, photos.length, refresh, requireAuthenticatedUser]);
 
   const updatePhoto = useCallback(async (id: string, patch: Partial<FamilyPhoto>) => {
+    const userId = requireAuthenticatedUser();
+    const target = photos.find((p) => p.id === id);
+    if (!target) return;
+    const canManage = isAdmin || target.owner_user_id === userId;
+    if (!canManage) throw new Error("forbidden");
+    if (target.locked_by_admin && !isAdmin) throw new Error("locked-by-admin");
+
     await supabase.from("family_photos").update(patch).eq("id", id);
     await refresh();
-  }, [refresh]);
+  }, [refresh, requireAuthenticatedUser, photos, isAdmin]);
 
   const deletePhoto = useCallback(async (id: string) => {
-    await supabase.from("family_photos").delete().eq("id", id);
+    const userId = requireAuthenticatedUser();
+    const target = photos.find((p) => p.id === id);
+    if (!target) return;
+    const canManage = isAdmin || target.owner_user_id === userId;
+    if (!canManage) throw new Error("forbidden");
+    if (target.locked_by_admin && !isAdmin) throw new Error("locked-by-admin");
+
+    await supabase
+      .from("family_photos")
+      .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
+      .eq("id", id);
     await refresh();
-  }, [refresh]);
+  }, [refresh, requireAuthenticatedUser, photos, isAdmin]);
 
   const reorderPhotos = useCallback(async (orderedIds: string[]) => {
+    requireAuthenticatedUser();
     await Promise.all(orderedIds.map((id, idx) =>
       supabase.from("family_photos").update({ sort_order: idx }).eq("id", id)
     ));
     await refresh();
-  }, [refresh]);
+  }, [refresh, requireAuthenticatedUser]);
 
   return { photos, loading, uploadFiles, addFromUrls, updatePhoto, deletePhoto, reorderPhotos, refresh };
 }

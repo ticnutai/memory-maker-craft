@@ -32,7 +32,7 @@ export default function FamilyHome({
   externalThemePickerOpen,
   onThemePickerOpenChange,
 }: FamilyHomeProps) {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const familyCtx = useFamily();
   const { collages, loading, createCollage, updateCollage, deleteCollage, joinByCode, deviceId } = useFamilyCollages(familyCtx.familyDeviceIds);
   const bootstrappingHomeRef = useRef(false);
@@ -140,6 +140,7 @@ export default function FamilyHome({
   // Create a real, editable "Home" collage if there are no collages yet.
   useEffect(() => {
     if (loading || bootstrappingHomeRef.current) return;
+    if (!user) return;
     if (photoCollages.length > 0) return;
 
     bootstrappingHomeRef.current = true;
@@ -153,7 +154,7 @@ export default function FamilyHome({
         bootstrappingHomeRef.current = false;
       }
     })();
-  }, [loading, photoCollages.length, createCollage]);
+  }, [loading, photoCollages.length, createCollage, user]);
 
   // Auto-set home collage to first one if none selected
   useEffect(() => {
@@ -226,10 +227,15 @@ export default function FamilyHome({
 
   const active = collages.find(c => c.id === activeId);
   if (active) {
-    return <CollageView collage={active} onBack={() => setActiveId(null)} onUpdateCollage={updateCollage} />;
+    const canEditActive = !!user && (isAdmin || active.owner_user_id === user.id);
+    return <CollageView collage={active} onBack={() => setActiveId(null)} onUpdateCollage={updateCollage} canEdit={canEditActive} />;
   }
 
   const handleCreate = async (partial?: Partial<typeof collages[0]>) => {
+    if (!user) {
+      toast.error("יש להתחבר כדי ליצור קולאז׳");
+      throw new Error("auth-required");
+    }
     try {
       const c = await createCollage({ name: `קולאז׳ ${collages.length + 1}`, ...partial });
       if (!homeCollageId || !photoCollages.some((item) => item.id === homeCollageId)) {
@@ -253,7 +259,7 @@ export default function FamilyHome({
       <FamilyCodeManager
         family={familyCtx.family}
         members={familyCtx.members}
-        isAdmin={familyCtx.isAdmin}
+        isAdmin={isAdmin || familyCtx.isAdmin}
         deviceId={familyCtx.deviceId}
         onCreateFamily={familyCtx.createFamily}
         onJoinByCode={familyCtx.joinByCode}
@@ -276,7 +282,7 @@ export default function FamilyHome({
         onCreateCollage={handleCreate}
         onDeleteCollage={deleteCollage}
         onJoinByCode={joinByCode}
-        isAdmin={familyCtx.isAdmin}
+        isAdmin={!!user}
         slideshow={slideshow}
         onSlideshowChange={(cfg) => { void persistSlideshow(cfg); }}
         onResetSlideshow={resetSlideshowPreferences}

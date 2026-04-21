@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useFamilyCollages, FamilyCollage } from "@/hooks/useFamilyCollages";
 import { useFamily } from "@/hooks/useFamily";
+import { useAuth } from "@/hooks/useAuth";
 import CollageView from "./CollageView";
 import { loadHomeCollageId, saveHomeCollageId, saveSlideshowConfig, loadSlideshowConfig } from "@/lib/familyThemes";
 import { toast } from "sonner";
@@ -24,7 +25,8 @@ const CATEGORIES = [
 ];
 
 export default function FamilyAlbums() {
-  const { familyDeviceIds, isAdmin } = useFamily();
+  const { familyDeviceIds } = useFamily();
+  const { user, isAdmin } = useAuth();
   const {
     collages,
     loading,
@@ -62,6 +64,10 @@ export default function FamilyAlbums() {
   const [editDraft, setEditDraft] = useState({
     name: "",
     emoji: "",
+    visibility: "public" as "public" | "private",
+    owner_user_id: "",
+    locked_by_admin: false,
+    lock_reason: "",
     category: "" as string | null,
     year_tag: "" as string,
     family_tag: "" as string,
@@ -82,6 +88,10 @@ export default function FamilyAlbums() {
     setEditDraft({
       name: c.name,
       emoji: c.emoji ?? "",
+      visibility: c.visibility ?? "public",
+      owner_user_id: c.owner_user_id ?? "",
+      locked_by_admin: c.locked_by_admin ?? false,
+      lock_reason: c.lock_reason ?? "",
       category: c.category,
       year_tag: c.year_tag?.toString() ?? "",
       family_tag: c.family_tag ?? "",
@@ -95,11 +105,24 @@ export default function FamilyAlbums() {
 
   const handleSaveEdit = async () => {
     if (!editingAlbum) return;
+    const canManage = !!user && (isAdmin || editingAlbum.owner_user_id === user.id);
+    if (!canManage) {
+      toast.error("אין הרשאה לערוך אלבום זה");
+      return;
+    }
     setSavingEdit(true);
     try {
       await updateCollage(editingAlbum.id, {
         name: editDraft.name.trim() || editingAlbum.name,
         emoji: editDraft.emoji.trim() || null,
+        visibility: editDraft.visibility,
+        ...(isAdmin ? {
+          owner_user_id: editDraft.owner_user_id.trim() || null,
+          locked_by_admin: editDraft.locked_by_admin,
+          lock_reason: editDraft.locked_by_admin ? (editDraft.lock_reason.trim() || null) : null,
+          locked_at: editDraft.locked_by_admin ? new Date().toISOString() : null,
+          locked_by_user_id: editDraft.locked_by_admin ? user?.id ?? null : null,
+        } : {}),
         category: editDraft.category || null,
         year_tag: editDraft.year_tag ? parseInt(editDraft.year_tag) || null : null,
         family_tag: editDraft.family_tag.trim() || null,
@@ -219,8 +242,8 @@ export default function FamilyAlbums() {
   }, []);
 
   const handleCreate = async () => {
-    if (!isAdmin) {
-      toast.error("רק אדמין משפחה יכול ליצור אלבומים/תיקיות");
+    if (!user) {
+      toast.error("יש להתחבר כדי ליצור אלבומים/תיקיות");
       return;
     }
     try {
@@ -232,8 +255,8 @@ export default function FamilyAlbums() {
   };
 
   const handleCreateFolder = async () => {
-    if (!isAdmin) {
-      toast.error("רק אדמין משפחה יכול ליצור תתי-תיקיות");
+    if (!user) {
+      toast.error("יש להתחבר כדי ליצור תתי-תיקיות");
       return;
     }
     if (!newFolderName.trim()) return;
@@ -291,7 +314,8 @@ export default function FamilyAlbums() {
   // Active collage view (full edit screen with upload, reorder, etc.)
   const active = collages.find(c => c.id === activeId);
   if (active) {
-    return <CollageView collage={active} onBack={() => setActiveId(null)} onUpdateCollage={updateCollage} />;
+    const canEditActive = !!user && (isAdmin || active.owner_user_id === user.id);
+    return <CollageView collage={active} onBack={() => setActiveId(null)} onUpdateCollage={updateCollage} canEdit={canEditActive} />;
   }
 
   const folderCount = visibleItems.filter(c => c.is_folder).length;
@@ -314,11 +338,11 @@ export default function FamilyAlbums() {
               <Filter className="w-4 h-4 ml-1" />
               סינון
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setShowNewFolder(true)} disabled={!isAdmin}>
+            <Button size="sm" variant="outline" onClick={() => setShowNewFolder(true)} disabled={!user}>
               <FolderPlus className="w-4 h-4 ml-1" />
               תיקייה
             </Button>
-            <Button size="sm" onClick={handleCreate} disabled={!isAdmin}>
+            <Button size="sm" onClick={handleCreate} disabled={!user}>
               <Plus className="w-4 h-4 ml-1" />
               אלבום חדש
             </Button>
@@ -442,7 +466,7 @@ export default function FamilyAlbums() {
               <Input placeholder="שנה" value={templateYear} onChange={(e) => setTemplateYear(e.target.value)} className="h-9" />
             </div>
             <div className="flex items-center gap-2">
-              <Button size="sm" onClick={handleCreateFolder} disabled={!newFolderName.trim() || !isAdmin}>צור</Button>
+              <Button size="sm" onClick={handleCreateFolder} disabled={!newFolderName.trim() || !user}>צור</Button>
               <Button size="sm" variant="ghost" onClick={() => { setShowNewFolder(false); setNewFolderName(""); }}>ביטול</Button>
             </div>
           </div>
@@ -525,6 +549,7 @@ export default function FamilyAlbums() {
               const isShared = c.device_id !== deviceId;
               const isHome = homeCollageId === c.id;
               const childCount = c.is_folder ? collages.filter(x => x.parent_id === c.id).length : 0;
+              const canManage = !!user && (isAdmin || c.owner_user_id === user.id);
               return (
                 <div
                   key={c.id}
@@ -579,6 +604,7 @@ export default function FamilyAlbums() {
                           onClick={() => openEditDialog(c)}
                           className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                           title="ערוך פרטי אלבום"
+                          disabled={!canManage}
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
@@ -598,14 +624,15 @@ export default function FamilyAlbums() {
                         onClick={() => openEditDialog(c)}
                         className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                         title="ערוך שם תיקייה"
+                        disabled={!canManage}
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                     )}
                     <button
                       onClick={() => {
-                        if (!isAdmin) {
-                          toast.error("רק אדמין משפחה יכול למחוק/לארכב");
+                        if (!canManage) {
+                          toast.error("רק בעל התוכן או אדמין יכולים למחוק/לארכב");
                           return;
                         }
                         const msg = showArchived
@@ -617,7 +644,7 @@ export default function FamilyAlbums() {
                               : `להעביר לארכיון את "${c.name}"?`;
                         if (confirm(msg)) {
                           if (homeCollageId === c.id) clearHome();
-                          deleteCollage(c.id, { permanent: showArchived });
+                          deleteCollage(c.id, { permanent: showArchived && isAdmin });
                         }
                       }}
                       className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
@@ -659,6 +686,62 @@ export default function FamilyAlbums() {
               <Label>אימוג׳י</Label>
               <Input value={editDraft.emoji} onChange={(e) => setEditDraft(d => ({ ...d, emoji: e.target.value }))} className="w-24 text-center text-2xl" />
             </div>
+            <div>
+              <Label>פרטיות</Label>
+              <div className="flex gap-2 mt-1">
+                <button
+                  onClick={() => setEditDraft((d) => ({ ...d, visibility: "public" }))}
+                  className={`px-3 py-1 text-xs rounded-full border ${editDraft.visibility === "public" ? "bg-primary text-primary-foreground" : "bg-background"}`}
+                >
+                  כללי
+                </button>
+                <button
+                  onClick={() => setEditDraft((d) => ({ ...d, visibility: "private" }))}
+                  className={`px-3 py-1 text-xs rounded-full border ${editDraft.visibility === "private" ? "bg-primary text-primary-foreground" : "bg-background"}`}
+                >
+                  פרטי
+                </button>
+              </div>
+            </div>
+            {isAdmin && (
+              <>
+                <div>
+                  <Label>העברת בעלות (Owner User ID)</Label>
+                  <Input
+                    placeholder="UUID של המשתמש החדש"
+                    value={editDraft.owner_user_id}
+                    onChange={(e) => setEditDraft((d) => ({ ...d, owner_user_id: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label>נעילת אדמין</Label>
+                  <div className="flex gap-2 mt-1">
+                    <button
+                      onClick={() => setEditDraft((d) => ({ ...d, locked_by_admin: false }))}
+                      className={`px-3 py-1 text-xs rounded-full border ${!editDraft.locked_by_admin ? "bg-primary text-primary-foreground" : "bg-background"}`}
+                    >
+                      פתוח
+                    </button>
+                    <button
+                      onClick={() => setEditDraft((d) => ({ ...d, locked_by_admin: true }))}
+                      className={`px-3 py-1 text-xs rounded-full border ${editDraft.locked_by_admin ? "bg-primary text-primary-foreground" : "bg-background"}`}
+                    >
+                      נעול
+                    </button>
+                  </div>
+                </div>
+                {editDraft.locked_by_admin && (
+                  <div>
+                    <Label>סיבת נעילה (אופציונלי)</Label>
+                    <Input
+                      placeholder="לדוגמה: אלבום מוגן לעריכה"
+                      value={editDraft.lock_reason}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, lock_reason: e.target.value }))}
+                    />
+                  </div>
+                )}
+              </>
+            )}
             {!editingAlbum?.is_folder && (
               <>
                 <div>
@@ -748,11 +831,11 @@ export default function FamilyAlbums() {
             )}
             <div className="flex gap-2 pt-2">
               <Button variant="outline" className="flex-1" onClick={() => setEditingAlbum(null)} disabled={savingEdit}>ביטול</Button>
-              <Button className="flex-1" onClick={handleSaveEdit} disabled={savingEdit || !isAdmin}>
+              <Button className="flex-1" onClick={handleSaveEdit} disabled={savingEdit || !user}>
                 {savingEdit ? "שומר..." : "שמור ✓"}
               </Button>
             </div>
-            {!isAdmin && <p className="text-xs text-amber-600">עריכת תיקיות/אלבומים זמינה רק לאדמין המשפחה.</p>}
+            {!user && <p className="text-xs text-amber-600">עריכת תיקיות/אלבומים זמינה רק למשתמש מחובר.</p>}
             {!editingAlbum?.is_folder && (
               <Button
                 variant="secondary"
