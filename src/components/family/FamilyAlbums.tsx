@@ -2,10 +2,12 @@ import { useState, useMemo, useCallback } from "react";
 import {
   Plus, FolderPlus, KeyRound, Trash2, Users, ChevronLeft,
   Home as HomeIcon, FolderOpen, Image as ImageIcon, Filter, Tag, CalendarDays, User,
+  Pencil, Settings, Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useFamilyCollages, FamilyCollage } from "@/hooks/useFamilyCollages";
 import { useFamily } from "@/hooks/useFamily";
 import CollageView from "./CollageView";
@@ -38,6 +40,44 @@ export default function FamilyAlbums() {
   const [filterYear, setFilterYear] = useState<number | null>(null);
   const [filterFamily, setFilterFamily] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Album metadata edit dialog
+  const [editingAlbum, setEditingAlbum] = useState<FamilyCollage | null>(null);
+  const [editDraft, setEditDraft] = useState({ name: "", emoji: "", category: "" as string | null, year_tag: "" as string, family_tag: "" as string, event_tag: "" as string });
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const openEditDialog = (c: FamilyCollage) => {
+    setEditingAlbum(c);
+    setEditDraft({
+      name: c.name,
+      emoji: c.emoji ?? "",
+      category: c.category,
+      year_tag: c.year_tag?.toString() ?? "",
+      family_tag: c.family_tag ?? "",
+      event_tag: c.event_tag ?? "",
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingAlbum) return;
+    setSavingEdit(true);
+    try {
+      await updateCollage(editingAlbum.id, {
+        name: editDraft.name.trim() || editingAlbum.name,
+        emoji: editDraft.emoji.trim() || null,
+        category: editDraft.category || null,
+        year_tag: editDraft.year_tag ? parseInt(editDraft.year_tag) || null : null,
+        family_tag: editDraft.family_tag.trim() || null,
+        event_tag: editDraft.event_tag.trim() || null,
+      });
+      setEditingAlbum(null);
+      toast.success("פרטי האלבום נשמרו ✓");
+    } catch {
+      toast.error("שגיאה בשמירה");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   // Breadcrumb
   const breadcrumb = useMemo(() => {
@@ -128,7 +168,7 @@ export default function FamilyAlbums() {
     }
   };
 
-  // Active collage view
+  // Active collage view (full edit screen with upload, reorder, etc.)
   const active = collages.find(c => c.id === activeId);
   if (active) {
     return <CollageView collage={active} onBack={() => setActiveId(null)} onUpdateCollage={updateCollage} />;
@@ -356,17 +396,42 @@ export default function FamilyAlbums() {
                       </div>
                     </div>
                   </div>
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                  {/* Actions - always visible on mobile, hover on desktop */}
+                  <div className="flex items-center gap-1 mt-3 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                     {!c.is_folder && (
+                      <>
+                        <button
+                          onClick={() => setActiveId(c.id)}
+                          className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          title="פתח ועריכה — העלאת תמונות, סידור מחדש"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => openEditDialog(c)}
+                          className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          title="ערוך פרטי אלבום"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => isHome ? clearHome() : setAsHome(c.id)}
+                          className={`p-1.5 rounded-md text-xs transition-colors ${
+                            isHome ? "text-primary bg-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                          }`}
+                          title={isHome ? "הסר מדף הבית" : "קבע כדף הבית"}
+                        >
+                          <HomeIcon className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
+                    {c.is_folder && (
                       <button
-                        onClick={() => isHome ? clearHome() : setAsHome(c.id)}
-                        className={`p-1.5 rounded-md text-xs transition-colors ${
-                          isHome ? "text-primary bg-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                        }`}
-                        title={isHome ? "הסר מדף הבית" : "קבע כדף הבית"}
+                        onClick={() => openEditDialog(c)}
+                        className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        title="ערוך שם תיקייה"
                       >
-                        <HomeIcon className="w-3.5 h-3.5" />
+                        <Pencil className="w-3.5 h-3.5" />
                       </button>
                     )}
                     <button
@@ -389,6 +454,99 @@ export default function FamilyAlbums() {
           </div>
         )}
       </div>
+
+      {/* Album / Folder edit dialog */}
+      <Dialog open={!!editingAlbum} onOpenChange={(o) => !o && setEditingAlbum(null)}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>{editingAlbum?.is_folder ? "עריכת תיקייה" : "עריכת פרטי אלבום"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>שם</Label>
+              <Input value={editDraft.name} onChange={(e) => setEditDraft(d => ({ ...d, name: e.target.value }))} />
+            </div>
+            <div>
+              <Label>אימוג׳י</Label>
+              <Input value={editDraft.emoji} onChange={(e) => setEditDraft(d => ({ ...d, emoji: e.target.value }))} className="w-24 text-center text-2xl" />
+            </div>
+            {!editingAlbum?.is_folder && (
+              <>
+                <div>
+                  <Label>קטגוריה</Label>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    <button
+                      onClick={() => setEditDraft(d => ({ ...d, category: null }))}
+                      className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                        !editDraft.category ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted"
+                      }`}
+                    >
+                      ללא
+                    </button>
+                    {CATEGORIES.map(cat => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setEditDraft(d => ({ ...d, category: cat.id }))}
+                        className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                          editDraft.category === cat.id ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted"
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>שנה</Label>
+                    <Input
+                      type="number"
+                      placeholder="2024"
+                      value={editDraft.year_tag}
+                      onChange={(e) => setEditDraft(d => ({ ...d, year_tag: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>אירוע</Label>
+                    <Input
+                      placeholder="חנוכה, פסח..."
+                      value={editDraft.event_tag}
+                      onChange={(e) => setEditDraft(d => ({ ...d, event_tag: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>תגית משפחה</Label>
+                  <Input
+                    placeholder="טננבאום, כהן..."
+                    value={editDraft.family_tag}
+                    onChange={(e) => setEditDraft(d => ({ ...d, family_tag: e.target.value }))}
+                  />
+                </div>
+              </>
+            )}
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" className="flex-1" onClick={() => setEditingAlbum(null)} disabled={savingEdit}>ביטול</Button>
+              <Button className="flex-1" onClick={handleSaveEdit} disabled={savingEdit}>
+                {savingEdit ? "שומר..." : "שמור ✓"}
+              </Button>
+            </div>
+            {!editingAlbum?.is_folder && (
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={() => {
+                  setEditingAlbum(null);
+                  if (editingAlbum) setActiveId(editingAlbum.id);
+                }}
+              >
+                <ImageIcon className="w-4 h-4 ml-1" />
+                פתח לעריכת תמונות, סידור והעלאה
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
