@@ -1,6 +1,8 @@
-import { Home, Cake, Gamepad2, Map, Train, ChevronDown, Pin, PinOff, Settings } from "lucide-react";
+import { Home, Cake, Gamepad2, Map, Train, ChevronDown, Pin, PinOff, Settings, LogIn, LogOut, User, Shield } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 export type SidebarSection = "family" | "birthdays" | "memory" | "treasure" | "train";
 
@@ -19,6 +21,8 @@ const games: { key: SidebarSection; title: string; icon: typeof Gamepad2 }[] = [
 const PIN_KEY = "app-sidebar-pinned";
 
 export default function AppSidebar({ active, onSelect, onOpenSettings }: AppSidebarProps) {
+  const { user, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
   const [pinned, setPinned] = useState<boolean>(() => {
     try { return localStorage.getItem(PIN_KEY) === "1"; } catch { return false; }
   });
@@ -138,8 +142,32 @@ export default function AppSidebar({ active, onSelect, onOpenSettings }: AppSide
           </div>
         </nav>
 
-        {/* Footer: settings */}
-        <div className="absolute bottom-0 inset-x-0 border-t border-sidebar-border p-2 bg-sidebar">
+        {/* Footer: user + settings */}
+        <div className="absolute bottom-0 inset-x-0 border-t border-sidebar-border p-2 bg-sidebar space-y-1">
+          {user ? (
+            <div className="flex items-center justify-between px-3 py-1.5">
+              <div className="flex items-center gap-2 text-xs text-sidebar-foreground/70 truncate">
+                <User className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{user.email}</span>
+                {isAdmin && <Shield className="w-3 h-3 text-primary shrink-0" />}
+              </div>
+              <button
+                onClick={() => signOut()}
+                className="p-1 rounded hover:bg-sidebar-accent text-sidebar-foreground/60"
+                title="התנתק"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => navigate("/auth")}
+              className={cn(baseBtn)}
+            >
+              <LogIn className="h-4 w-4 shrink-0" />
+              <span>התחבר</span>
+            </button>
+          )}
           <button
             onClick={() => { onOpenSettings(); if (!pinned) setHoverOpen(false); }}
             className={cn(baseBtn)}
