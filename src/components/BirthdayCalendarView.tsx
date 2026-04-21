@@ -331,7 +331,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
                       key={i}
                       className={`relative aspect-square flex items-center justify-center text-[9px] rounded ${
                         !inMonth ? "opacity-20" : ""
-                      } ${isToday ? "bg-yellow-300 text-yellow-900 font-bold" : ""}`}
+                      } ${isToday ? `${ct.todayBg} ${ct.todayText} font-bold` : ""}`}
                     >
                       {heb.hebDay}
                       {hasB && inMonth && (
