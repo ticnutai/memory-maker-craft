@@ -1,9 +1,9 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   Plus, FolderPlus, KeyRound, Trash2, Users, ChevronLeft,
   Home as HomeIcon, FolderOpen, Image as ImageIcon, Filter, Tag, CalendarDays, User,
   Pencil, Eye, Search, Archive, RotateCcw, GripVertical,
-  LayoutGrid, List, Table2, GalleryHorizontalEnd,
+  LayoutGrid, List, Table2, GalleryHorizontalEnd, Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,6 +70,10 @@ export default function FamilyAlbums() {
   });
   const [dragItemId, setDragItemId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [externalDragOver, setExternalDragOver] = useState(false);
+  const [externalDropTarget, setExternalDropTarget] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const dropCounterRef = useRef(0);
 
   // Persist view mode to cloud + localStorage
   const changeViewMode = useCallback(async (mode: AlbumViewMode) => {
@@ -296,6 +300,118 @@ export default function FamilyAlbums() {
     }
   }, [collages, updateCollage]);
 
+  // ─── External File Drop (from OS) ───
+  const isExternalFileDrag = useCallback((e: React.DragEvent) => {
+    return e.dataTransfer.types.includes("Files");
+  }, []);
+
+  const handleExternalDragEnter = useCallback((e: React.DragEvent) => {
+    if (!isExternalFileDrag(e)) return;
+    e.preventDefault();
+    dropCounterRef.current++;
+    setExternalDragOver(true);
+  }, [isExternalFileDrag]);
+
+  const handleExternalDragLeave = useCallback((e: React.DragEvent) => {
+    if (!isExternalFileDrag(e)) return;
+    e.preventDefault();
+    dropCounterRef.current--;
+    if (dropCounterRef.current <= 0) {
+      dropCounterRef.current = 0;
+      setExternalDragOver(false);
+      setExternalDropTarget(null);
+    }
+  }, [isExternalFileDrag]);
+
+  const handleExternalDragOver = useCallback((e: React.DragEvent) => {
+    if (!isExternalFileDrag(e)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  }, [isExternalFileDrag]);
+
+  const handleExternalFileDrop = useCallback(async (e: React.DragEvent, targetAlbumId?: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropCounterRef.current = 0;
+    setExternalDragOver(false);
+    setExternalDropTarget(null);
+
+    if (!user) {
+      toast.error("יש להתחבר כדי להעלות קבצים");
+      return;
+    }
+
+    const files = Array.from(e.dataTransfer.files).filter(
+      f => f.type.startsWith("image/") || f.type.startsWith("video/")
+    );
+    if (files.length === 0) {
+      toast.error("לא נמצאו קבצי תמונה או וידאו");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      let albumId = targetAlbumId;
+
+      // If dropped on a folder or no target, create a new album
+      if (!albumId) {
+        const newAlbum = await createCollage({
+          name: `העלאה ${new Date().toLocaleDateString("he-IL")}`,
+          emoji: "📸",
+          parent_id: currentFolderId,
+        } as Partial<FamilyCollage>);
+        albumId = newAlbum.id;
+      } else {
+        // Check if target is a folder - if so, create album inside it
+        const target = collages.find(c => c.id === albumId);
+        if (target?.is_folder) {
+          const newAlbum = await createCollage({
+            name: `העלאה ${new Date().toLocaleDateString("he-IL")}`,
+            emoji: "📸",
+            parent_id: albumId,
+          } as Partial<FamilyCollage>);
+          albumId = newAlbum.id;
+        }
+      }
+
+      // Upload files to the album
+      let uploadedCount = 0;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const isVideo = file.type.startsWith("video/");
+        const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
+        const path = `${user.id}/${albumId}/${Date.now()}-${i}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("family-photos").upload(path, file, {
+          upsert: false,
+          contentType: file.type || undefined,
+        });
+        if (upErr) { console.warn("upload error:", upErr); continue; }
+        const { data: pub } = supabase.storage.from("family-photos").getPublicUrl(path);
+
+        const { error } = await supabase
+          .from("family_photos")
+          .insert({
+            collage_id: albumId,
+            device_id: deviceId,
+            owner_user_id: user.id,
+            visibility: "public",
+            image_url: pub.publicUrl,
+            sort_order: i,
+            media_type: isVideo ? "video" : "image",
+          } as never);
+        if (!error) uploadedCount++;
+      }
+
+      toast.success(`${uploadedCount} קבצים הועלו בהצלחה!`);
+      setActiveId(albumId);
+    } catch (err: any) {
+      if (err?.message === "auth-required") toast.error("יש להתחבר");
+      else toast.error("שגיאה בהעלאה");
+    } finally {
+      setUploading(false);
+    }
+  }, [user, createCollage, currentFolderId, collages, deviceId]);
+
   const availableYears = useMemo(() => [...new Set(collages.map(c => c.year_tag).filter(Boolean) as number[])].sort((a, b) => b - a), [collages]);
   const availableFamilies = useMemo(() => [...new Set(collages.map(c => c.family_tag).filter(Boolean) as string[])].sort(), [collages]);
   const hasActiveFilters = !!(filterCategory || filterYear || filterFamily);
@@ -437,7 +553,32 @@ export default function FamilyAlbums() {
   const albumCount = visibleItems.filter(c => !c.is_folder).length;
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 pt-14 pb-8" dir="rtl">
+    <div
+      className="w-full px-4 sm:px-6 lg:px-8 pt-14 pb-8 relative"
+      dir="rtl"
+      onDragEnter={handleExternalDragEnter}
+      onDragLeave={handleExternalDragLeave}
+      onDragOver={handleExternalDragOver}
+      onDrop={(e) => { if (isExternalFileDrag(e)) handleExternalFileDrop(e); }}
+    >
+      {/* External file drop overlay */}
+      {externalDragOver && (
+        <div className="fixed inset-0 z-50 bg-primary/10 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+          <div className="bg-background border-2 border-dashed border-primary rounded-2xl p-12 text-center shadow-xl">
+            <Upload className="w-16 h-16 mx-auto mb-4 text-primary animate-bounce" />
+            <p className="text-xl font-bold text-foreground">שחרר קבצים כאן להעלאה</p>
+            <p className="text-sm text-muted-foreground mt-2">תמונות ווידאו יועלו לאלבום חדש</p>
+          </div>
+        </div>
+      )}
+      {uploading && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-background border rounded-2xl p-8 text-center shadow-xl">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-lg font-bold text-foreground">מעלה קבצים...</p>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
@@ -686,21 +827,43 @@ export default function FamilyAlbums() {
             {!loading && visibleItems.length > 0 && (() => {
               const dragProps = (c: FamilyCollage) => ({
                 draggable: !!user,
-                onDragStart: (e: React.DragEvent) => handleDragStart(e, c.id),
-                onDragEnd: () => { setDragItemId(null); setDragOverId(null); },
-                ...(c.is_folder ? {
-                  onDragOver: (e: React.DragEvent) => handleDragOver(e, c.id),
-                  onDragLeave: handleDragLeave,
-                  onDrop: (e: React.DragEvent) => handleDrop(e, c.id),
-                } : {}),
+                onDragStart: (e: React.DragEvent) => { if (!isExternalFileDrag(e)) handleDragStart(e, c.id); },
+                onDragEnd: () => { setDragItemId(null); setDragOverId(null); setExternalDropTarget(null); },
+                onDragOver: (e: React.DragEvent) => {
+                  if (isExternalFileDrag(e)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.dataTransfer.dropEffect = "copy";
+                    setExternalDropTarget(c.id);
+                  } else if (c.is_folder) {
+                    handleDragOver(e, c.id);
+                  }
+                },
+                onDragLeave: (e: React.DragEvent) => {
+                  if (isExternalFileDrag(e)) {
+                    setExternalDropTarget(null);
+                  } else {
+                    handleDragLeave();
+                  }
+                },
+                onDrop: (e: React.DragEvent) => {
+                  if (isExternalFileDrag(e)) {
+                    e.stopPropagation();
+                    handleExternalFileDrop(e, c.id);
+                  } else if (c.is_folder) {
+                    handleDrop(e, c.id);
+                  }
+                },
               });
 
               const dragClass = (c: FamilyCollage, isHome: boolean) =>
-                dragOverId === c.id && c.is_folder
+                externalDropTarget === c.id
                   ? "ring-2 ring-primary border-primary bg-primary/15 scale-[1.02]"
-                  : dragItemId === c.id
-                    ? "opacity-40 scale-95"
-                    : isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md";
+                  : dragOverId === c.id && c.is_folder
+                    ? "ring-2 ring-primary border-primary bg-primary/15 scale-[1.02]"
+                    : dragItemId === c.id
+                      ? "opacity-40 scale-95"
+                      : isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md";
 
               const itemClick = (c: FamilyCollage) => {
                 if (c.is_folder) setCurrentFolderId(c.id);
