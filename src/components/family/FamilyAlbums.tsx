@@ -197,6 +197,58 @@ export default function FamilyAlbums() {
 
   const toggleFolder = (id: string) => setExpandedFolders((prev) => ({ ...prev, [id]: !prev[id] }));
 
+  // ─── Drag & Drop ───
+  const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData("text/plain", id);
+    e.dataTransfer.effectAllowed = "move";
+    setDragItemId(id);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, targetId: string | null) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverId(targetId);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOverId(null);
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent, targetFolderId: string | null) => {
+    e.preventDefault();
+    setDragOverId(null);
+    setDragItemId(null);
+    const itemId = e.dataTransfer.getData("text/plain");
+    if (!itemId || itemId === targetFolderId) return;
+    
+    const item = collages.find(c => c.id === itemId);
+    if (!item) return;
+    if (item.parent_id === targetFolderId) return; // already there
+
+    // Prevent dropping a folder into itself or its descendant
+    if (targetFolderId) {
+      let parentId: string | null = targetFolderId;
+      while (parentId) {
+        if (parentId === itemId) {
+          toast.error("לא ניתן להעביר תיקייה לתוך עצמה");
+          return;
+        }
+        const parent = collages.find(c => c.id === parentId);
+        parentId = parent?.parent_id ?? null;
+      }
+    }
+
+    try {
+      await updateCollage(itemId, { parent_id: targetFolderId } as Partial<FamilyCollage>);
+      const targetName = targetFolderId
+        ? collages.find(c => c.id === targetFolderId)?.name ?? "תיקייה"
+        : "שורש";
+      toast.success(`"${item.name}" הועבר ל-${targetName}`);
+    } catch {
+      toast.error("שגיאה בהעברה");
+    }
+  }, [collages, updateCollage]);
+
   const availableYears = useMemo(() => [...new Set(collages.map(c => c.year_tag).filter(Boolean) as number[])].sort((a, b) => b - a), [collages]);
   const availableFamilies = useMemo(() => [...new Set(collages.map(c => c.family_tag).filter(Boolean) as string[])].sort(), [collages]);
   const hasActiveFilters = !!(filterCategory || filterYear || filterFamily);
