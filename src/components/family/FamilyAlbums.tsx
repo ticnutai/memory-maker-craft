@@ -840,13 +840,50 @@ export default function FamilyAlbums() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="mb-3 text-xs text-muted-foreground">
-          {visibleItems.length === 0 ? "ריק" : `${folderCount} תיקיות · ${albumCount} אלבומים`}
+        {/* Stats + Selection toolbar */}
+        <div className="mb-3 text-xs text-muted-foreground flex items-center gap-3 flex-wrap">
+          <span>{visibleItems.length === 0 ? "ריק" : `${folderCount} תיקיות · ${albumCount} אלבומים`}</span>
           {homeCollageId && !currentFolderId && (
-            <button onClick={clearHome} className="mr-3 underline hover:text-foreground">נקה דף בית</button>
+            <button onClick={clearHome} className="underline hover:text-foreground">נקה דף בית</button>
           )}
         </div>
+        {selectMode && (
+          <div className="mb-3 p-2.5 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-medium text-foreground">
+              {selectedIds.size > 0 ? `${selectedIds.size} נבחרו` : "לחץ על פריטים לבחירה"}
+            </span>
+            <Button size="sm" variant="ghost" onClick={selectAll} className="text-xs h-7">
+              בחר הכל
+            </Button>
+            {selectedIds.size > 0 && (
+              <>
+                <Button size="sm" variant="ghost" onClick={clearSelection} className="text-xs h-7">
+                  <X className="w-3 h-3 ml-1" />
+                  נקה בחירה
+                </Button>
+                <div className="flex items-center gap-1 mr-auto">
+                  <Move className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">העבר ל:</span>
+                  <button
+                    onClick={() => moveSelectedTo(null)}
+                    className="text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors"
+                  >
+                    🏠 שורש
+                  </button>
+                  {folderItems.filter(f => !selectedIds.has(f.id)).slice(0, 5).map(f => (
+                    <button
+                      key={f.id}
+                      onClick={() => moveSelectedTo(f.id)}
+                      className="text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors truncate max-w-[120px]"
+                    >
+                      {f.emoji ?? "📁"} {f.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4">
           <aside className="border rounded-xl bg-muted/20 p-2 h-fit">
