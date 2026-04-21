@@ -5,14 +5,16 @@ import { CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import {
   Upload, Volume2, VolumeX, Music, Trash2, Cloud, Loader2,
-  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move, Paintbrush, Code2, FolderOpen, Edit2
+  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move, Paintbrush, Code2, FolderOpen, Edit2, Shield
 } from "lucide-react";
 import DevPanel from "@/components/DevPanel";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import BirthdayManager from "@/components/BirthdayManager";
 import CloudGallery from "@/components/CloudGallery";
 import CustomCardSets from "@/components/CustomCardSets";
+import AdminPanel from "@/components/AdminPanel";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
+import { useAuth } from "@/hooks/useAuth";
 import { getBgThemes } from "@/components/ThemeBackground";
 import { supabase } from "@/integrations/supabase/client";
 import FloatingPanel from "@/components/FloatingPanel";
@@ -27,7 +29,7 @@ interface CardSetSelectProps {
   settingsOnly?: boolean;
 }
 
-type SettingsTabId = "general" | "music" | "cards" | "themes" | "gallery" | "custom-sets" | "birthdays" | "recordings" | "dev";
+type SettingsTabId = "general" | "music" | "cards" | "themes" | "gallery" | "custom-sets" | "birthdays" | "recordings" | "admin" | "dev";
 
 const BACK_ICONS = ["⭐", "❓", "🎴", "🃏", "💫", "🌟", "🎯", "🔮", "🎪", "🎨"];
 const BACK_COLORS = [
@@ -88,6 +90,7 @@ function getDeviceId(): string {
 }
 
 export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsToggle, settingsOnly }: CardSetSelectProps) {
+  const { isAdmin } = useAuth();
   const theme = "girl";
   const [_showSettings, _setShowSettings] = useState(false);
   const showSettings = settingsOpen !== undefined ? settingsOpen : _showSettings;
@@ -250,6 +253,7 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
     { id: "gallery", label: "גלריה", icon: <Image className="w-4 h-4" /> },
     { id: "birthdays", label: "ימי הולדת", icon: <Cake className="w-4 h-4" /> },
     { id: "recordings", label: "הקלטות", icon: <Mic className="w-4 h-4" /> },
+    ...(isAdmin ? [{ id: "admin" as SettingsTabId, label: "ניהול", icon: <Shield className="w-4 h-4" /> }] : []),
     { id: "dev", label: "פיתוח", icon: <Code2 className="w-4 h-4" /> },
   ];
 
@@ -896,6 +900,9 @@ export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsTog
 
               {/* ═══ RECORDINGS ═══ */}
               {settingsTab === "recordings" && <VoiceRecorder theme={theme} />}
+
+              {/* ═══ ADMIN ═══ */}
+              {settingsTab === "admin" && isAdmin && <AdminPanel />}
 
               {/* ═══ DEV ═══ */}
               {settingsTab === "dev" && <DevPanel deviceId={deviceId} />}
