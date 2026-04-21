@@ -4,6 +4,7 @@ import GameBoard from "@/components/GameBoard";
 import TreasureHuntGame from "@/components/TreasureHuntGame";
 import TrainGame from "@/components/TrainGame";
 import FamilyHome from "@/components/family/FamilyHome";
+import FamilyAlbums from "@/components/family/FamilyAlbums";
 import BirthdayManager from "@/components/BirthdayManager";
 import AppSidebar, { SidebarSection } from "@/components/AppSidebar";
 import { CardSetType, CardData, GameSettings } from "@/lib/gameData";
@@ -73,6 +74,8 @@ const Index = () => {
           <TrainGame onHome={() => handleSelect("memory")} />
         ) : tab === "treasure" ? (
           <TreasureHuntGame onHome={() => handleSelect("memory")} />
+        ) : tab === "albums" ? (
+          <FamilyAlbums />
         ) : tab === "birthdays" ? (
           <div className="w-full px-4 sm:px-6 lg:px-8 pt-14 pb-8">
             <BirthdayManager theme="girl" familyDeviceIds={familyDeviceIds} />

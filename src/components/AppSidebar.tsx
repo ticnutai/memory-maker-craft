@@ -1,10 +1,10 @@
-import { Home, Cake, Gamepad2, Map, Train, ChevronDown, Pin, PinOff, Settings, LogIn, LogOut, User, Shield, Users, Palette } from "lucide-react";
+import { Home, Cake, Gamepad2, Map, Train, ChevronDown, Pin, PinOff, Settings, LogIn, LogOut, User, Shield, Users, Palette, Album } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
-export type SidebarSection = "family" | "birthdays" | "memory" | "treasure" | "train";
+export type SidebarSection = "family" | "albums" | "birthdays" | "memory" | "treasure" | "train";
 
 interface AppSidebarProps {
   active: SidebarSection;
@@ -107,6 +107,13 @@ export default function AppSidebar({ active, onSelect, onOpenSettings, onOpenFam
             >
               <Home className="h-4 w-4 shrink-0" />
               <span>אלבומים</span>
+            </button>
+            <button
+              onClick={() => handleSelect("albums")}
+              className={cn(baseBtn, active === "albums" && activeBtn)}
+            >
+              <Album className="h-4 w-4 shrink-0" />
+              <span>אלבומי משפחה</span>
             </button>
             <button
               onClick={() => handleSelect("birthdays")}
