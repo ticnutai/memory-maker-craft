@@ -402,9 +402,15 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
             <h3 className="font-bold text-sm flex items-center gap-2">
               <Home className="w-4 h-4" /> הגדרות תצוגה בדף הבית
             </h3>
-            <button onClick={() => setShowHomeSettings(false)} className="text-muted-foreground hover:text-foreground">
-              <X className="w-4 h-4" />
-            </button>
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() => setShowHomeSettings(false)}
+              className="rounded-xl gap-1 text-xs"
+            >
+              <Check className="w-3.5 h-3.5" />
+              אישור
+            </Button>
           </div>
 
           {/* Enable/disable toggle with settings icon */}
