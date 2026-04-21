@@ -28,6 +28,25 @@ function removeJoinedCollageId(id: string) {
   localStorage.setItem(JOINED_KEY, JSON.stringify(arr));
 }
 
+function isMissingColumnError(err: any): boolean {
+  const text = `${err?.message ?? ""} ${err?.details ?? ""} ${err?.hint ?? ""}`.toLowerCase();
+  return text.includes("column") && text.includes("does not exist");
+}
+
+function stripExtendedCollageFields<T extends Record<string, any>>(payload: T): Partial<T> {
+  const {
+    description,
+    tags,
+    location_tag,
+    cover_url,
+    archived_at,
+    archived_by,
+    purge_after,
+    ...legacy
+  } = payload;
+  return legacy;
+}
+
 export interface FamilyCollage {
   id: string;
   device_id: string;
@@ -136,29 +155,40 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
     const depth = getDepth(collages, partial.parent_id ?? null);
     if (depth >= 5) throw new Error("max-depth-reached");
 
-    const { data, error } = await supabase
+    const insertPayload = {
+      device_id: deviceId,
+      name: partial.name ?? "קולאז׳ חדש",
+      emoji: partial.emoji ?? "📸",
+      layout_type: partial.layout_type ?? "grid",
+      cols: partial.cols ?? 3,
+      gap: partial.gap ?? 8,
+      background: partial.background ?? "#ffffff",
+      parent_id: partial.parent_id ?? null,
+      is_folder: partial.is_folder ?? false,
+      category: partial.category ?? null,
+      year_tag: partial.year_tag ?? null,
+      family_tag: partial.family_tag ?? null,
+      event_tag: partial.event_tag ?? null,
+      description: partial.description ?? null,
+      tags: partial.tags ?? [],
+      location_tag: partial.location_tag ?? null,
+      cover_url: partial.cover_url ?? null,
+    };
+
+    let { data, error } = await supabase
       .from("family_collages")
-      .insert({
-        device_id: deviceId,
-        name: partial.name ?? "קולאז׳ חדש",
-        emoji: partial.emoji ?? "📸",
-        layout_type: partial.layout_type ?? "grid",
-        cols: partial.cols ?? 3,
-        gap: partial.gap ?? 8,
-        background: partial.background ?? "#ffffff",
-        parent_id: partial.parent_id ?? null,
-        is_folder: partial.is_folder ?? false,
-        category: partial.category ?? null,
-        year_tag: partial.year_tag ?? null,
-        family_tag: partial.family_tag ?? null,
-        event_tag: partial.event_tag ?? null,
-        description: partial.description ?? null,
-        tags: partial.tags ?? [],
-        location_tag: partial.location_tag ?? null,
-        cover_url: partial.cover_url ?? null,
-      } as never)
+      .insert(insertPayload as never)
       .select()
       .single();
+
+    if (error && isMissingColumnError(error)) {
+      ({ data, error } = await supabase
+        .from("family_collages")
+        .insert(stripExtendedCollageFields(insertPayload) as never)
+        .select()
+        .single());
+    }
+
     if (error) throw error;
     await refresh();
     return data as FamilyCollage;
@@ -172,8 +202,17 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
       const depth = getDepth(collages, patch.parent_id ?? null);
       if (depth >= 5) throw new Error("max-depth-reached");
     }
+    const patchWithTimestamp = { ...patch, updated_at: new Date().toISOString() };
+    let { error } = await supabase.from("family_collages").update(patchWithTimestamp).eq("id", id);
 
-    await supabase.from("family_collages").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
+    if (error && isMissingColumnError(error)) {
+      ({ error } = await supabase
+        .from("family_collages")
+        .update(stripExtendedCollageFields(patchWithTimestamp))
+        .eq("id", id));
+    }
+
+    if (error) throw error;
     await refresh();
   }, [refresh, collages, wouldCreateCycle, getDepth]);
 
@@ -187,29 +226,39 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
     } else {
       const now = new Date();
       const purgeAfter = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
-      await supabase.from("family_collages").update({
+      let { error } = await supabase.from("family_collages").update({
         archived_at: now.toISOString(),
         archived_by: deviceId,
         purge_after: purgeAfter,
         updated_at: now.toISOString(),
       }).eq("id", id);
+
+      // Fallback: if archive columns don't exist yet, perform hard delete.
+      if (error && isMissingColumnError(error)) {
+        ({ error } = await supabase.from("family_collages").delete().eq("id", id));
+      }
+      if (error) throw error;
     }
     await refresh();
   }, [collages, deviceId, refresh]);
 
   const restoreCollage = useCallback(async (id: string) => {
-    await supabase.from("family_collages").update({
+    let { error } = await supabase.from("family_collages").update({
       archived_at: null,
       archived_by: null,
       purge_after: null,
       updated_at: new Date().toISOString(),
     }).eq("id", id);
+    if (error && isMissingColumnError(error)) return;
+    if (error) throw error;
     await refresh();
   }, [refresh]);
 
   const purgeExpiredArchived = useCallback(async () => {
     const nowIso = new Date().toISOString();
-    await supabase.from("family_collages").delete().not("purge_after", "is", null).lte("purge_after", nowIso);
+    const { error } = await supabase.from("family_collages").delete().not("purge_after", "is", null).lte("purge_after", nowIso);
+    if (error && isMissingColumnError(error)) return;
+    if (error) throw error;
     await refresh();
   }, [refresh]);
 
