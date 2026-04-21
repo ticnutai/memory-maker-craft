@@ -918,6 +918,7 @@ export default function FamilyAlbums() {
                       : isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md";
 
               const itemClick = (c: FamilyCollage) => {
+                if (selectMode) { toggleSelect(c.id); return; }
                 if (c.is_folder) setCurrentFolderId(c.id);
                 else setActiveId(c.id);
               };
