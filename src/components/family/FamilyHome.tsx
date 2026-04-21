@@ -17,7 +17,19 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-export default function FamilyHome() {
+interface FamilyHomeProps {
+  externalFamilyCodeOpen?: boolean;
+  onFamilyCodeOpenChange?: (open: boolean) => void;
+  externalThemePickerOpen?: boolean;
+  onThemePickerOpenChange?: (open: boolean) => void;
+}
+
+export default function FamilyHome({
+  externalFamilyCodeOpen,
+  onFamilyCodeOpenChange,
+  externalThemePickerOpen,
+  onThemePickerOpenChange,
+}: FamilyHomeProps) {
   const familyCtx = useFamily();
   const { collages, loading, createCollage, updateCollage, deleteCollage, joinByCode, deviceId } = useFamilyCollages(familyCtx.familyDeviceIds);
   const [activeId, setActiveId] = useState<string | null>(null);
