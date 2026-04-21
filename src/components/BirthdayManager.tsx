@@ -146,9 +146,10 @@ type ViewMode = "calendar" | "cards" | "timeline" | "holidays";
 
 interface BirthdayManagerProps {
   theme: "girl" | "boy";
+  familyDeviceIds?: string[];
 }
 
-export default function BirthdayManager({ theme }: BirthdayManagerProps) {
+export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayManagerProps) {
   const [birthdays, setBirthdays] = useState<Birthday[]>([]);
   const [familyEvents, setFamilyEvents] = useState<FamilyEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -174,17 +175,18 @@ export default function BirthdayManager({ theme }: BirthdayManagerProps) {
   const [hebDay, setHebDay] = useState<number>(1);
 
   const deviceId = getDeviceId();
+  const queryIds = familyDeviceIds && familyDeviceIds.length > 0 ? familyDeviceIds : [deviceId];
   const accent = theme === "girl" ? "bg-game-pink" : "bg-game-blue";
 
   const loadBirthdays = useCallback(async () => {
     const [{ data: bData }, { data: eData }] = await Promise.all([
-      supabase.from("birthdays").select("*").eq("device_id", deviceId).order("birth_date", { ascending: true }),
-      supabase.from("family_events").select("*").eq("device_id", deviceId).order("event_date", { ascending: true }),
+      supabase.from("birthdays").select("*").in("device_id", queryIds).order("birth_date", { ascending: true }),
+      supabase.from("family_events").select("*").in("device_id", queryIds).order("event_date", { ascending: true }),
     ]);
     if (bData) setBirthdays(bData as Birthday[]);
     if (eData) setFamilyEvents(eData as FamilyEvent[]);
     setLoading(false);
-  }, [deviceId]);
+  }, [queryIds.join(",")]);
 
   useEffect(() => { loadBirthdays(); }, [loadBirthdays]);
 

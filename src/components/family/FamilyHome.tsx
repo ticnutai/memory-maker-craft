@@ -8,6 +8,8 @@ import FamilyDecorations from "./FamilyDecorations";
 import FamilySlideshow from "./FamilySlideshow";
 import FamilyQuoteRotator from "./FamilyQuoteRotator";
 import BirthdayHearts from "./BirthdayHearts";
+import FamilyCodeManager from "./FamilyCodeManager";
+import { useFamily } from "@/hooks/useFamily";
 import {
   loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
   loadSlideshowConfig, saveSlideshowConfig, SlideshowConfig,
@@ -16,7 +18,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function FamilyHome() {
-  const { collages, loading, createCollage, updateCollage, deleteCollage, joinByCode, deviceId } = useFamilyCollages();
+  const familyCtx = useFamily();
+  const { collages, loading, createCollage, updateCollage, deleteCollage, joinByCode, deviceId } = useFamilyCollages(familyCtx.familyDeviceIds);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [homeCollageId, setHomeCollageId] = useState<string | null>(() => loadHomeCollageId());
   const [theme, setTheme] = useState<FamilyTheme>(() => loadFamilyTheme());
@@ -116,6 +119,20 @@ export default function FamilyHome() {
     <div className="min-h-screen relative">
       <FamilyDecorations type={theme.decoration ?? "none"} />
 
+      {/* Family code manager — top-left alongside theme picker */}
+      <div className="fixed top-[max(0.5rem,env(safe-area-inset-top))] left-[210px] z-[91]">
+        <FamilyCodeManager
+          family={familyCtx.family}
+          members={familyCtx.members}
+          isAdmin={familyCtx.isAdmin}
+          deviceId={familyCtx.deviceId}
+          onCreateFamily={familyCtx.createFamily}
+          onJoinByCode={familyCtx.joinByCode}
+          onLeaveFamily={familyCtx.leaveFamily}
+          onUpdateNickname={familyCtx.updateNickname}
+        />
+      </div>
+
       {/* Theme/Collages icon — same style as other top-left nav icons */}
       <div className="fixed top-[max(0.5rem,env(safe-area-inset-top))] left-[170px] z-[91]">
         <FamilyThemePicker
@@ -151,8 +168,7 @@ export default function FamilyHome() {
           </p>
         </header>
 
-        {/* Birthday hearts reminder */}
-        <BirthdayHearts isDark={isDark} />
+        <BirthdayHearts isDark={isDark} familyDeviceIds={familyCtx.familyDeviceIds} />
 
         {loading && <div className="text-center text-foreground/60">טוען…</div>}
 
