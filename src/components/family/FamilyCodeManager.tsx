@@ -15,13 +15,22 @@ interface Props {
   onJoinByCode: (code: string) => Promise<Family | null>;
   onLeaveFamily: () => Promise<void>;
   onUpdateNickname: (nickname: string) => Promise<void>;
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }
 
 export default function FamilyCodeManager({
   family, members, isAdmin, deviceId,
   onCreateFamily, onJoinByCode, onLeaveFamily, onUpdateNickname,
+  externalOpen, onExternalOpenChange, hideTrigger,
 }: Props) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen ?? internalOpen;
+  const setOpen = (v: boolean) => {
+    setInternalOpen(v);
+    onExternalOpenChange?.(v);
+  };
   const [mode, setMode] = useState<"menu" | "create" | "join">("menu");
   const [name, setName] = useState("המשפחה שלי");
   const [code, setCode] = useState("");
@@ -73,16 +82,18 @@ export default function FamilyCodeManager({
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => { setOpen(true); setMode("menu"); }}
-        className="rounded-full"
-        title="ניהול משפחה"
-      >
-        <Users className="w-5 h-5" />
-        {family && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary border border-background" />}
-      </Button>
+      {!hideTrigger && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => { setOpen(true); setMode("menu"); }}
+          className="rounded-full"
+          title="ניהול משפחה"
+        >
+          <Users className="w-5 h-5" />
+          {family && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary border border-background" />}
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm" dir="rtl">
