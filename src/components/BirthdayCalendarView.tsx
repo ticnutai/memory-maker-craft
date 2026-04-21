@@ -228,9 +228,9 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
     const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
     return (
-      <div className="bg-card rounded-2xl border-2 border-muted overflow-hidden shadow-sm">
+      <div className={`${ct.cardBg} rounded-2xl border-2 ${ct.cardBorder} overflow-hidden shadow-sm`}>
         {/* Day headers */}
-        <div className="grid grid-cols-7 bg-muted/50">
+        <div className={`grid grid-cols-7 ${ct.headerBg}`}>
           {days.map((day, i) => {
             const isToday = isSameDay(day, today);
             return (
@@ -241,7 +241,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
                 <div className={`text-[10px] font-bold ${i === 6 ? "text-blue-600" : "text-muted-foreground"}`}>
                   {HEBREW_DAYS[i]}
                 </div>
-                <div className={`text-sm font-black ${isToday ? "text-yellow-700" : "text-purple-700"}`}>
+                <div className={`text-sm font-black ${isToday ? ct.todayText : ct.hebDateText}`}>
                   {getHebDayInfo(day).hebDay}
                 </div>
                 <div className={`text-[9px] ${isToday ? "text-yellow-600" : "text-muted-foreground"}`}>
@@ -268,8 +268,8 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
     const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
 
     return (
-      <div className="bg-card rounded-2xl border-2 border-muted overflow-hidden shadow-sm">
-        <div className="grid grid-cols-7 bg-muted/50">
+      <div className={`${ct.cardBg} rounded-2xl border-2 ${ct.cardBorder} overflow-hidden shadow-sm`}>
+        <div className={`grid grid-cols-7 ${ct.headerBg}`}>
           {HEBREW_DAYS.map((d, i) => (
             <div
               key={d}
