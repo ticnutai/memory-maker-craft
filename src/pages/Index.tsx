@@ -7,6 +7,7 @@ import FamilyHome from "@/components/family/FamilyHome";
 import FamilyAlbums from "@/components/family/FamilyAlbums";
 import BirthdayManager from "@/components/BirthdayManager";
 import AppSidebar, { SidebarSection } from "@/components/AppSidebar";
+import HomeNav from "@/components/HomeNav";
 import { CardSetType, CardData, GameSettings } from "@/lib/gameData";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { useFamily } from "@/hooks/useFamily";
@@ -52,13 +53,20 @@ const Index = () => {
       dir="rtl"
     >
       {!inGame && (
-        <AppSidebar
-          active={tab}
-          onSelect={handleSelect}
-          onOpenSettings={() => setShowSettings(true)}
-          onOpenFamilyCode={() => setOpenFamilyCode(true)}
-          onOpenThemePicker={() => setOpenThemePicker(true)}
-        />
+        <>
+          <HomeNav
+            active={tab}
+            onSelect={handleSelect}
+            onOpenThemePicker={() => setOpenThemePicker(true)}
+          />
+          <AppSidebar
+            active={tab}
+            onSelect={handleSelect}
+            onOpenSettings={() => setShowSettings(true)}
+            onOpenFamilyCode={() => setOpenFamilyCode(true)}
+            onOpenThemePicker={() => setOpenThemePicker(true)}
+          />
+        </>
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
