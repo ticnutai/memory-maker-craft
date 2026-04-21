@@ -960,6 +960,8 @@ export default function FamilyAlbums() {
                 },
               });
 
+              const isSelected = (id: string) => selectedIds.has(id);
+
               const dragClass = (c: FamilyCollage, isHome: boolean) =>
                 externalDropTarget === c.id
                   ? "ring-2 ring-primary border-primary bg-primary/15 scale-[1.02]"
@@ -967,12 +969,30 @@ export default function FamilyAlbums() {
                     ? "ring-2 ring-primary border-primary bg-primary/15 scale-[1.02]"
                     : dragItemId === c.id
                       ? "opacity-40 scale-95"
-                      : isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md";
+                      : isSelected(c.id)
+                        ? "ring-2 ring-primary/50 bg-primary/10"
+                        : isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md";
 
               const itemClick = (c: FamilyCollage) => {
+                if (selectMode) {
+                  toggleSelect(c.id);
+                  return;
+                }
                 if (c.is_folder) setCurrentFolderId(c.id);
                 else setActiveId(c.id);
               };
+
+              const renderCheckbox = (c: FamilyCollage) => selectMode ? (
+                <button
+                  onClick={(e) => toggleSelect(c.id, e)}
+                  className="p-0.5 flex-shrink-0 transition-colors"
+                >
+                  {isSelected(c.id)
+                    ? <CheckSquare className="w-4 h-4 text-primary" />
+                    : <Square className="w-4 h-4 text-muted-foreground" />
+                  }
+                </button>
+              ) : null;
 
               const renderActions = (c: FamilyCollage, isHome: boolean, isShared: boolean, canManage: boolean) => (
                 <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
