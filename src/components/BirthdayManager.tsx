@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send, CalendarPlus, Home, Eye, EyeOff, Settings2, Check } from "lucide-react";
-import { loadHeartsConfig, saveHeartsConfig, HeartsDisplayConfig, HeartsFilterMode, HeartsDisplayStyle, FloatEnvironment, FloatPresetId, getFloatPresetPatch } from "@/lib/heartsDisplayConfig";
+import { loadHeartsConfig, saveHeartsConfig, HeartsDisplayConfig, HeartsFilterMode, HeartsDisplayStyle, FloatEnvironment, FloatPresetId, FloatAnimationType, getFloatPresetPatch } from "@/lib/heartsDisplayConfig";
 import { format, differenceInDays, addYears, isBefore, parseISO, getMonth, getDate } from "date-fns";
 import { he } from "date-fns/locale";
 import BirthdayCalendarView from "./BirthdayCalendarView";
@@ -492,6 +492,39 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
                       {heartsConfig.floatAnimation && <Check className="w-3 h-3 text-primary" />}
                     </div>
                   </button>
+                </div>
+               )}
+
+              {/* Animation type selector */}
+              {(heartsConfig.displayStyle === "hearts" || heartsConfig.displayStyle === "bubbles") && heartsConfig.floatAnimation && (
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground mb-1.5 block">🎬 סוג אנימציה</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {([
+                      { id: "bounce" as FloatAnimationType, label: "⬆️ קפיצה", desc: "תנועה למעלה ולמטה" },
+                      { id: "drift" as FloatAnimationType, label: "🌊 גלישה", desc: "תנועה חופשית בין מקומות" },
+                      { id: "pulse" as FloatAnimationType, label: "💓 פעימה", desc: "גדילה והתכווצות" },
+                      { id: "swing" as FloatAnimationType, label: "🎠 נדנדה", desc: "סיבוב עדין ימינה ושמאלה" },
+                      { id: "wander" as FloatAnimationType, label: "🦋 שיטוט", desc: "תנועה אקראית עם סיבוב" },
+                    ]).map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => {
+                          const next = { ...heartsConfig, floatAnimationType: opt.id };
+                          setHeartsConfig(next);
+                          saveHeartsConfig(next);
+                        }}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 border ${
+                          (heartsConfig.floatAnimationType || "bounce") === opt.id
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
+                        }`}
+                        title={opt.desc}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
