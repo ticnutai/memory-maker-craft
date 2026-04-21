@@ -259,6 +259,7 @@ export type Database = {
           admin_user_id: string | null
           code: string
           created_at: string
+          home_collage_id: string | null
           id: string
           name: string
           updated_at: string
@@ -268,6 +269,7 @@ export type Database = {
           admin_user_id?: string | null
           code?: string
           created_at?: string
+          home_collage_id?: string | null
           id?: string
           name?: string
           updated_at?: string
@@ -277,11 +279,20 @@ export type Database = {
           admin_user_id?: string | null
           code?: string
           created_at?: string
+          home_collage_id?: string | null
           id?: string
           name?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "families_home_collage_id_fkey"
+            columns: ["home_collage_id"]
+            isOneToOne: false
+            referencedRelation: "family_collages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       family_collages: {
         Row: {

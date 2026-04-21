@@ -13,6 +13,7 @@ import { useFamily } from "@/hooks/useFamily";
 import { useAuth } from "@/hooks/useAuth";
 import {
   loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
+  loadGlobalHomeCollageId, saveGlobalHomeCollageId,
   loadSlideshowConfig, saveSlideshowConfig, SlideshowConfig, normalizeSlideshowConfig, resetSlideshowConfig,
 } from "@/lib/familyThemes";
 import { FloatEnvironment, FloatPresetId, getFloatPresetPatch, hasSavedHeartsConfig, HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, saveHeartsConfig } from "@/lib/heartsDisplayConfig";
@@ -152,9 +153,16 @@ export default function FamilyHome({
     return () => { cancelled = true; };
   }, [user]);
 
-  const applyHomeCollage = (id: string | null, options?: { followHomeInSlideshow?: boolean }) => {
+  const applyHomeCollage = async (id: string | null, options?: { followHomeInSlideshow?: boolean }) => {
+    // Always save locally
     saveHomeCollageId(id);
     setHomeCollageId(id);
+
+    // Admin: also save globally to families table
+    if (isAdmin && familyCtx.family?.id) {
+      const ok = await saveGlobalHomeCollageId(familyCtx.family.id, id);
+      if (ok && id) toast.success("הקולאז׳ נשמר כברירת מחדל לכולם");
+    }
 
     if (options?.followHomeInSlideshow) {
       const next = { ...slideshow, enabled: true, autoStart: true, collageId: null };
@@ -190,28 +198,43 @@ export default function FamilyHome({
     })();
   }, [loading, photoCollages.length, createCollage, user]);
 
-  // Auto-set home collage to first one if none selected
+  // Load global home collage from cloud (families table), then fall back to local
   useEffect(() => {
     if (loading) return;
+    const familyId = familyCtx.family?.id;
+    
+    (async () => {
+      // Try loading global setting from families table
+      let globalId: string | null = null;
+      if (familyId) {
+        globalId = await loadGlobalHomeCollageId(familyId);
+      }
 
-    const namedHomeId = photoCollages.find((c) => c.name.trim() === "דף הבית")?.id ?? null;
-    const firstPhotoCollageId = photoCollages[0]?.id ?? null;
-    const hasValidHome = homeCollageId ? photoCollages.some((c) => c.id === homeCollageId) : false;
+      // Local override from localStorage
+      const localId = loadHomeCollageId();
+      
+      // Priority: local override > global > auto-detect
+      const effectiveId = localId || globalId;
 
-    if (!hasValidHome && homeCollageId) {
-      applyHomeCollage(firstPhotoCollageId);
-      return;
-    }
+      const namedHomeId = photoCollages.find((c) => c.name.trim() === "דף הבית")?.id ?? null;
+      const firstPhotoCollageId = photoCollages[0]?.id ?? null;
 
-    if (!homeCollageId && namedHomeId) {
-      applyHomeCollage(namedHomeId);
-      return;
-    }
+      if (effectiveId && photoCollages.some((c) => c.id === effectiveId)) {
+        if (homeCollageId !== effectiveId) {
+          setHomeCollageId(effectiveId);
+          saveHomeCollageId(effectiveId);
+        }
+        return;
+      }
 
-    if (!homeCollageId && firstPhotoCollageId) {
-      applyHomeCollage(firstPhotoCollageId);
-    }
-  }, [loading, homeCollageId, photoCollages]);
+      // Fallback: auto-detect
+      const fallback = namedHomeId ?? firstPhotoCollageId;
+      if (fallback && homeCollageId !== fallback) {
+        setHomeCollageId(fallback);
+        saveHomeCollageId(fallback);
+      }
+    })();
+  }, [loading, photoCollages, familyCtx.family?.id]);
 
   useEffect(() => {
     if (!slideshow.collageId) return;

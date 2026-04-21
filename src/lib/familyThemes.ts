@@ -114,6 +114,7 @@ export function loadCustomTheme(): FamilyTheme | null {
 }
 
 // Home collage selection — which collage to show on the family home page
+// localStorage stores the user's local override
 const HOME_COLLAGE_KEY = "family-home-collage-id";
 export function loadHomeCollageId(): string | null {
   try { return localStorage.getItem(HOME_COLLAGE_KEY); } catch { return null; }
@@ -121,6 +122,32 @@ export function loadHomeCollageId(): string | null {
 export function saveHomeCollageId(id: string | null) {
   if (id) localStorage.setItem(HOME_COLLAGE_KEY, id);
   else localStorage.removeItem(HOME_COLLAGE_KEY);
+}
+
+// Cloud-aware: load global home collage from families table
+export async function loadGlobalHomeCollageId(familyId: string | null): Promise<string | null> {
+  if (!familyId) return null;
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data } = await supabase
+      .from("families")
+      .select("home_collage_id")
+      .eq("id", familyId)
+      .maybeSingle();
+    return (data as any)?.home_collage_id ?? null;
+  } catch { return null; }
+}
+
+// Admin saves global home collage to families table
+export async function saveGlobalHomeCollageId(familyId: string, collageId: string | null): Promise<boolean> {
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { error } = await supabase
+      .from("families")
+      .update({ home_collage_id: collageId } as any)
+      .eq("id", familyId);
+    return !error;
+  } catch { return false; }
 }
 
 // Slideshow configuration
