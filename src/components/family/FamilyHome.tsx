@@ -38,6 +38,17 @@ export default function FamilyHome({
   const [homePreviewPhotos, setHomePreviewPhotos] = useState<{ url: string; caption: string | null; media_type: string; thumbnail_url: string | null }[]>([]);
   const [slideshow, setSlideshow] = useState<SlideshowConfig>(() => loadSlideshowConfig());
 
+  const applyHomeCollage = (id: string | null, options?: { followHomeInSlideshow?: boolean }) => {
+    saveHomeCollageId(id);
+    setHomeCollageId(id);
+
+    if (options?.followHomeInSlideshow) {
+      const next = { ...slideshow, enabled: true, collageId: null };
+      saveSlideshowConfig(next);
+      setSlideshow(next);
+    }
+  };
+
   // Apply theme to body so it covers the entire page (under the icons too)
   useEffect(() => {
     const prev = document.body.style.background;
@@ -54,14 +65,12 @@ export default function FamilyHome({
     const hasValidHome = homeCollageId ? photoCollages.some((c) => c.id === homeCollageId) : false;
 
     if (!hasValidHome && homeCollageId) {
-      saveHomeCollageId(firstPhotoCollageId);
-      setHomeCollageId(firstPhotoCollageId);
+      applyHomeCollage(firstPhotoCollageId);
       return;
     }
 
     if (!homeCollageId && firstPhotoCollageId) {
-      saveHomeCollageId(firstPhotoCollageId);
-      setHomeCollageId(firstPhotoCollageId);
+      applyHomeCollage(firstPhotoCollageId);
     }
   }, [loading, homeCollageId, photoCollages]);
 
@@ -114,8 +123,7 @@ export default function FamilyHome({
     try {
       const c = await createCollage({ name: `קולאז׳ ${collages.length + 1}`, ...partial });
       if (!homeCollageId || !photoCollages.some((item) => item.id === homeCollageId)) {
-        saveHomeCollageId(c.id);
-        setHomeCollageId(c.id);
+        applyHomeCollage(c.id);
       }
       setActiveId(c.id);
       return c;
@@ -153,7 +161,7 @@ export default function FamilyHome({
         collages={collages}
         deviceId={deviceId}
         homeCollageId={homeCollageId}
-        onSetHomeCollage={setHomeCollageId}
+        onSetHomeCollage={(id) => applyHomeCollage(id, { followHomeInSlideshow: true })}
         onOpenCollage={(id) => setActiveId(id)}
         onCreateCollage={handleCreate}
         onDeleteCollage={deleteCollage}
