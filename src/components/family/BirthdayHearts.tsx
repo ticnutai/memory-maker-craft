@@ -101,12 +101,14 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
       setReducedMotion(!!config.reducedMotion);
     };
 
-    applyConfig();
+    const config = applyConfig();
     const onCfgUpdated = () => applyConfig();
     window.addEventListener(HEARTS_CONFIG_UPDATED_EVENT, onCfgUpdated);
 
+    if (!config || !config.enabled) return () => window.removeEventListener(HEARTS_CONFIG_UPDATED_EVENT, onCfgUpdated);
+
     const deviceId = getDeviceId();
-    if (!deviceId) return;
+    if (!deviceId) return () => window.removeEventListener(HEARTS_CONFIG_UPDATED_EVENT, onCfgUpdated);
     const queryIds = familyDeviceIds && familyDeviceIds.length > 0 ? familyDeviceIds : [deviceId];
 
     (async () => {
