@@ -827,21 +827,43 @@ export default function FamilyAlbums() {
             {!loading && visibleItems.length > 0 && (() => {
               const dragProps = (c: FamilyCollage) => ({
                 draggable: !!user,
-                onDragStart: (e: React.DragEvent) => handleDragStart(e, c.id),
-                onDragEnd: () => { setDragItemId(null); setDragOverId(null); },
-                ...(c.is_folder ? {
-                  onDragOver: (e: React.DragEvent) => handleDragOver(e, c.id),
-                  onDragLeave: handleDragLeave,
-                  onDrop: (e: React.DragEvent) => handleDrop(e, c.id),
-                } : {}),
+                onDragStart: (e: React.DragEvent) => { if (!isExternalFileDrag(e)) handleDragStart(e, c.id); },
+                onDragEnd: () => { setDragItemId(null); setDragOverId(null); setExternalDropTarget(null); },
+                onDragOver: (e: React.DragEvent) => {
+                  if (isExternalFileDrag(e)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.dataTransfer.dropEffect = "copy";
+                    setExternalDropTarget(c.id);
+                  } else if (c.is_folder) {
+                    handleDragOver(e, c.id);
+                  }
+                },
+                onDragLeave: (e: React.DragEvent) => {
+                  if (isExternalFileDrag(e)) {
+                    setExternalDropTarget(null);
+                  } else {
+                    handleDragLeave();
+                  }
+                },
+                onDrop: (e: React.DragEvent) => {
+                  if (isExternalFileDrag(e)) {
+                    e.stopPropagation();
+                    handleExternalFileDrop(e, c.id);
+                  } else if (c.is_folder) {
+                    handleDrop(e, c.id);
+                  }
+                },
               });
 
               const dragClass = (c: FamilyCollage, isHome: boolean) =>
-                dragOverId === c.id && c.is_folder
+                externalDropTarget === c.id
                   ? "ring-2 ring-primary border-primary bg-primary/15 scale-[1.02]"
-                  : dragItemId === c.id
-                    ? "opacity-40 scale-95"
-                    : isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md";
+                  : dragOverId === c.id && c.is_folder
+                    ? "ring-2 ring-primary border-primary bg-primary/15 scale-[1.02]"
+                    : dragItemId === c.id
+                      ? "opacity-40 scale-95"
+                      : isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md";
 
               const itemClick = (c: FamilyCollage) => {
                 if (c.is_folder) setCurrentFolderId(c.id);
