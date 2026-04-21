@@ -607,8 +607,18 @@ export default function FamilyAlbums() {
               return (
                 <div
                   key={c.id}
+                  draggable={!!user}
+                  onDragStart={(e) => handleDragStart(e, c.id)}
+                  onDragEnd={() => { setDragItemId(null); setDragOverId(null); }}
+                  onDragOver={c.is_folder ? (e) => handleDragOver(e, c.id) : undefined}
+                  onDragLeave={c.is_folder ? handleDragLeave : undefined}
+                  onDrop={c.is_folder ? (e) => handleDrop(e, c.id) : undefined}
                   className={`rounded-xl border p-4 transition-all cursor-pointer group ${
-                    isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md"
+                    dragOverId === c.id && c.is_folder
+                      ? "ring-2 ring-primary border-primary bg-primary/15 scale-[1.02]"
+                      : dragItemId === c.id
+                        ? "opacity-40 scale-95"
+                        : isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md"
                   }`}
                   onClick={() => {
                     if (c.is_folder) setCurrentFolderId(c.id);
