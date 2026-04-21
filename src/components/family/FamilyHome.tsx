@@ -13,6 +13,7 @@ import { useFamily } from "@/hooks/useFamily";
 import { useAuth } from "@/hooks/useAuth";
 import {
   loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
+  loadGlobalHomeCollageId, saveGlobalHomeCollageId,
   loadSlideshowConfig, saveSlideshowConfig, SlideshowConfig, normalizeSlideshowConfig, resetSlideshowConfig,
 } from "@/lib/familyThemes";
 import { FloatEnvironment, FloatPresetId, getFloatPresetPatch, hasSavedHeartsConfig, HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, saveHeartsConfig } from "@/lib/heartsDisplayConfig";
