@@ -482,10 +482,37 @@ export default function FamilyHome({
               </div>
             </div>
 
-            {/* Floating mode options */}
-            {animCfg.displayStyle === "floating" && (
+            {/* Floating / full-page options — available for hearts, bubbles, floating */}
+            {(animCfg.displayStyle === "floating" || animCfg.displayStyle === "hearts" || animCfg.displayStyle === "bubbles") && (
               <div className="space-y-1.5 rounded-lg border p-2 bg-background/50">
-                <div className="text-[11px] font-bold">הגדרות מצב צף</div>
+                <div className="text-[11px] font-bold">הגדרות צפים ובלונים</div>
+
+                {/* Full page toggle */}
+                {animCfg.displayStyle !== "floating" && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px]">🎈 צפים על כל העמוד</span>
+                    <button
+                      type="button"
+                      onClick={() => updateAnimCfg({ floatFullPage: !(animCfg as any).floatFullPage } as any)}
+                      className={`w-10 h-6 rounded-full transition-all relative ${(animCfg as any).floatFullPage ? "bg-primary" : "bg-muted"}`}
+                    >
+                      <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${(animCfg as any).floatFullPage ? "right-0.5" : "right-4"}`} />
+                    </button>
+                  </div>
+                )}
+
+                {/* Draggable toggle */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px]">🖐️ גרירה חופשית</span>
+                  <button
+                    type="button"
+                    onClick={() => updateAnimCfg({ draggable: (animCfg as any).draggable === false } as any)}
+                    className={`w-10 h-6 rounded-full transition-all relative ${(animCfg as any).draggable !== false ? "bg-primary" : "bg-muted"}`}
+                  >
+                    <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${(animCfg as any).draggable !== false ? "right-0.5" : "right-4"}`} />
+                  </button>
+                </div>
+
                 <div className="flex items-center justify-between">
                   <span className="text-[11px]">תנועה עצמאית</span>
                   <button
