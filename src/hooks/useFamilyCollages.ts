@@ -33,7 +33,7 @@ function isMissingColumnError(err: any): boolean {
   return text.includes("column") && text.includes("does not exist");
 }
 
-function stripExtendedCollageFields<T extends Record<string, any>>(payload: T): Partial<T> {
+function stripExtendedCollageFields<T extends Record<string, any>>(payload: T): Record<string, any> {
   const {
     description,
     tags,
