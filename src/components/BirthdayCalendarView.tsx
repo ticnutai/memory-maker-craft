@@ -8,9 +8,11 @@ import { he } from "date-fns/locale";
 import {
   ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft,
   CalendarDays, LayoutGrid, Plus, Send, Moon, BookOpen, Calendar, Rows3,
+  Palette,
 } from "lucide-react";
 import { getHebDayInfo, getHebMonthLabel, toHebrewYear, toHebrewNumeral } from "@/lib/hebrewCalendar";
 import { HDate } from "@hebcal/core";
+import { CalendarTheme, CALENDAR_THEMES, loadCalendarTheme, saveCalendarTheme } from "@/lib/calendarThemes";
 
 interface Birthday {
   id: string;
@@ -52,7 +54,10 @@ const HEBREW_DAYS = ["א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ש'"];
 export default function BirthdayCalendarView({ birthdays, familyEvents = [], accent, onAddOnDate, onSendInvite, onEdit, onEditEvent }: Props) {
   const [mode, setMode] = useState<CalMode>("month");
   const [cursor, setCursor] = useState(new Date());
+  const [calTheme, setCalTheme] = useState<CalendarTheme>(() => loadCalendarTheme());
+  const [showThemePicker, setShowThemePicker] = useState(false);
   const today = new Date();
+  const ct = calTheme;
 
   const birthdaysByDay = useMemo(() => {
     const map = new Map<string, Birthday[]>();
@@ -126,17 +131,17 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
           tall ? "min-h-[100px] sm:min-h-[110px]" : "min-h-[88px]"
         } ${
           !inRange ? "opacity-30" : ""
-        } ${isSat ? "bg-blue-50/40" : ""} ${hasYomTov ? "bg-amber-50/60" : ""} ${
-          isToday ? "ring-2 ring-yellow-400 ring-inset bg-yellow-50/70 z-10" : ""
+        } ${isSat ? ct.satBg : ""} ${hasYomTov ? ct.yomTovBg : ""} ${
+          isToday ? `ring-2 ${ct.todayRing} ring-inset ${ct.todayBg} z-10` : ""
         }`}
       >
         {/* Top: dates — Hebrew dominant */}
         <div className="flex items-start justify-between leading-tight">
-          <span className={`text-[9px] ${isToday ? "text-yellow-700" : "text-muted-foreground"}`}>
+          <span className={`text-[9px] ${isToday ? ct.todayText : "text-muted-foreground"}`}>
             {format(day, "d")}
           </span>
           <div className="flex flex-col items-end">
-            <span className={`text-sm font-black ${isToday ? "text-yellow-700" : "text-purple-700"}`}>
+            <span className={`text-sm font-black ${isToday ? ct.todayText : ct.hebDateText}`}>
               {heb.hebDay}
             </span>
             {heb.isRoshChodesh && (
@@ -223,9 +228,9 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
     const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
     return (
-      <div className="bg-card rounded-2xl border-2 border-muted overflow-hidden shadow-sm">
+      <div className={`${ct.cardBg} rounded-2xl border-2 ${ct.cardBorder} overflow-hidden shadow-sm`}>
         {/* Day headers */}
-        <div className="grid grid-cols-7 bg-muted/50">
+        <div className={`grid grid-cols-7 ${ct.headerBg}`}>
           {days.map((day, i) => {
             const isToday = isSameDay(day, today);
             return (
@@ -236,7 +241,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
                 <div className={`text-[10px] font-bold ${i === 6 ? "text-blue-600" : "text-muted-foreground"}`}>
                   {HEBREW_DAYS[i]}
                 </div>
-                <div className={`text-sm font-black ${isToday ? "text-yellow-700" : "text-purple-700"}`}>
+                <div className={`text-sm font-black ${isToday ? ct.todayText : ct.hebDateText}`}>
                   {getHebDayInfo(day).hebDay}
                 </div>
                 <div className={`text-[9px] ${isToday ? "text-yellow-600" : "text-muted-foreground"}`}>
@@ -263,8 +268,8 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
     const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
 
     return (
-      <div className="bg-card rounded-2xl border-2 border-muted overflow-hidden shadow-sm">
-        <div className="grid grid-cols-7 bg-muted/50">
+      <div className={`${ct.cardBg} rounded-2xl border-2 ${ct.cardBorder} overflow-hidden shadow-sm`}>
+        <div className={`grid grid-cols-7 ${ct.headerBg}`}>
           {HEBREW_DAYS.map((d, i) => (
             <div
               key={d}
@@ -326,7 +331,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
                       key={i}
                       className={`relative aspect-square flex items-center justify-center text-[9px] rounded ${
                         !inMonth ? "opacity-20" : ""
-                      } ${isToday ? "bg-yellow-300 text-yellow-900 font-bold" : ""}`}
+                      } ${isToday ? `${ct.todayBg} ${ct.todayText} font-bold` : ""}`}
                     >
                       {heb.hebDay}
                       {hasB && inMonth && (
@@ -356,7 +361,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
       const hebEnd = getHebDayInfo(we);
       return (
         <>
-          <span className="text-purple-800 font-black">
+          <span className={`${ct.toolbarText} font-black`}>
             {hebStart.hebDay} {hebStart.hebMonth}
             {hebStart.hebMonth !== hebEnd.hebMonth ? ` — ${hebEnd.hebDay} ${hebEnd.hebMonth}` : ` — ${hebEnd.hebDay}`}
             {" "}{getHebYearLabel(ws)}
@@ -373,7 +378,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
       const hebYr = getHebYearLabel(new Date(cursor.getFullYear(), cursor.getMonth(), 15));
       return (
         <>
-          <span className="text-purple-800 font-black">
+          <span className={`${ct.toolbarText} font-black`}>
             {hebMonthStart}{hebMonthStart !== hebMonthEnd ? ` - ${hebMonthEnd}` : ""} {hebYr}
           </span>
           <span className="text-[10px] text-muted-foreground">
@@ -385,7 +390,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
     const hebYr = getHebYearLabel(new Date(cursor.getFullYear(), 6, 1));
     return (
       <>
-        <span className="text-purple-800 font-black">{hebYr}</span>
+        <span className={`${ct.toolbarText} font-black`}>{hebYr}</span>
         <span className="text-[10px] text-muted-foreground">{cursor.getFullYear()}</span>
       </>
     );
@@ -398,13 +403,13 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
   return (
     <div className="space-y-3">
       {/* Today banner */}
-      <div className="bg-gradient-to-l from-purple-100 via-pink-50 to-yellow-50 rounded-2xl p-3 border-2 border-purple-200 flex flex-wrap items-center justify-between gap-2">
+      <div className={`${ct.bannerBg} rounded-2xl p-3 border-2 ${ct.bannerBorder} flex flex-wrap items-center justify-between gap-2`}>
         <div className="flex items-center gap-3">
           {/* Hebrew — dominant */}
           <div className="bg-white/80 rounded-xl px-4 py-2 text-center shadow-sm">
             <div className="text-[10px] text-muted-foreground leading-none">תאריך עברי</div>
-            <div className="text-2xl font-black text-purple-700 leading-tight">{todayInfo.hebDay}</div>
-            <div className="text-[10px] font-bold text-purple-600">{todayInfo.hebMonth} {toHebrewYear(new HDate(today).getFullYear())}</div>
+            <div className={`text-2xl font-black ${ct.hebDateText} leading-tight`}>{todayInfo.hebDay}</div>
+            <div className={`text-[10px] font-bold ${ct.hebDateText}`}>{todayInfo.hebMonth} {toHebrewYear(new HDate(today).getFullYear())}</div>
           </div>
           {/* Gregorian — secondary */}
           <div className="bg-white/60 rounded-xl px-3 py-2 text-center shadow-sm">
@@ -414,7 +419,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
           </div>
         </div>
         <div className="flex flex-col items-end gap-1 text-xs">
-          <div className="font-bold text-purple-800">{format(today, "EEEE", { locale: he })}</div>
+          <div className={`font-bold ${ct.toolbarText}`}>{format(today, "EEEE", { locale: he })}</div>
           {todayInfo.parsha && (
             <div className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
               <BookOpen className="w-3 h-3" /> פרשת {todayInfo.parsha}
@@ -436,7 +441,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
       </div>
 
       {/* Toolbar — arrows for step + big step (year/decade) */}
-      <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-3 border-2 border-pink-200">
+      <div className={`flex items-center justify-between gap-2 ${ct.toolbarBg} rounded-2xl p-3 border-2 ${ct.toolbarBorder}`}>
         {/* Right side: navigation arrows (RTL: right = back) */}
         <div className="flex items-center gap-0.5">
           <button
@@ -476,33 +481,62 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
         </div>
 
         {/* Center: title */}
-        <h3 className="text-sm font-black text-purple-800 flex-1 text-center flex flex-col leading-tight">
+        <h3 className={`text-sm font-black ${ct.toolbarText} flex-1 text-center flex flex-col leading-tight`}>
           {getTitle()}
         </h3>
 
-        {/* Left side: mode toggles */}
-        <div className="flex gap-0.5 bg-white/60 rounded-lg p-0.5">
-          <button
-            onClick={() => setMode("week")}
-            className={`p-1.5 rounded transition-all ${mode === "week" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
-            title="שבוע"
-          >
-            <Rows3 className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setMode("month")}
-            className={`p-1.5 rounded transition-all ${mode === "month" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
-            title="חודש"
-          >
-            <CalendarDays className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setMode("year")}
-            className={`p-1.5 rounded transition-all ${mode === "year" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
-            title="שנה"
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-          </button>
+        {/* Left side: theme picker + mode toggles */}
+        <div className="flex items-center gap-1.5">
+          {/* Theme picker */}
+          <div className="relative">
+            <button
+              onClick={() => setShowThemePicker(p => !p)}
+              className={`p-1.5 rounded-lg transition-all active:scale-90 ${showThemePicker ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
+              title="ערכת נושא"
+            >
+              <Palette className="w-3.5 h-3.5" />
+            </button>
+            {showThemePicker && (
+              <div className="absolute left-0 top-full mt-1 z-50 bg-card rounded-xl border-2 border-muted shadow-xl p-2 min-w-[160px] space-y-1 bounce-in">
+                {CALENDAR_THEMES.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => { setCalTheme(t); saveCalendarTheme(t.id); setShowThemePicker(false); }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                      ct.id === t.id ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    <span className="text-base">{t.emoji}</span>
+                    <span>{t.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-0.5 bg-white/60 rounded-lg p-0.5">
+            <button
+              onClick={() => setMode("week")}
+              className={`p-1.5 rounded transition-all ${mode === "week" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
+              title="שבוע"
+            >
+              <Rows3 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setMode("month")}
+              className={`p-1.5 rounded transition-all ${mode === "month" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
+              title="חודש"
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setMode("year")}
+              className={`p-1.5 rounded transition-all ${mode === "year" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
+              title="שנה"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
