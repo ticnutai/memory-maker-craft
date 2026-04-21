@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send, CalendarPlus, Home, Eye, EyeOff, Settings2 } from "lucide-react";
+import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send, CalendarPlus, Home, Eye, EyeOff, Settings2, Check } from "lucide-react";
 import { loadHeartsConfig, saveHeartsConfig, HeartsDisplayConfig, HeartsFilterMode, HeartsDisplayStyle, FloatEnvironment, FloatPresetId, getFloatPresetPatch } from "@/lib/heartsDisplayConfig";
 import { format, differenceInDays, addYears, isBefore, parseISO, getMonth, getDate } from "date-fns";
 import { he } from "date-fns/locale";
@@ -420,9 +420,11 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
                 setHeartsConfig(next);
                 saveHeartsConfig(next);
               }}
-              className={`w-10 h-6 rounded-full transition-all relative ${heartsConfig.enabled ? "bg-primary" : "bg-muted"}`}
+              className={`w-11 h-6 rounded-full transition-all relative flex items-center ${heartsConfig.enabled ? "bg-primary" : "bg-muted"}`}
             >
-              <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${heartsConfig.enabled ? "right-0.5" : "right-4"}`} />
+              <div className={`absolute top-0.5 w-5 h-5 rounded-full shadow transition-all flex items-center justify-center ${heartsConfig.enabled ? "right-0.5 bg-primary-foreground" : "right-[1.25rem] bg-background"}`}>
+                {heartsConfig.enabled && <Check className="w-3 h-3 text-primary" />}
+              </div>
             </button>
           </div>
 
@@ -469,9 +471,11 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
                       setHeartsConfig(next);
                       saveHeartsConfig(next);
                     }}
-                    className={`w-10 h-6 rounded-full transition-all relative ${heartsConfig.floatAnimation ? "bg-primary" : "bg-muted"}`}
+                    className={`w-11 h-6 rounded-full transition-all relative flex items-center ${heartsConfig.floatAnimation ? "bg-primary" : "bg-muted"}`}
                   >
-                    <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${heartsConfig.floatAnimation ? "right-0.5" : "right-4"}`} />
+                    <div className={`absolute top-0.5 w-5 h-5 rounded-full shadow transition-all flex items-center justify-center ${heartsConfig.floatAnimation ? "right-0.5 bg-primary-foreground" : "right-[1.25rem] bg-background"}`}>
+                      {heartsConfig.floatAnimation && <Check className="w-3 h-3 text-primary" />}
+                    </div>
                   </button>
                 </div>
               )}

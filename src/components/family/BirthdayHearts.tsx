@@ -92,21 +92,24 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
   useEffect(() => {
     const applyConfig = () => {
       const config = loadHeartsConfig();
-      if (!config.enabled) { setItems([]); return; }
+      if (!config.enabled) { setItems([]); return config; }
       setDisplayStyle(config.displayStyle);
       setFloatAnim(config.floatAnimation);
       setFloatSizeScale(Math.min(2, Math.max(0.5, config.floatSizeScale || 1)));
       setFloatSpeedScale(Math.min(2.5, Math.max(0.4, config.floatSpeedScale || 1)));
       setFloatDensityScale(Math.min(2.5, Math.max(0.4, config.floatDensityScale || 1)));
       setReducedMotion(!!config.reducedMotion);
+      return config;
     };
 
-    applyConfig();
+    const config = applyConfig();
     const onCfgUpdated = () => applyConfig();
     window.addEventListener(HEARTS_CONFIG_UPDATED_EVENT, onCfgUpdated);
 
+    if (!config || !config.enabled) return () => window.removeEventListener(HEARTS_CONFIG_UPDATED_EVENT, onCfgUpdated);
+
     const deviceId = getDeviceId();
-    if (!deviceId) return;
+    if (!deviceId) return () => window.removeEventListener(HEARTS_CONFIG_UPDATED_EVENT, onCfgUpdated);
     const queryIds = familyDeviceIds && familyDeviceIds.length > 0 ? familyDeviceIds : [deviceId];
 
     (async () => {
