@@ -591,6 +591,32 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
                 </div>
 
                 <div>
+                  <label className="text-xs font-bold text-muted-foreground mb-1.5 block">↕️ כיוון תנועה</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {([
+                      { id: "up" as const, label: "⬆️ צף למעלה" },
+                      { id: "down" as const, label: "⬇️ נוזל למטה" },
+                    ]).map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => {
+                          const next = { ...heartsConfig, floatPreset: "custom" as const, floatDirection: opt.id };
+                          setHeartsConfig(next);
+                          saveHeartsConfig(next);
+                        }}
+                        className={`text-xs font-bold rounded-lg border px-2 py-1.5 ${
+                          (heartsConfig.floatDirection ?? "up") === opt.id
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background hover:bg-muted/60"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-muted-foreground">🧩 צפיפות אלמנטים</label>
                     <span className="text-[10px] text-muted-foreground">{Math.round((heartsConfig.floatDensityScale ?? 1) * 100)}%</span>
@@ -666,7 +692,8 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
                 <div className="flex flex-wrap gap-1.5">
                   {([
                     { id: "all" as HeartsFilterMode, label: "📋 הכל" },
-                    { id: "month" as HeartsFilterMode, label: "📅 החודש הנוכחי" },
+                    { id: "month" as HeartsFilterMode, label: "📅 חודש עברי נוכחי" },
+                    { id: "year" as HeartsFilterMode, label: "🗓️ השנה הקרובה" },
                     { id: "30days" as HeartsFilterMode, label: "🗓️ 30 יום" },
                     { id: "7days" as HeartsFilterMode, label: "⏰ 7 ימים" },
                   ]).map(opt => (

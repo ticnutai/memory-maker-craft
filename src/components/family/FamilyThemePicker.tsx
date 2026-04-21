@@ -769,6 +769,27 @@ export default function FamilyThemePicker({
                     ))}
                   </div>
                 </div>
+                <div>
+                  <Label className="text-[10px]">כיוון</Label>
+                  <div className="grid grid-cols-2 gap-1 mt-1">
+                    {([
+                      { id: "up" as const, label: "⬆️ למעלה" },
+                      { id: "down" as const, label: "⬇️ למטה" },
+                    ]).map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => updateFloatCfg({ floatDirection: opt.id })}
+                        className={`px-2 py-1 text-xs rounded border ${
+                          (floatCfg.floatDirection ?? "up") === opt.id
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

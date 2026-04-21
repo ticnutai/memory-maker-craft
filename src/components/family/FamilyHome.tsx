@@ -419,6 +419,29 @@ export default function FamilyHome({
             </div>
 
             <div>
+              <div className="text-[11px] mb-1">כיוון</div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {([
+                  { id: "up" as const, label: "⬆️ למעלה" },
+                  { id: "down" as const, label: "⬇️ למטה" },
+                ]).map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => updateAnimCfg({ floatDirection: opt.id })}
+                    className={`text-[11px] font-bold rounded-lg border px-2 py-1 ${
+                      (animCfg.floatDirection ?? "up") === opt.id
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background hover:bg-muted/50"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
               <div className="flex items-center justify-between text-[11px]">
                 <span>{Math.round((animCfg.floatDensityScale ?? 1) * 100)}%</span>
                 <span>צפיפות</span>

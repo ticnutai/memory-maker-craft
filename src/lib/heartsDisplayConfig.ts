@@ -1,13 +1,13 @@
 const STORAGE_KEY = "family-hearts-display-config";
 export const HEARTS_CONFIG_UPDATED_EVENT = "family-hearts-config-updated";
 
-export type HeartsFilterMode = "all" | "month" | "30days" | "7days";
+export type HeartsFilterMode = "all" | "month" | "year" | "30days" | "7days";
 export type HeartsDisplayStyle = "hearts" | "bubbles" | "cards" | "compact" | "floating";
 export type FloatingEffect = "sparkles" | "confetti" | "pop";
-
 export type FloatPresetId = "soft" | "balanced" | "rich";
 export type FloatPresetSelection = FloatPresetId | "custom";
 export type FloatAnimationType = "bounce" | "drift" | "pulse" | "swing" | "wander";
+export type FloatDirection = "up" | "down";
 export type FloatEnvironment =
   | "theme"
   | "hearts"
@@ -32,6 +32,8 @@ export interface HeartsDisplayConfig {
   floatSizeScale: number;
   /** Global floating speed scale (0.4 - 2.5), higher = faster */
   floatSpeedScale: number;
+  /** Vertical movement direction */
+  floatDirection: FloatDirection;
   /** Global floating density scale (0.4 - 2.5), higher = more elements */
   floatDensityScale: number;
   /** Floating environment profile */
@@ -60,6 +62,7 @@ const DEFAULTS: HeartsDisplayConfig = {
   floatAnimationType: "bounce",
   floatSizeScale: 1,
   floatSpeedScale: 1,
+  floatDirection: "up",
   floatDensityScale: 1,
   floatEnvironment: "theme",
   reducedMotion: false,

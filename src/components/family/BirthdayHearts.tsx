@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { differenceInDays, addYears, isBefore, parseISO, format } from "date-fns";
 import { he } from "date-fns/locale";
 import { HDate } from "@hebcal/core";
+import { SlidersHorizontal } from "lucide-react";
 import { toHebrewNumeral } from "@/lib/hebrewCalendar";
 import { getDeviceId } from "@/lib/deviceId";
-import { HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, HeartsDisplayStyle, FloatAnimationType, FloatingEffect } from "@/lib/heartsDisplayConfig";
+import { HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, saveHeartsConfig, HeartsDisplayStyle, FloatAnimationType, FloatingEffect, HeartsFilterMode, FloatDirection } from "@/lib/heartsDisplayConfig";
 
 const HEB_MONTH_NAMES: Record<string, string> = {
   Nisan: "ניסן", Iyyar: "אייר", Sivan: "סיון", Tamuz: "תמוז",
@@ -149,10 +150,13 @@ function generatePositions(count: number, speedScale: number, independent: boole
 export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: boolean; familyDeviceIds?: string[] }) {
   const [items, setItems] = useState<UpcomingItem[]>([]);
   const [displayStyle, setDisplayStyle] = useState<HeartsDisplayStyle>("hearts");
+  const [filterMode, setFilterMode] = useState<HeartsFilterMode>("month");
+  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [floatAnim, setFloatAnim] = useState(true);
   const [floatAnimType, setFloatAnimType] = useState<FloatAnimationType>("bounce");
   const [floatSizeScale, setFloatSizeScale] = useState(1);
   const [floatSpeedScale, setFloatSpeedScale] = useState(1);
+  const [floatDirection, setFloatDirection] = useState<FloatDirection>("up");
   const [floatDensityScale, setFloatDensityScale] = useState(1);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
@@ -192,10 +196,12 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
       const config = loadHeartsConfig();
       if (!config.enabled) { setItems([]); return config; }
       setDisplayStyle(config.displayStyle);
+      setFilterMode(config.filterMode);
       setFloatAnim(config.floatAnimation);
       setFloatAnimType(config.floatAnimationType || "bounce");
       setFloatSizeScale(Math.min(2, Math.max(0.5, config.floatSizeScale || 1)));
       setFloatSpeedScale(Math.min(2.5, Math.max(0.4, config.floatSpeedScale || 1)));
+      setFloatDirection(config.floatDirection ?? "up");
       setFloatDensityScale(Math.min(2.5, Math.max(0.4, config.floatDensityScale || 1)));
       setReducedMotion(!!config.reducedMotion);
       setFloatingEffects(config.floatingEffects ?? ["sparkles", "confetti", "pop"]);
@@ -222,9 +228,17 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
       ]);
 
       const now = new Date();
-      const currentMonth = now.getMonth();
       const all: UpcomingItem[] = [];
-      const { filterMode, eventTypes } = config;
+      const activeConfig = loadHeartsConfig();
+      const { filterMode, eventTypes } = activeConfig;
+
+      const sameHebrewMonth = (a: Date, b: Date) => {
+        try {
+          return new HDate(a).getMonth() === new HDate(b).getMonth();
+        } catch {
+          return a.getMonth() === b.getMonth();
+        }
+      };
 
       const shouldInclude = (type: string) =>
         eventTypes.length === 0 || eventTypes.includes(type);
@@ -232,7 +246,8 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
       const timeFilter = (daysUntil: number, date: Date) => {
         switch (filterMode) {
           case "all": return true;
-          case "month": return date.getMonth() === currentMonth && date.getFullYear() === now.getFullYear();
+          case "month": return sameHebrewMonth(date, now);
+          case "year": return daysUntil <= 365;
           case "30days": return daysUntil <= 30;
           case "7days": return daysUntil <= 7;
           default: return true;
@@ -273,23 +288,61 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
 
   if (items.length === 0) return null;
 
+  const updateFilterMode = (nextMode: HeartsFilterMode) => {
+    const cfg = loadHeartsConfig();
+    const next = { ...cfg, filterMode: nextMode };
+    saveHeartsConfig(next);
+    setFilterMode(nextMode);
+    setFilterMenuOpen(false);
+  };
+
   const floatEnabled = floatAnim && !reducedMotion;
   const densityLimit = Math.max(4, Math.round(10 * floatDensityScale));
   const renderedItems = displayStyle === "hearts" || displayStyle === "bubbles"
     ? items.slice(0, densityLimit)
     : items;
 
-  const now = new Date();
-  const currentMonthItems = items
-    .filter((item) => item.date.getMonth() === now.getMonth() && item.date.getFullYear() === now.getFullYear())
-    .slice(0, 8);
+  const currentMonthItems = items.slice(0, 8);
   const nearest = items[0];
+
+  const floatDistancePx = Math.max(6, Math.round(10 * floatSizeScale));
+  const floatY = floatDirection === "down" ? floatDistancePx : -floatDistancePx;
 
   const monthShowcase = (
     <div className={`mb-5 rounded-2xl border p-3 sm:p-4 ${isDark ? "bg-white/5 border-white/15" : "bg-white/70 border-white/80"}`}>
       <div className="flex items-center justify-between gap-2 mb-2">
-        <div className={`text-xs sm:text-sm font-black ${isDark ? "text-white" : "text-foreground"}`}>
-          אירועי החודש
+        <div className="flex items-center gap-2">
+          <div className={`text-xs sm:text-sm font-black ${isDark ? "text-white" : "text-foreground"}`}>
+            אירועי החודש
+          </div>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setFilterMenuOpen((v) => !v)}
+              className={`h-6 w-6 rounded-full border flex items-center justify-center ${isDark ? "bg-white/10 text-white border-white/20" : "bg-white text-foreground border-muted"}`}
+              title="סינון תצוגה"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+            </button>
+            {filterMenuOpen && (
+              <div className={`absolute right-0 mt-1 z-30 min-w-[120px] rounded-lg border shadow-lg p-1 ${isDark ? "bg-slate-900 text-white border-white/20" : "bg-white text-foreground border-muted"}`}>
+                {([
+                  { id: "all" as HeartsFilterMode, label: "הצגת הכול" },
+                  { id: "month" as HeartsFilterMode, label: "הצגת חודש" },
+                  { id: "year" as HeartsFilterMode, label: "הצגת שנה" },
+                ]).map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => updateFilterMode(opt.id)}
+                    className={`w-full text-right text-xs rounded-md px-2 py-1.5 ${filterMode === opt.id ? "bg-primary text-primary-foreground" : "hover:bg-muted/60"}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         {nearest && (
           <div className={`text-[10px] sm:text-xs px-2 py-1 rounded-full font-bold ${isDark ? "bg-white/10 text-white" : "bg-background/80 text-foreground"}`}>
@@ -336,7 +389,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
   );
 
   const animKeyframes = `
-    @keyframes heartFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes heartFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(var(--float-y, -10px)); } }
     @keyframes heartDrift { 0% { transform: translate(0, 0); } 25% { transform: translate(12px, -8px); } 50% { transform: translate(-8px, -14px); } 75% { transform: translate(6px, -4px); } 100% { transform: translate(0, 0); } }
     @keyframes heartPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
     @keyframes heartSwing { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(6deg); } 75% { transform: rotate(-6deg); } }
@@ -583,7 +636,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
             className="relative group"
             {...dragProps(i)}
             style={{
-              ...(floatEnabled ? { animation: `${getFloatAnimName(i)} ${3 / floatSpeedScale}s ease-in-out infinite`, animationDelay: `${i * 0.35}s` } : {}),
+              ...(floatEnabled ? { animation: `${getFloatAnimName(i)} ${3 / floatSpeedScale}s ease-in-out infinite`, animationDelay: `${i * 0.35}s`, ["--float-y" as string]: `${floatY}px` } : {}),
               ...(dOff ? { transform: `translate(${dOff.x}px, ${dOff.y}px)`, zIndex: 50 } : {}),
               touchAction: draggableEnabled ? "none" : undefined,
             }}
@@ -655,7 +708,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
             className="relative group"
             {...dragProps(i)}
             style={{
-              ...(floatEnabled ? { animation: `${getFloatAnimName(i)} ${3 / floatSpeedScale}s ease-in-out infinite`, animationDelay: `${i * 0.3}s` } : {}),
+              ...(floatEnabled ? { animation: `${getFloatAnimName(i)} ${3 / floatSpeedScale}s ease-in-out infinite`, animationDelay: `${i * 0.3}s`, ["--float-y" as string]: `${floatY}px` } : {}),
               ...(dOff ? { transform: `translate(${dOff.x}px, ${dOff.y}px)`, zIndex: 50 } : {}),
               touchAction: draggableEnabled ? "none" : undefined,
             }}
