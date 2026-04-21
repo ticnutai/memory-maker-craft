@@ -119,6 +119,20 @@ export default function FamilyHome() {
     <div className="min-h-screen relative">
       <FamilyDecorations type={theme.decoration ?? "none"} />
 
+      {/* Family code manager — top-left alongside theme picker */}
+      <div className="fixed top-[max(0.5rem,env(safe-area-inset-top))] left-[210px] z-[91]">
+        <FamilyCodeManager
+          family={familyCtx.family}
+          members={familyCtx.members}
+          isAdmin={familyCtx.isAdmin}
+          deviceId={familyCtx.deviceId}
+          onCreateFamily={familyCtx.createFamily}
+          onJoinByCode={familyCtx.joinByCode}
+          onLeaveFamily={familyCtx.leaveFamily}
+          onUpdateNickname={familyCtx.updateNickname}
+        />
+      </div>
+
       {/* Theme/Collages icon — same style as other top-left nav icons */}
       <div className="fixed top-[max(0.5rem,env(safe-area-inset-top))] left-[170px] z-[91]">
         <FamilyThemePicker
