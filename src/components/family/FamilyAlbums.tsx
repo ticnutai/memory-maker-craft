@@ -266,9 +266,12 @@ export default function FamilyAlbums() {
             setCurrentFolderId(folder.id);
             if (children.length > 0) toggleFolder(folder.id);
           }}
+          onDragOver={(e) => handleDragOver(e, folder.id)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => { e.stopPropagation(); handleDrop(e, folder.id); }}
           className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-right text-sm transition-colors ${
-            currentFolderId === folder.id ? "bg-primary/15 text-primary" : "hover:bg-muted"
-          }`}
+            dragOverId === folder.id ? "ring-2 ring-primary bg-primary/15" : ""
+          } ${currentFolderId === folder.id ? "bg-primary/15 text-primary" : "hover:bg-muted"}`}
           style={{ paddingRight: `${8 + depth * 12}px` }}
         >
           <span className="text-base">{folder.emoji ?? "📁"}</span>
