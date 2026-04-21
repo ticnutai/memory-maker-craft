@@ -37,7 +37,8 @@ const CATEGORIES = [
 ];
 
 export default function FamilyAlbums() {
-  const { familyDeviceIds } = useFamily();
+  const familyCtx = useFamily();
+  const { familyDeviceIds } = familyCtx;
   const { user, isAdmin } = useAuth();
   const {
     collages,
