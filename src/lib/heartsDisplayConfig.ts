@@ -5,6 +5,7 @@ export type HeartsFilterMode = "all" | "month" | "30days" | "7days";
 export type HeartsDisplayStyle = "hearts" | "bubbles" | "cards" | "compact";
 export type FloatPresetId = "soft" | "balanced" | "rich";
 export type FloatPresetSelection = FloatPresetId | "custom";
+export type FloatAnimationType = "bounce" | "drift" | "pulse" | "swing" | "wander";
 export type FloatEnvironment =
   | "theme"
   | "hearts"
@@ -23,6 +24,8 @@ export interface HeartsDisplayConfig {
   displayStyle: HeartsDisplayStyle;
   /** Whether hearts/items float (animate) */
   floatAnimation: boolean;
+  /** Animation type for floating elements */
+  floatAnimationType: FloatAnimationType;
   /** Global floating size scale (0.5 - 2) */
   floatSizeScale: number;
   /** Global floating speed scale (0.4 - 2.5), higher = faster */
@@ -44,6 +47,7 @@ const DEFAULTS: HeartsDisplayConfig = {
   filterMode: "month",
   displayStyle: "hearts",
   floatAnimation: true,
+  floatAnimationType: "bounce",
   floatSizeScale: 1,
   floatSpeedScale: 1,
   floatDensityScale: 1,
