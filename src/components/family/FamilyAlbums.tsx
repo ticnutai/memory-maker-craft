@@ -1102,8 +1102,8 @@ export default function FamilyAlbums() {
                       {visibleItems.map(c => {
                         const { isShared, isHome, childCount, canManage } = getItemInfo(c);
                         return (
-                          <tr key={c.id} {...dragProps(c)} className={`border-t cursor-pointer group transition-colors hover:bg-muted/30 ${dragOverId === c.id && c.is_folder ? "bg-primary/10" : dragItemId === c.id ? "opacity-40" : ""}`} onClick={() => itemClick(c)}>
-                            <td className="p-2">{user && <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 cursor-grab" />}</td>
+                          <tr key={c.id} {...dragProps(c)} className={`border-t cursor-pointer group transition-colors hover:bg-muted/30 ${isSelected(c.id) ? "bg-primary/10" : ""} ${dragOverId === c.id && c.is_folder ? "bg-primary/10" : dragItemId === c.id ? "opacity-40" : ""}`} onClick={() => itemClick(c)}>
+                            <td className="p-2">{selectMode ? renderCheckbox(c) : user && <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 cursor-grab" />}</td>
                             <td className="p-2">
                               <div className="flex items-center gap-2">
                                 <span className="text-lg">{c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}</span>
