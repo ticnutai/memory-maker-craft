@@ -432,7 +432,27 @@ export default function FamilyAlbums() {
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             📸 אלבומי משפחה
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* View mode selector */}
+            <div className="flex items-center bg-muted rounded-lg p-0.5 gap-0.5">
+              {VIEW_MODES.map(vm => {
+                const Icon = vm.icon;
+                return (
+                  <button
+                    key={vm.id}
+                    onClick={() => changeViewMode(vm.id)}
+                    className={`p-1.5 rounded-md transition-all ${
+                      viewMode === vm.id
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                    }`}
+                    title={vm.label}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                  </button>
+                );
+              })}
+            </div>
             <Button size="sm" variant={showArchived ? "default" : "outline"} onClick={() => setShowArchived((v) => !v)}>
               <Archive className="w-4 h-4 ml-1" />
               {showArchived ? "מצב ארכיון" : "ארכיון"}
