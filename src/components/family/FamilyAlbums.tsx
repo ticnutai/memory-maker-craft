@@ -73,6 +73,8 @@ export default function FamilyAlbums() {
   const [externalDragOver, setExternalDragOver] = useState(false);
   const [externalDropTarget, setExternalDropTarget] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectMode, setSelectMode] = useState(false);
   const dropCounterRef = useRef(0);
 
   // Persist view mode to cloud + localStorage
