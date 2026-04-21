@@ -198,28 +198,43 @@ export default function FamilyHome({
     })();
   }, [loading, photoCollages.length, createCollage, user]);
 
-  // Auto-set home collage to first one if none selected
+  // Load global home collage from cloud (families table), then fall back to local
   useEffect(() => {
     if (loading) return;
+    const familyId = familyCtx.family?.id;
+    
+    (async () => {
+      // Try loading global setting from families table
+      let globalId: string | null = null;
+      if (familyId) {
+        globalId = await loadGlobalHomeCollageId(familyId);
+      }
 
-    const namedHomeId = photoCollages.find((c) => c.name.trim() === "דף הבית")?.id ?? null;
-    const firstPhotoCollageId = photoCollages[0]?.id ?? null;
-    const hasValidHome = homeCollageId ? photoCollages.some((c) => c.id === homeCollageId) : false;
+      // Local override from localStorage
+      const localId = loadHomeCollageId();
+      
+      // Priority: local override > global > auto-detect
+      const effectiveId = localId || globalId;
 
-    if (!hasValidHome && homeCollageId) {
-      applyHomeCollage(firstPhotoCollageId);
-      return;
-    }
+      const namedHomeId = photoCollages.find((c) => c.name.trim() === "דף הבית")?.id ?? null;
+      const firstPhotoCollageId = photoCollages[0]?.id ?? null;
 
-    if (!homeCollageId && namedHomeId) {
-      applyHomeCollage(namedHomeId);
-      return;
-    }
+      if (effectiveId && photoCollages.some((c) => c.id === effectiveId)) {
+        if (homeCollageId !== effectiveId) {
+          setHomeCollageId(effectiveId);
+          saveHomeCollageId(effectiveId);
+        }
+        return;
+      }
 
-    if (!homeCollageId && firstPhotoCollageId) {
-      applyHomeCollage(firstPhotoCollageId);
-    }
-  }, [loading, homeCollageId, photoCollages]);
+      // Fallback: auto-detect
+      const fallback = namedHomeId ?? firstPhotoCollageId;
+      if (fallback && homeCollageId !== fallback) {
+        setHomeCollageId(fallback);
+        saveHomeCollageId(fallback);
+      }
+    })();
+  }, [loading, photoCollages, familyCtx.family?.id]);
 
   useEffect(() => {
     if (!slideshow.collageId) return;
