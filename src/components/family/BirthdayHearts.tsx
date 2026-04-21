@@ -329,7 +329,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
           <div
             key={key}
             className="relative group"
-            style={floatEnabled ? { animation: `heartFloat ${3 / floatSpeedScale}s ease-in-out infinite`, animationDelay: `${i * 0.3}s` } : undefined}
+            style={floatEnabled ? { animation: `${floatAnimType === "bounce" ? "heartFloat" : floatAnimType === "drift" ? "heartDrift" : floatAnimType === "pulse" ? "heartPulse" : floatAnimType === "swing" ? "heartSwing" : "heartWander"} ${3 / floatSpeedScale}s ease-in-out infinite`, animationDelay: `${i * 0.3}s` } : undefined}
           >
             <button
               type="button"
@@ -369,7 +369,13 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
           </div>
         );
         })}
-        <style>{`@keyframes heartFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+        <style>{`
+          @keyframes heartFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+          @keyframes heartDrift { 0% { transform: translate(0, 0); } 25% { transform: translate(12px, -8px); } 50% { transform: translate(-8px, -14px); } 75% { transform: translate(6px, -4px); } 100% { transform: translate(0, 0); } }
+          @keyframes heartPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+          @keyframes heartSwing { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(6deg); } 75% { transform: rotate(-6deg); } }
+          @keyframes heartWander { 0% { transform: translate(0,0) rotate(0); } 20% { transform: translate(15px,-10px) rotate(3deg); } 40% { transform: translate(-10px,-18px) rotate(-2deg); } 60% { transform: translate(8px,-6px) rotate(4deg); } 80% { transform: translate(-12px,-12px) rotate(-3deg); } 100% { transform: translate(0,0) rotate(0); } }
+        `}</style>
       </div>
       </>
     );
