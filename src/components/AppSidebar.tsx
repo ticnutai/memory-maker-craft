@@ -115,6 +115,20 @@ export default function AppSidebar({ active, onSelect, onOpenSettings, onOpenFam
               <Cake className="h-4 w-4 shrink-0" />
               <span>ימי הולדת</span>
             </button>
+            <button
+              onClick={() => { onOpenThemePicker?.(); if (!pinned) setHoverOpen(false); }}
+              className={cn(baseBtn)}
+            >
+              <Palette className="h-4 w-4 shrink-0" />
+              <span>קולאז׳ים וערכות</span>
+            </button>
+            <button
+              onClick={() => { onOpenFamilyCode?.(); if (!pinned) setHoverOpen(false); }}
+              className={cn(baseBtn)}
+            >
+              <Users className="h-4 w-4 shrink-0" />
+              <span>ניהול משפחה</span>
+            </button>
           </div>
 
           <div className="space-y-1">
@@ -175,7 +189,7 @@ export default function AppSidebar({ active, onSelect, onOpenSettings, onOpenFam
             className={cn(baseBtn)}
           >
             <Settings className="h-4 w-4 shrink-0" />
-            <span>הגדרות</span>
+            <span>הגדרות משחקים</span>
           </button>
         </div>
       </aside>
