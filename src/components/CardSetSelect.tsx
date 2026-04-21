@@ -90,6 +90,7 @@ function getDeviceId(): string {
 }
 
 export default function CardSetSelect({ onSelectSet, settingsOpen, onSettingsToggle, settingsOnly }: CardSetSelectProps) {
+  const { isAdmin } = useAuth();
   const theme = "girl";
   const [_showSettings, _setShowSettings] = useState(false);
   const showSettings = settingsOpen !== undefined ? settingsOpen : _showSettings;
