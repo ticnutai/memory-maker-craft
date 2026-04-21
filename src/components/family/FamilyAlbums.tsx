@@ -1024,7 +1024,8 @@ export default function FamilyAlbums() {
                     return (
                       <div key={c.id} {...dragProps(c)} className={`rounded-xl border p-4 transition-all cursor-pointer group ${dragClass(c, isHome)}`} onClick={() => itemClick(c)}>
                         <div className="flex items-start gap-3">
-                          {user && <GripVertical className="w-4 h-4 mt-3 text-muted-foreground/50 flex-shrink-0 cursor-grab active:cursor-grabbing" />}
+                          {renderCheckbox(c)}
+                          {user && !selectMode && <GripVertical className="w-4 h-4 mt-3 text-muted-foreground/50 flex-shrink-0 cursor-grab active:cursor-grabbing" />}
                           <span className="text-4xl flex-shrink-0">{c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}</span>
                           <div className="flex-1 min-w-0">
                             <div className="font-bold text-sm truncate flex items-center gap-1">
