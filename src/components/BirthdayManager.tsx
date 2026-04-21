@@ -455,7 +455,9 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
                     <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${heartsConfig.floatAnimation ? "right-0.5" : "right-4"}`} />
                   </button>
                 </div>
-              )
+              )}
+
+              {/* Filter mode */}
               <div>
                 <label className="text-xs font-bold text-muted-foreground mb-1.5 block">סינון לפי זמן</label>
                 <div className="flex flex-wrap gap-1.5">
