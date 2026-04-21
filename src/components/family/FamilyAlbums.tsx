@@ -3,7 +3,7 @@ import {
   Plus, FolderPlus, KeyRound, Trash2, Users, ChevronLeft,
   Home as HomeIcon, FolderOpen, Image as ImageIcon, Filter, Tag, CalendarDays, User,
   Pencil, Eye, Search, Archive, RotateCcw, GripVertical,
-  LayoutGrid, List, Table2, GalleryHorizontalEnd, Upload,
+  LayoutGrid, List, Table2, GalleryHorizontalEnd, Upload, CheckSquare, Square, XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
