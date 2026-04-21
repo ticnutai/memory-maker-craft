@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Plus, Sparkles, Heart, Image as ImageIcon, Settings2, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Sparkles, Heart, Image as ImageIcon, Settings2, X, CalendarDays, Gamepad2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFamilyCollages } from "@/hooks/useFamilyCollages";
 import CollageView from "./CollageView";
@@ -18,6 +18,7 @@ import {
 } from "@/lib/familyThemes";
 import { FloatEnvironment, FloatPresetId, FloatingEffect, HeartsDisplayStyle, getFloatPresetPatch, hasSavedHeartsConfig, HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, saveHeartsConfig } from "@/lib/heartsDisplayConfig";
 import { analyzeSmartHome, type SmartHomeAnalysis } from "@/lib/smartInsights";
+import { buildWeeklyFamilyPlan, getQuickGameSuggestions, pickActivityOfTheDay } from "@/lib/familyActivities";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
@@ -50,7 +51,12 @@ export default function FamilyHome({
   const [animCfg, setAnimCfg] = useState(() => loadHeartsConfig());
   const [smartAnalysis, setSmartAnalysis] = useState<SmartHomeAnalysis | null>(null);
   const [smartBusyId, setSmartBusyId] = useState<string | null>(null);
+  const [activitySeed, setActivitySeed] = useState(() => new Date().toISOString().slice(0, 10));
   const isMobile = useIsMobile();
+
+  const weeklyPlan = useMemo(() => buildWeeklyFamilyPlan(activitySeed), [activitySeed]);
+  const activityOfTheDay = useMemo(() => pickActivityOfTheDay(activitySeed), [activitySeed]);
+  const gameSuggestions = useMemo(() => getQuickGameSuggestions(), []);
 
   const applyAnimationPreset = (preset: FloatPresetId) => {
     const prefersReduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -470,6 +476,13 @@ export default function FamilyHome({
 
   const isDark = theme.id === "night";
 
+  const shiftActivityWeek = () => {
+    const parsed = new Date(activitySeed);
+    const next = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+    next.setDate(next.getDate() + 7);
+    setActivitySeed(next.toISOString().slice(0, 10));
+  };
+
   return (
     <div className="min-h-screen relative">
       <FamilyDecorations type={theme.decoration ?? "none"} />
@@ -803,6 +816,59 @@ export default function FamilyHome({
             </div>
           </section>
         )}
+
+        <section className={`mb-5 rounded-2xl border p-3 sm:p-4 ${isDark ? "bg-white/5 border-white/15" : "bg-white/75 border-white/90"}`}>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 className={`text-sm sm:text-base font-black flex items-center gap-1.5 ${isDark ? "text-white" : "text-foreground"}`}>
+              <CalendarDays className="w-4 h-4" />
+              תוכניות ופעילויות משפחתיות
+            </h2>
+            <button
+              type="button"
+              onClick={shiftActivityWeek}
+              className="text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-full border bg-background/70 hover:bg-background"
+            >
+              שבוע הבא
+            </button>
+          </div>
+
+          <div className={`mt-3 rounded-xl border p-3 ${isDark ? "bg-white/5 border-white/10" : "bg-background/70 border-muted"}`}>
+            <div className={`text-[11px] font-black ${isDark ? "text-white/75" : "text-muted-foreground"}`}>פעילות היום</div>
+            <div className={`mt-1 text-sm font-bold ${isDark ? "text-white" : "text-foreground"}`}>{activityOfTheDay.title}</div>
+            <div className={`text-xs mt-1 ${isDark ? "text-white/75" : "text-muted-foreground"}`}>{activityOfTheDay.description}</div>
+            <div className={`text-[11px] mt-2 ${isDark ? "text-white/70" : "text-muted-foreground"}`}>משך משוער: {activityOfTheDay.durationMin} דקות</div>
+          </div>
+
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {weeklyPlan.slice(0, 6).map((item) => (
+              <div
+                key={`${item.weekday}-${item.idea.id}`}
+                className={`rounded-xl border p-2.5 ${isDark ? "bg-white/5 border-white/10" : "bg-background/70 border-muted"}`}
+              >
+                <div className={`text-[11px] font-black ${isDark ? "text-white/75" : "text-muted-foreground"}`}>{item.weekday}</div>
+                <div className={`text-sm font-bold mt-1 ${isDark ? "text-white" : "text-foreground"}`}>{item.idea.title}</div>
+                <div className={`text-xs mt-1 ${isDark ? "text-white/75" : "text-muted-foreground"}`}>{item.idea.durationMin} דקות</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3">
+            <div className={`text-[11px] font-black flex items-center gap-1.5 ${isDark ? "text-white/75" : "text-muted-foreground"}`}>
+              <Gamepad2 className="w-3.5 h-3.5" />
+              משחקים מומלצים להפעלה מיידית
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {gameSuggestions.map((game) => (
+                <span
+                  key={game.id}
+                  className={`px-2 py-1 text-[11px] rounded-full border ${isDark ? "bg-white/10 border-white/20 text-white" : "bg-background border-muted text-foreground"}`}
+                >
+                  {game.title}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
 
         <BirthdayHearts isDark={isDark} familyDeviceIds={familyCtx.familyDeviceIds} />
 
