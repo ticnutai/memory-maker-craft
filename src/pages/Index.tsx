@@ -8,10 +8,12 @@ import BirthdayManager from "@/components/BirthdayManager";
 import AppSidebar, { SidebarSection } from "@/components/AppSidebar";
 import { CardSetType, CardData, GameSettings } from "@/lib/gameData";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
+import { useFamily } from "@/hooks/useFamily";
 
 type Screen = "home" | "game";
 
 const Index = () => {
+  const { familyDeviceIds } = useFamily();
   const { settings: cloudSettings, toGameSettings } = useCloudSettings("girl");
   const [tab, setTab] = useState<SidebarSection>("family");
   const [screen, setScreen] = useState<Screen>("home");
@@ -69,7 +71,7 @@ const Index = () => {
           <TreasureHuntGame onHome={() => handleSelect("memory")} />
         ) : tab === "birthdays" ? (
           <div className="w-full px-4 sm:px-6 lg:px-8 pt-14 pb-8">
-            <BirthdayManager theme="girl" />
+            <BirthdayManager theme="girl" familyDeviceIds={familyDeviceIds} />
           </div>
         ) : (
           <FamilyHome />
