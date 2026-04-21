@@ -17,6 +17,7 @@ import {
   loadSlideshowConfig, saveSlideshowConfig, SlideshowConfig, normalizeSlideshowConfig, resetSlideshowConfig,
 } from "@/lib/familyThemes";
 import { FloatEnvironment, FloatPresetId, FloatingEffect, HeartsDisplayStyle, getFloatPresetPatch, hasSavedHeartsConfig, HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, saveHeartsConfig } from "@/lib/heartsDisplayConfig";
+import { analyzeSmartHome, type SmartHomeAnalysis } from "@/lib/smartInsights";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
@@ -47,6 +48,7 @@ export default function FamilyHome({
   const [pageClock, setPageClock] = useState(() => new Date());
   const [quickAnimOpen, setQuickAnimOpen] = useState(false);
   const [animCfg, setAnimCfg] = useState(() => loadHeartsConfig());
+  const [smartAnalysis, setSmartAnalysis] = useState<SmartHomeAnalysis | null>(null);
   const isMobile = useIsMobile();
 
   const applyAnimationPreset = (preset: FloatPresetId) => {
@@ -292,6 +294,56 @@ export default function FamilyHome({
     })();
     return () => { cancelled = true; };
   }, [activeId, displayCollageId, slideshow.enabled]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    let cancelled = false;
+    (async () => {
+      const photoCollageIds = photoCollages.map((c) => c.id);
+      const deviceIds = familyCtx.familyDeviceIds ?? [];
+
+      const [{ count: photoCount }, { count: birthdayCount }, { count: eventCount }] = await Promise.all([
+        photoCollageIds.length > 0
+          ? supabase.from("family_photos").select("id", { count: "exact", head: true }).in("collage_id", photoCollageIds)
+          : Promise.resolve({ count: 0 } as any),
+        deviceIds.length > 0
+          ? supabase.from("birthdays").select("id", { count: "exact", head: true }).in("device_id", deviceIds)
+          : Promise.resolve({ count: 0 } as any),
+        deviceIds.length > 0
+          ? supabase.from("family_events").select("id", { count: "exact", head: true }).in("device_id", deviceIds)
+          : Promise.resolve({ count: 0 } as any),
+      ]);
+
+      if (cancelled) return;
+
+      const analysis = analyzeSmartHome({
+        collageCount: photoCollages.length,
+        photoCount: photoCount ?? 0,
+        birthdayCount: birthdayCount ?? 0,
+        eventCount: eventCount ?? 0,
+        hasHomeCollage: !!homeCollageId,
+        slideshowEnabled: slideshow.enabled,
+        reducedMotionEnabled: !!animCfg.reducedMotion,
+        richAnimationsEnabled: (animCfg.floatDensityScale ?? 1) > 1.15 || (animCfg.floatSpeedScale ?? 1) > 1.15,
+      });
+
+      setSmartAnalysis(analysis);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    loading,
+    photoCollages,
+    homeCollageId,
+    slideshow.enabled,
+    familyCtx.familyDeviceIds,
+    animCfg.reducedMotion,
+    animCfg.floatDensityScale,
+    animCfg.floatSpeedScale,
+  ]);
 
   const active = collages.find(c => c.id === activeId);
   if (active) {
@@ -606,6 +658,32 @@ export default function FamilyHome({
             <Sparkles className="w-4 h-4" />
           </p>
         </header>
+
+        {smartAnalysis && (
+          <section className={`mb-5 rounded-2xl border p-3 sm:p-4 ${isDark ? "bg-white/5 border-white/15" : "bg-white/75 border-white/90"}`}>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className={`text-sm sm:text-base font-black ${isDark ? "text-white" : "text-foreground"}`}>Smart Insights</h2>
+              <div className={`text-xs sm:text-sm font-black px-2.5 py-1 rounded-full ${smartAnalysis.score >= 85 ? "bg-emerald-500 text-white" : smartAnalysis.score >= 65 ? "bg-amber-500 text-white" : "bg-rose-500 text-white"}`}>
+                ציון בית חכם: {smartAnalysis.score}
+              </div>
+            </div>
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {smartAnalysis.recommendations.slice(0, 4).map((rec) => (
+                <div
+                  key={rec.id}
+                  className={`rounded-xl border p-2.5 ${isDark ? "bg-white/5 border-white/10" : "bg-background/70 border-muted"}`}
+                >
+                  <div className={`text-[11px] font-black ${rec.priority === "high" ? "text-rose-500" : rec.priority === "medium" ? "text-amber-500" : "text-emerald-500"}`}>
+                    {rec.priority === "high" ? "עדיפות גבוהה" : rec.priority === "medium" ? "עדיפות בינונית" : "עדיפות נמוכה"}
+                  </div>
+                  <div className={`text-sm font-bold mt-1 ${isDark ? "text-white" : "text-foreground"}`}>{rec.title}</div>
+                  <div className={`text-xs mt-1 ${isDark ? "text-white/75" : "text-muted-foreground"}`}>{rec.description}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <BirthdayHearts isDark={isDark} familyDeviceIds={familyCtx.familyDeviceIds} />
 

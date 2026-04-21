@@ -9,6 +9,7 @@ import BirthdayCalendarView from "./BirthdayCalendarView";
 import BirthdayInviteDialog from "./BirthdayInviteDialog";
 import { getHebMonthsForYear, hebrewToGregorian, gregorianToHebrew, getCurrentHebYear, daysInHebMonth, toHebrewNumeral, toHebrewYear } from "@/lib/hebrewCalendar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 
 interface Birthday {
   id: string;
@@ -262,52 +263,89 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
   };
 
   const saveEntry = async () => {
-    if (!formName || !formDate) return;
-
-    if (formType === "birthday") {
-      // Save as birthday
-      const payload = {
-        device_id: deviceId, name: formName, birth_date: formDate,
-        relation: formRelation, emoji: formEmoji, notes: formNotes || null,
-        color: formColor, updated_at: new Date().toISOString(),
-      };
-      if (editId && !editingEvent) {
-        await supabase.from("birthdays").update(payload).eq("id", editId);
-      } else {
-        // If switching from event to birthday while editing, delete old event
-        if (editId && editingEvent) {
-          await supabase.from("family_events").delete().eq("id", editId);
-        }
-        await supabase.from("birthdays").insert(payload);
-      }
-    } else {
-      // Save as family event
-      const payload = {
-        device_id: deviceId, name: formName, event_date: formDate,
-        event_type: formType, emoji: formEmoji, color: formColor,
-        notes: formNotes || null, recurring: formRecurring,
-        updated_at: new Date().toISOString(),
-      };
-      if (editId && editingEvent) {
-        await supabase.from("family_events").update(payload).eq("id", editId);
-      } else {
-        // If switching from birthday to event while editing, delete old birthday
-        if (editId && !editingEvent) {
-          await supabase.from("birthdays").delete().eq("id", editId);
-        }
-        await supabase.from("family_events").insert(payload);
-      }
+    const cleanedName = formName.trim();
+    if (!cleanedName) {
+      toast.error("יש להזין שם אירוע");
+      return;
     }
-    resetForm(); loadBirthdays();
+
+    if (!formDate) {
+      toast.error("יש לבחור תאריך");
+      return;
+    }
+
+    const parsed = parseISO(formDate);
+    if (Number.isNaN(parsed.getTime())) {
+      toast.error("התאריך שנבחר לא תקין");
+      return;
+    }
+
+    try {
+      if (formType === "birthday") {
+        // Save as birthday
+        const payload = {
+          device_id: deviceId, name: cleanedName, birth_date: formDate,
+          relation: formRelation, emoji: formEmoji, notes: formNotes || null,
+          color: formColor, updated_at: new Date().toISOString(),
+        };
+        if (editId && !editingEvent) {
+          const { error } = await supabase.from("birthdays").update(payload).eq("id", editId);
+          if (error) throw error;
+        } else {
+          // If switching from event to birthday while editing, delete old event
+          if (editId && editingEvent) {
+            const { error: deleteError } = await supabase.from("family_events").delete().eq("id", editId);
+            if (deleteError) throw deleteError;
+          }
+          const { error } = await supabase.from("birthdays").insert(payload);
+          if (error) throw error;
+        }
+      } else {
+        // Save as family event
+        const payload = {
+          device_id: deviceId, name: cleanedName, event_date: formDate,
+          event_type: formType, emoji: formEmoji, color: formColor,
+          notes: formNotes || null, recurring: formRecurring,
+          updated_at: new Date().toISOString(),
+        };
+        if (editId && editingEvent) {
+          const { error } = await supabase.from("family_events").update(payload).eq("id", editId);
+          if (error) throw error;
+        } else {
+          // If switching from birthday to event while editing, delete old birthday
+          if (editId && !editingEvent) {
+            const { error: deleteError } = await supabase.from("birthdays").delete().eq("id", editId);
+            if (deleteError) throw deleteError;
+          }
+          const { error } = await supabase.from("family_events").insert(payload);
+          if (error) throw error;
+        }
+      }
+
+      toast.success(editId ? "האירוע עודכן" : "האירוע נשמר");
+      resetForm();
+      loadBirthdays();
+    } catch (error) {
+      console.error("saveEntry failed", error);
+      toast.error("שמירת האירוע נכשלה");
+    }
   };
 
   const deleteEntry = async (id: string, isEvent: boolean) => {
-    if (isEvent) {
-      await supabase.from("family_events").delete().eq("id", id);
-    } else {
-      await supabase.from("birthdays").delete().eq("id", id);
+    try {
+      if (isEvent) {
+        const { error } = await supabase.from("family_events").delete().eq("id", id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("birthdays").delete().eq("id", id);
+        if (error) throw error;
+      }
+      loadBirthdays();
+      toast.success("נמחק בהצלחה");
+    } catch (error) {
+      console.error("deleteEntry failed", error);
+      toast.error("מחיקת האירוע נכשלה");
     }
-    loadBirthdays();
   };
 
   const sorted = [...birthdays].sort((a, b) => getDaysUntilBirthday(a.birth_date) - getDaysUntilBirthday(b.birth_date));
