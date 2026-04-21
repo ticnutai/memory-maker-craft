@@ -1143,7 +1143,10 @@ export default function FamilyAlbums() {
                           ) : (
                             <span className="text-5xl">{c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}</span>
                           )}
-                          {user && <GripVertical className="absolute top-1 right-1 w-4 h-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />}
+                          {selectMode && (
+                            <div className="absolute top-1 right-1">{renderCheckbox(c)}</div>
+                          )}
+                          {user && !selectMode && <GripVertical className="absolute top-1 right-1 w-4 h-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />}
                           {isHome && <HomeIcon className="absolute top-1 left-1 w-4 h-4 text-primary" />}
                         </div>
                         <div className="p-2">
