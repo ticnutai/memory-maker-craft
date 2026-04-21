@@ -14,7 +14,7 @@ import { useFamilyCollages, FamilyCollage } from "@/hooks/useFamilyCollages";
 import { useFamily } from "@/hooks/useFamily";
 import { useAuth } from "@/hooks/useAuth";
 import CollageView from "./CollageView";
-import { loadHomeCollageId, saveHomeCollageId, saveSlideshowConfig, loadSlideshowConfig } from "@/lib/familyThemes";
+import { loadHomeCollageId, saveHomeCollageId, saveGlobalHomeCollageId, saveSlideshowConfig, loadSlideshowConfig } from "@/lib/familyThemes";
 import { toast } from "sonner";
 
 type AlbumViewMode = "grid" | "table" | "list" | "gallery";
@@ -329,20 +329,31 @@ export default function FamilyAlbums() {
     );
   };
 
-  const setAsHome = useCallback((id: string) => {
+  const setAsHome = useCallback(async (id: string) => {
     saveHomeCollageId(id);
     setHomeCollageId(id);
     const sl = loadSlideshowConfig();
     const next = { ...sl, enabled: true, collageId: null };
     saveSlideshowConfig(next);
-    toast.success("הקולאז׳ נקבע לדף הבית");
-  }, []);
 
-  const clearHome = useCallback(() => {
+    // Admin: also save globally
+    if (isAdmin && familyCtx.family?.id) {
+      const ok = await saveGlobalHomeCollageId(familyCtx.family.id, id);
+      if (ok) toast.success("הקולאז׳ נשמר כברירת מחדל לכולם");
+      else toast.success("הקולאז׳ נקבע לדף הבית (מקומי)");
+    } else {
+      toast.success("הקולאז׳ נקבע לדף הבית (מקומי)");
+    }
+  }, [isAdmin, familyCtx.family?.id]);
+
+  const clearHome = useCallback(async () => {
     saveHomeCollageId(null);
     setHomeCollageId(null);
+    if (isAdmin && familyCtx.family?.id) {
+      await saveGlobalHomeCollageId(familyCtx.family.id, null);
+    }
     toast.success("הוסר מדף הבית");
-  }, []);
+  }, [isAdmin, familyCtx.family?.id]);
 
   const handleCreate = async () => {
     if (!user) {
