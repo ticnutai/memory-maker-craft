@@ -250,12 +250,63 @@ export default function FamilyAlbums() {
 
   const toggleFolder = (id: string) => setExpandedFolders((prev) => ({ ...prev, [id]: !prev[id] }));
 
+  // ─── Selection ───
+  const toggleSelect = useCallback((id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelectedIds(new Set(visibleItems.map(c => c.id)));
+  }, [visibleItems]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+    setSelectMode(false);
+  }, []);
+
+  const moveSelectedTo = useCallback(async (targetFolderId: string | null) => {
+    if (selectedIds.size === 0) return;
+    const items = collages.filter(c => selectedIds.has(c.id));
+    let moved = 0;
+    for (const item of items) {
+      if (item.id === targetFolderId) continue;
+      if (item.parent_id === targetFolderId) continue;
+      // cycle check
+      if (targetFolderId) {
+        let parentId: string | null = targetFolderId;
+        let cycle = false;
+        while (parentId) {
+          if (parentId === item.id) { cycle = true; break; }
+          const parent = collages.find(c => c.id === parentId);
+          parentId = parent?.parent_id ?? null;
+        }
+        if (cycle) continue;
+      }
+      try {
+        await updateCollage(item.id, { parent_id: targetFolderId } as Partial<FamilyCollage>);
+        moved++;
+      } catch { /* skip */ }
+    }
+    if (moved > 0) toast.success(`${moved} פריטים הועברו`);
+    clearSelection();
+  }, [selectedIds, collages, updateCollage, clearSelection]);
+
   // ─── Drag & Drop ───
   const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
-    e.dataTransfer.setData("text/plain", id);
+    // If dragging a selected item, carry all selected
+    const ids = selectedIds.has(id) && selectedIds.size > 1
+      ? Array.from(selectedIds)
+      : [id];
+    e.dataTransfer.setData("text/plain", JSON.stringify(ids));
     e.dataTransfer.effectAllowed = "move";
     setDragItemId(id);
-  }, []);
+  }, [selectedIds]);
 
   const handleDragOver = useCallback((e: React.DragEvent, targetId: string | null) => {
     e.preventDefault();
