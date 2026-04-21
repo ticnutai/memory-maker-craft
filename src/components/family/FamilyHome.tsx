@@ -10,12 +10,14 @@ import FamilyQuoteRotator from "./FamilyQuoteRotator";
 import BirthdayHearts from "./BirthdayHearts";
 import FamilyCodeManager from "./FamilyCodeManager";
 import { useFamily } from "@/hooks/useFamily";
+import { useAuth } from "@/hooks/useAuth";
 import {
   loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
   loadSlideshowConfig, saveSlideshowConfig, SlideshowConfig, normalizeSlideshowConfig, resetSlideshowConfig,
 } from "@/lib/familyThemes";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 interface FamilyHomeProps {
   externalFamilyCodeOpen?: boolean;
@@ -30,6 +32,7 @@ export default function FamilyHome({
   externalThemePickerOpen,
   onThemePickerOpenChange,
 }: FamilyHomeProps) {
+  const { user } = useAuth();
   const familyCtx = useFamily();
   const { collages, loading, createCollage, updateCollage, deleteCollage, joinByCode, deviceId } = useFamilyCollages(familyCtx.familyDeviceIds);
   const bootstrappingHomeRef = useRef(false);
@@ -40,6 +43,21 @@ export default function FamilyHome({
   const [slideshow, setSlideshow] = useState<SlideshowConfig>(() => loadSlideshowConfig());
   const [pageClock, setPageClock] = useState(() => new Date());
 
+  const isSchemaMismatchError = (err: any) => {
+    const text = `${err?.message ?? ""} ${err?.details ?? ""} ${err?.hint ?? ""}`.toLowerCase();
+    return text.includes("does not exist") || text.includes("column") || text.includes("relation");
+  };
+
+  const saveCloudSlideshow = async (cfg: SlideshowConfig) => {
+    if (!user) return;
+    const { error } = await supabase.from("user_preferences").upsert({
+      user_id: user.id,
+      slideshow_config: cfg as unknown as Json,
+      updated_at: cfg.updatedAt,
+    });
+    if (error && !isSchemaMismatchError(error)) throw error;
+  };
+
   const persistSlideshow = async (nextInput: SlideshowConfig, options?: { touchUpdatedAt?: boolean }) => {
     const touchUpdatedAt = options?.touchUpdatedAt !== false;
     const next = normalizeSlideshowConfig({
@@ -49,14 +67,56 @@ export default function FamilyHome({
 
     saveSlideshowConfig(next, { touchUpdatedAt: false });
     setSlideshow(next);
+    await saveCloudSlideshow(next);
   };
 
   const resetSlideshowPreferences = async () => {
     const next = resetSlideshowConfig();
     setSlideshow(next);
     saveSlideshowConfig(next, { touchUpdatedAt: false });
+    await saveCloudSlideshow(next);
     toast.success("העדפות הסליידשואו אופסו");
   };
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    (async () => {
+      const localCfg = loadSlideshowConfig();
+      const { data, error } = await supabase
+        .from("user_preferences")
+        .select("slideshow_config, updated_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+      if (error) {
+        if (!isSchemaMismatchError(error)) console.warn("slideshow cloud sync read failed", error);
+        return;
+      }
+
+      const rawCloud = (data?.slideshow_config ?? null) as Partial<SlideshowConfig> | null;
+      if (!rawCloud) {
+        await saveCloudSlideshow(localCfg);
+        return;
+      }
+
+      const cloudCfg = normalizeSlideshowConfig(rawCloud);
+      const localTs = Date.parse(localCfg.updatedAt || "");
+      const cloudTs = Date.parse(cloudCfg.updatedAt || (data?.updated_at ?? ""));
+      const useCloud = Number.isFinite(cloudTs) && (!Number.isFinite(localTs) || cloudTs >= localTs);
+
+      if (useCloud) {
+        saveSlideshowConfig(cloudCfg, { touchUpdatedAt: false });
+        setSlideshow(cloudCfg);
+      } else {
+        await saveCloudSlideshow(localCfg);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [user]);
 
   const applyHomeCollage = (id: string | null, options?: { followHomeInSlideshow?: boolean }) => {
     saveHomeCollageId(id);
