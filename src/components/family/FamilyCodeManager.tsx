@@ -81,7 +81,7 @@ export default function FamilyCodeManager({
         title="ניהול משפחה"
       >
         <Users className="w-5 h-5" />
-        {family && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-background" />}
+        {family && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary border border-background" />}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -112,7 +112,7 @@ export default function FamilyCodeManager({
                 <div className="space-y-1.5 max-h-40 overflow-y-auto">
                   {members.map((m) => (
                     <div key={m.id} className="flex items-center gap-2 text-sm bg-muted/30 rounded-lg px-3 py-1.5">
-                      {m.device_id === family.admin_device_id && <Crown className="w-3.5 h-3.5 text-amber-500" />}
+                      {m.device_id === family.admin_device_id && <Crown className="w-3.5 h-3.5 text-primary" />}
                       <span>{m.nickname || (m.device_id === deviceId ? "אני" : `מכשיר ${m.device_id.slice(-4)}`)}</span>
                       {m.device_id === deviceId && <span className="text-xs text-muted-foreground">(המכשיר הזה)</span>}
                     </div>
