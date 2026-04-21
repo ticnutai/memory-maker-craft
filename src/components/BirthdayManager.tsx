@@ -180,13 +180,13 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
 
   const loadBirthdays = useCallback(async () => {
     const [{ data: bData }, { data: eData }] = await Promise.all([
-      supabase.from("birthdays").select("*").eq("device_id", deviceId).order("birth_date", { ascending: true }),
-      supabase.from("family_events").select("*").eq("device_id", deviceId).order("event_date", { ascending: true }),
+      supabase.from("birthdays").select("*").in("device_id", queryIds).order("birth_date", { ascending: true }),
+      supabase.from("family_events").select("*").in("device_id", queryIds).order("event_date", { ascending: true }),
     ]);
     if (bData) setBirthdays(bData as Birthday[]);
     if (eData) setFamilyEvents(eData as FamilyEvent[]);
     setLoading(false);
-  }, [deviceId]);
+  }, [queryIds.join(",")]);
 
   useEffect(() => { loadBirthdays(); }, [loadBirthdays]);
 
