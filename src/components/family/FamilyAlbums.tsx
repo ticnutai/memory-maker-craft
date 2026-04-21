@@ -626,6 +626,9 @@ export default function FamilyAlbums() {
                   }}
                 >
                   <div className="flex items-start gap-3">
+                    {user && (
+                      <GripVertical className="w-4 h-4 mt-3 text-muted-foreground/50 flex-shrink-0 cursor-grab active:cursor-grabbing" />
+                    )}
                     <span className="text-4xl flex-shrink-0">
                       {c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}
                     </span>
