@@ -299,6 +299,7 @@ export type Database = {
           id: string
           is_folder: boolean
           layout_type: string
+          location_tag: string | null
           name: string
           parent_id: string | null
           purge_after: string | null
@@ -306,7 +307,6 @@ export type Database = {
           sort_order: number | null
           tags: string[]
           updated_at: string
-          location_tag: string | null
           year_tag: number | null
         }
         Insert: {
@@ -327,6 +327,7 @@ export type Database = {
           id?: string
           is_folder?: boolean
           layout_type?: string
+          location_tag?: string | null
           name?: string
           parent_id?: string | null
           purge_after?: string | null
@@ -334,7 +335,6 @@ export type Database = {
           sort_order?: number | null
           tags?: string[]
           updated_at?: string
-          location_tag?: string | null
           year_tag?: number | null
         }
         Update: {
@@ -355,6 +355,7 @@ export type Database = {
           id?: string
           is_folder?: boolean
           layout_type?: string
+          location_tag?: string | null
           name?: string
           parent_id?: string | null
           purge_after?: string | null
@@ -362,7 +363,6 @@ export type Database = {
           sort_order?: number | null
           tags?: string[]
           updated_at?: string
-          location_tag?: string | null
           year_tag?: number | null
         }
         Relationships: [
@@ -831,6 +831,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          created_at: string
+          slideshow_config: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          slideshow_config?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          slideshow_config?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -891,6 +912,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      purge_expired_family_collages: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "admin" | "user"
