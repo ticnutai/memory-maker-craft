@@ -54,7 +54,10 @@ const HEBREW_DAYS = ["א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ש'"];
 export default function BirthdayCalendarView({ birthdays, familyEvents = [], accent, onAddOnDate, onSendInvite, onEdit, onEditEvent }: Props) {
   const [mode, setMode] = useState<CalMode>("month");
   const [cursor, setCursor] = useState(new Date());
+  const [calTheme, setCalTheme] = useState<CalendarTheme>(() => loadCalendarTheme());
+  const [showThemePicker, setShowThemePicker] = useState(false);
   const today = new Date();
+  const ct = calTheme;
 
   const birthdaysByDay = useMemo(() => {
     const map = new Map<string, Birthday[]>();
