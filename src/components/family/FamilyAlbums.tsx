@@ -63,8 +63,42 @@ export default function FamilyAlbums() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+  const [viewMode, setViewModeLocal] = useState<AlbumViewMode>(() => {
+    try { return (localStorage.getItem(VIEW_MODE_KEY) as AlbumViewMode) || "grid"; } catch { return "grid"; }
+  });
   const [dragItemId, setDragItemId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+
+  // Persist view mode to cloud + localStorage
+  const changeViewMode = useCallback(async (mode: AlbumViewMode) => {
+    setViewModeLocal(mode);
+    try { localStorage.setItem(VIEW_MODE_KEY, mode); } catch {}
+    if (user) {
+      try {
+        const existing = await supabase.from("user_preferences").select("slideshow_config").eq("user_id", user.id).maybeSingle();
+        const config = (existing.data?.slideshow_config as Record<string, any>) ?? {};
+        await supabase.from("user_preferences").upsert({
+          user_id: user.id,
+          slideshow_config: { ...config, albumViewMode: mode },
+        }, { onConflict: "user_id" });
+      } catch {}
+    }
+  }, [user]);
+
+  // Load view mode from cloud on mount
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const { data } = await supabase.from("user_preferences").select("slideshow_config").eq("user_id", user.id).maybeSingle();
+        const cfg = data?.slideshow_config as Record<string, any> | null;
+        if (cfg?.albumViewMode && ["grid", "table", "list", "gallery"].includes(cfg.albumViewMode)) {
+          setViewModeLocal(cfg.albumViewMode as AlbumViewMode);
+          try { localStorage.setItem(VIEW_MODE_KEY, cfg.albumViewMode); } catch {}
+        }
+      } catch {}
+    })();
+  }, [user]);
 
   // Filters
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
