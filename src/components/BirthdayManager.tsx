@@ -409,7 +409,53 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
 
           {heartsConfig.enabled && (
             <>
-              {/* Filter mode */}
+              {/* Display style */}
+              <div>
+                <label className="text-xs font-bold text-muted-foreground mb-1.5 block">סגנון תצוגה</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {([
+                    { id: "hearts" as HeartsDisplayStyle, label: "❤️ לבבות", desc: "לבבות מרחפים" },
+                    { id: "bubbles" as HeartsDisplayStyle, label: "🫧 בועות", desc: "עיגולים צבעוניים" },
+                    { id: "cards" as HeartsDisplayStyle, label: "🃏 כרטיסים", desc: "כרטיסי אירוע" },
+                    { id: "compact" as HeartsDisplayStyle, label: "📋 רשימה", desc: "רשימה קומפקטית" },
+                  ]).map(opt => (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        const next = { ...heartsConfig, displayStyle: opt.id };
+                        setHeartsConfig(next);
+                        saveHeartsConfig(next);
+                      }}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 border ${
+                        heartsConfig.displayStyle === opt.id
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
+                      }`}
+                      title={opt.desc}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Float animation toggle */}
+              {(heartsConfig.displayStyle === "hearts" || heartsConfig.displayStyle === "bubbles") && (
+                <div className="flex items-center justify-between p-3 rounded-xl border bg-muted/30">
+                  <label className="text-xs font-bold text-muted-foreground">✨ אנימציית ריחוף</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = { ...heartsConfig, floatAnimation: !heartsConfig.floatAnimation };
+                      setHeartsConfig(next);
+                      saveHeartsConfig(next);
+                    }}
+                    className={`w-10 h-6 rounded-full transition-all relative ${heartsConfig.floatAnimation ? "bg-primary" : "bg-muted"}`}
+                  >
+                    <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${heartsConfig.floatAnimation ? "right-0.5" : "right-4"}`} />
+                  </button>
+                </div>
+              )
               <div>
                 <label className="text-xs font-bold text-muted-foreground mb-1.5 block">סינון לפי זמן</label>
                 <div className="flex flex-wrap gap-1.5">
