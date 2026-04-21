@@ -171,7 +171,7 @@ export default function FamilySlideshow({ photos, config, onOpenCollage, onConfi
   const next = () => { setEnded(false); setIdx(i => (i + 1) % ordered.length); };
   const prev = () => { setEnded(false); setIdx(i => (i - 1 + ordered.length) % ordered.length); };
 
-  const displayCaption = current?.caption || (config.autoCaptions ? `תמונה ${idx + 1} מתוך ${ordered.length}` : null);
+  const displayCaption = current?.caption ?? null;
 
   return (
     <div
@@ -227,7 +227,7 @@ export default function FamilySlideshow({ photos, config, onOpenCollage, onConfi
 
       {/* Clock overlay */}
       {config.showClock && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-black/50 text-white text-sm px-3 py-1 rounded-full backdrop-blur-sm font-mono">
+        <div className="absolute top-3 left-3 bg-black/50 text-white text-sm px-3 py-1 rounded-full backdrop-blur-sm font-mono z-20">
           {formatTime(clock)}
         </div>
       )}
@@ -330,7 +330,7 @@ export default function FamilySlideshow({ photos, config, onOpenCollage, onConfi
 
       {/* Progress dots */}
       {ordered.length <= 12 && (
-        <div className="absolute top-3 left-3 flex gap-1">
+        <div className="absolute top-12 left-3 flex gap-1 z-20">
           {ordered.map((_, i) => (
             <button
               key={i}
