@@ -642,6 +642,12 @@ export default function FamilyAlbums() {
               <Filter className="w-4 h-4 ml-1" />
               סינון
             </Button>
+            {isAdmin && (
+              <Button size="sm" variant={selectMode ? "default" : "outline"} onClick={() => { setSelectMode(v => !v); setSelectedIds(new Set()); }}>
+                <CheckSquare className="w-4 h-4 ml-1" />
+                בחירה
+              </Button>
+            )}
             <Button size="sm" variant="outline" onClick={() => setShowNewFolder(true)} disabled={!user}>
               <FolderPlus className="w-4 h-4 ml-1" />
               תיקייה
