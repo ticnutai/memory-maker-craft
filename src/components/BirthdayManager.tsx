@@ -471,9 +471,11 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
                       setHeartsConfig(next);
                       saveHeartsConfig(next);
                     }}
-                    className={`w-10 h-6 rounded-full transition-all relative ${heartsConfig.floatAnimation ? "bg-primary" : "bg-muted"}`}
+                    className={`w-11 h-6 rounded-full transition-all relative flex items-center ${heartsConfig.floatAnimation ? "bg-primary" : "bg-muted"}`}
                   >
-                    <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${heartsConfig.floatAnimation ? "right-0.5" : "right-4"}`} />
+                    <div className={`absolute top-0.5 w-5 h-5 rounded-full shadow transition-all flex items-center justify-center ${heartsConfig.floatAnimation ? "right-0.5 bg-primary-foreground" : "right-[1.25rem] bg-background"}`}>
+                      {heartsConfig.floatAnimation && <Check className="w-3 h-3 text-primary" />}
+                    </div>
                   </button>
                 </div>
               )}
