@@ -455,6 +455,77 @@ export default function FamilyHome({
               </div>
             </div>
 
+            {/* Display style selector */}
+            <div>
+              <div className="text-[11px] mb-1">סגנון תצוגה</div>
+              <div className="flex flex-wrap gap-1">
+                {([
+                  { id: "hearts" as HeartsDisplayStyle, label: "❤️ לבבות" },
+                  { id: "bubbles" as HeartsDisplayStyle, label: "🫧 בועות" },
+                  { id: "floating" as HeartsDisplayStyle, label: "🎈 צפים" },
+                  { id: "cards" as HeartsDisplayStyle, label: "🃏 כרטיסים" },
+                  { id: "compact" as HeartsDisplayStyle, label: "📋 רשימה" },
+                ]).map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => updateAnimCfg({ displayStyle: opt.id })}
+                    className={`px-2 py-1 text-[10px] font-bold rounded border ${
+                      (animCfg.displayStyle ?? "hearts") === opt.id
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Floating mode options */}
+            {animCfg.displayStyle === "floating" && (
+              <div className="space-y-1.5 rounded-lg border p-2 bg-background/50">
+                <div className="text-[11px] font-bold">הגדרות מצב צף</div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px]">תנועה עצמאית</span>
+                  <button
+                    type="button"
+                    onClick={() => updateAnimCfg({ floatingIndependent: !animCfg.floatingIndependent } as any)}
+                    className={`w-10 h-6 rounded-full transition-all relative ${(animCfg as any).floatingIndependent !== false ? "bg-primary" : "bg-muted"}`}
+                  >
+                    <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${(animCfg as any).floatingIndependent !== false ? "right-0.5" : "right-4"}`} />
+                  </button>
+                </div>
+                <div className="text-[11px]">אפקטים בלחיצה</div>
+                <div className="flex flex-wrap gap-1">
+                  {([
+                    { id: "sparkles" as FloatingEffect, label: "✨ ניצוצות" },
+                    { id: "confetti" as FloatingEffect, label: "🎊 קונפטי" },
+                    { id: "pop" as FloatingEffect, label: "🔊 צליל" },
+                  ]).map((eff) => {
+                    const effects: FloatingEffect[] = (animCfg as any).floatingEffects ?? ["sparkles", "confetti", "pop"];
+                    const active = effects.includes(eff.id);
+                    return (
+                      <button
+                        key={eff.id}
+                        type="button"
+                        onClick={() => {
+                          const cur: FloatingEffect[] = (animCfg as any).floatingEffects ?? ["sparkles", "confetti", "pop"];
+                          const next = active ? cur.filter((e) => e !== eff.id) : [...cur, eff.id];
+                          updateAnimCfg({ floatingEffects: next } as any);
+                        }}
+                        className={`px-2 py-1 text-[10px] font-bold rounded border ${
+                          active ? "bg-primary text-primary-foreground border-primary" : "bg-background"
+                        }`}
+                      >
+                        {eff.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center justify-between rounded-lg border px-2 py-1.5 bg-background/70">
               <span className="text-[11px]">תנועה מופחתת</span>
               <button
