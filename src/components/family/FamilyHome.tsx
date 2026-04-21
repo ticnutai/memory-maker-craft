@@ -8,6 +8,8 @@ import FamilyDecorations from "./FamilyDecorations";
 import FamilySlideshow from "./FamilySlideshow";
 import FamilyQuoteRotator from "./FamilyQuoteRotator";
 import BirthdayHearts from "./BirthdayHearts";
+import FamilyCodeManager from "./FamilyCodeManager";
+import { useFamily } from "@/hooks/useFamily";
 import {
   loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
   loadSlideshowConfig, saveSlideshowConfig, SlideshowConfig,
@@ -16,7 +18,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function FamilyHome() {
-  const { collages, loading, createCollage, updateCollage, deleteCollage, joinByCode, deviceId } = useFamilyCollages();
+  const familyCtx = useFamily();
+  const { collages, loading, createCollage, updateCollage, deleteCollage, joinByCode, deviceId } = useFamilyCollages(familyCtx.familyDeviceIds);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [homeCollageId, setHomeCollageId] = useState<string | null>(() => loadHomeCollageId());
   const [theme, setTheme] = useState<FamilyTheme>(() => loadFamilyTheme());
