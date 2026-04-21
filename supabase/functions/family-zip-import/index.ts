@@ -222,7 +222,8 @@ serve(async (req) => {
 
     if (insertError) throw insertError;
 
-    EdgeRuntime.waitUntil(processZipJob(job.id, collageId, deviceId, sourcePath));
+    (globalThis as any).EdgeRuntime?.waitUntil?.(processZipJob(job.id, collageId, deviceId, sourcePath)) ??
+      processZipJob(job.id, collageId, deviceId, sourcePath);
 
     return new Response(JSON.stringify({ jobId: job.id, status: job.status, progress: job.progress }), {
       status: 200,
