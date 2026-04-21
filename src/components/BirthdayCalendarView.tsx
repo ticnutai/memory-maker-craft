@@ -485,29 +485,58 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
           {getTitle()}
         </h3>
 
-        {/* Left side: mode toggles */}
-        <div className="flex gap-0.5 bg-white/60 rounded-lg p-0.5">
-          <button
-            onClick={() => setMode("week")}
-            className={`p-1.5 rounded transition-all ${mode === "week" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
-            title="שבוע"
-          >
-            <Rows3 className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setMode("month")}
-            className={`p-1.5 rounded transition-all ${mode === "month" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
-            title="חודש"
-          >
-            <CalendarDays className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setMode("year")}
-            className={`p-1.5 rounded transition-all ${mode === "year" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
-            title="שנה"
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-          </button>
+        {/* Left side: theme picker + mode toggles */}
+        <div className="flex items-center gap-1.5">
+          {/* Theme picker */}
+          <div className="relative">
+            <button
+              onClick={() => setShowThemePicker(p => !p)}
+              className={`p-1.5 rounded-lg transition-all active:scale-90 ${showThemePicker ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
+              title="ערכת נושא"
+            >
+              <Palette className="w-3.5 h-3.5" />
+            </button>
+            {showThemePicker && (
+              <div className="absolute left-0 top-full mt-1 z-50 bg-card rounded-xl border-2 border-muted shadow-xl p-2 min-w-[160px] space-y-1 bounce-in">
+                {CALENDAR_THEMES.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => { setCalTheme(t); saveCalendarTheme(t.id); setShowThemePicker(false); }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 ${
+                      ct.id === t.id ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    <span className="text-base">{t.emoji}</span>
+                    <span>{t.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-0.5 bg-white/60 rounded-lg p-0.5">
+            <button
+              onClick={() => setMode("week")}
+              className={`p-1.5 rounded transition-all ${mode === "week" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
+              title="שבוע"
+            >
+              <Rows3 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setMode("month")}
+              className={`p-1.5 rounded transition-all ${mode === "month" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
+              title="חודש"
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setMode("year")}
+              className={`p-1.5 rounded transition-all ${mode === "year" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/80"}`}
+              title="שנה"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
