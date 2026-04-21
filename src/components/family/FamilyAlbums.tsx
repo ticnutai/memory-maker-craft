@@ -300,6 +300,118 @@ export default function FamilyAlbums() {
     }
   }, [collages, updateCollage]);
 
+  // ─── External File Drop (from OS) ───
+  const isExternalFileDrag = useCallback((e: React.DragEvent) => {
+    return e.dataTransfer.types.includes("Files");
+  }, []);
+
+  const handleExternalDragEnter = useCallback((e: React.DragEvent) => {
+    if (!isExternalFileDrag(e)) return;
+    e.preventDefault();
+    dropCounterRef.current++;
+    setExternalDragOver(true);
+  }, [isExternalFileDrag]);
+
+  const handleExternalDragLeave = useCallback((e: React.DragEvent) => {
+    if (!isExternalFileDrag(e)) return;
+    e.preventDefault();
+    dropCounterRef.current--;
+    if (dropCounterRef.current <= 0) {
+      dropCounterRef.current = 0;
+      setExternalDragOver(false);
+      setExternalDropTarget(null);
+    }
+  }, [isExternalFileDrag]);
+
+  const handleExternalDragOver = useCallback((e: React.DragEvent) => {
+    if (!isExternalFileDrag(e)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  }, [isExternalFileDrag]);
+
+  const handleExternalFileDrop = useCallback(async (e: React.DragEvent, targetAlbumId?: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropCounterRef.current = 0;
+    setExternalDragOver(false);
+    setExternalDropTarget(null);
+
+    if (!user) {
+      toast.error("יש להתחבר כדי להעלות קבצים");
+      return;
+    }
+
+    const files = Array.from(e.dataTransfer.files).filter(
+      f => f.type.startsWith("image/") || f.type.startsWith("video/")
+    );
+    if (files.length === 0) {
+      toast.error("לא נמצאו קבצי תמונה או וידאו");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      let albumId = targetAlbumId;
+
+      // If dropped on a folder or no target, create a new album
+      if (!albumId) {
+        const newAlbum = await createCollage({
+          name: `העלאה ${new Date().toLocaleDateString("he-IL")}`,
+          emoji: "📸",
+          parent_id: currentFolderId,
+        } as Partial<FamilyCollage>);
+        albumId = newAlbum.id;
+      } else {
+        // Check if target is a folder - if so, create album inside it
+        const target = collages.find(c => c.id === albumId);
+        if (target?.is_folder) {
+          const newAlbum = await createCollage({
+            name: `העלאה ${new Date().toLocaleDateString("he-IL")}`,
+            emoji: "📸",
+            parent_id: albumId,
+          } as Partial<FamilyCollage>);
+          albumId = newAlbum.id;
+        }
+      }
+
+      // Upload files to the album
+      let uploadedCount = 0;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const isVideo = file.type.startsWith("video/");
+        const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
+        const path = `${user.id}/${albumId}/${Date.now()}-${i}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("family-photos").upload(path, file, {
+          upsert: false,
+          contentType: file.type || undefined,
+        });
+        if (upErr) { console.warn("upload error:", upErr); continue; }
+        const { data: pub } = supabase.storage.from("family-photos").getPublicUrl(path);
+
+        const { error } = await supabase
+          .from("family_photos")
+          .insert({
+            collage_id: albumId,
+            device_id: deviceId,
+            owner_user_id: user.id,
+            visibility: "public",
+            image_url: pub.publicUrl,
+            sort_order: i,
+            media_type: isVideo ? "video" : "image",
+          } as never);
+        if (!error) uploadedCount++;
+      }
+
+      toast.success(`${uploadedCount} קבצים הועלו בהצלחה!`);
+      setActiveId(albumId);
+    } catch (err: any) {
+      if (err?.message === "auth-required") toast.error("יש להתחבר");
+      else toast.error("שגיאה בהעלאה");
+    } finally {
+      setUploading(false);
+    }
+  }, [user, createCollage, currentFolderId, collages, deviceId]);
+
   const availableYears = useMemo(() => [...new Set(collages.map(c => c.year_tag).filter(Boolean) as number[])].sort((a, b) => b - a), [collages]);
   const availableFamilies = useMemo(() => [...new Set(collages.map(c => c.family_tag).filter(Boolean) as string[])].sort(), [collages]);
   const hasActiveFilters = !!(filterCategory || filterYear || filterFamily);
