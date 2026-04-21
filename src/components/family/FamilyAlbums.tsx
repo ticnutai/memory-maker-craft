@@ -553,7 +553,32 @@ export default function FamilyAlbums() {
   const albumCount = visibleItems.filter(c => !c.is_folder).length;
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 pt-14 pb-8" dir="rtl">
+    <div
+      className="w-full px-4 sm:px-6 lg:px-8 pt-14 pb-8 relative"
+      dir="rtl"
+      onDragEnter={handleExternalDragEnter}
+      onDragLeave={handleExternalDragLeave}
+      onDragOver={handleExternalDragOver}
+      onDrop={(e) => { if (isExternalFileDrag(e)) handleExternalFileDrop(e); }}
+    >
+      {/* External file drop overlay */}
+      {externalDragOver && (
+        <div className="fixed inset-0 z-50 bg-primary/10 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+          <div className="bg-background border-2 border-dashed border-primary rounded-2xl p-12 text-center shadow-xl">
+            <Upload className="w-16 h-16 mx-auto mb-4 text-primary animate-bounce" />
+            <p className="text-xl font-bold text-foreground">שחרר קבצים כאן להעלאה</p>
+            <p className="text-sm text-muted-foreground mt-2">תמונות ווידאו יועלו לאלבום חדש</p>
+          </div>
+        </div>
+      )}
+      {uploading && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-background border rounded-2xl p-8 text-center shadow-xl">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-lg font-bold text-foreground">מעלה קבצים...</p>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
