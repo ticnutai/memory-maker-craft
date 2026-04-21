@@ -403,13 +403,13 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
   return (
     <div className="space-y-3">
       {/* Today banner */}
-      <div className="bg-gradient-to-l from-purple-100 via-pink-50 to-yellow-50 rounded-2xl p-3 border-2 border-purple-200 flex flex-wrap items-center justify-between gap-2">
+      <div className={`${ct.bannerBg} rounded-2xl p-3 border-2 ${ct.bannerBorder} flex flex-wrap items-center justify-between gap-2`}>
         <div className="flex items-center gap-3">
           {/* Hebrew — dominant */}
           <div className="bg-white/80 rounded-xl px-4 py-2 text-center shadow-sm">
             <div className="text-[10px] text-muted-foreground leading-none">תאריך עברי</div>
-            <div className="text-2xl font-black text-purple-700 leading-tight">{todayInfo.hebDay}</div>
-            <div className="text-[10px] font-bold text-purple-600">{todayInfo.hebMonth} {toHebrewYear(new HDate(today).getFullYear())}</div>
+            <div className={`text-2xl font-black ${ct.hebDateText} leading-tight`}>{todayInfo.hebDay}</div>
+            <div className={`text-[10px] font-bold ${ct.hebDateText}`}>{todayInfo.hebMonth} {toHebrewYear(new HDate(today).getFullYear())}</div>
           </div>
           {/* Gregorian — secondary */}
           <div className="bg-white/60 rounded-xl px-3 py-2 text-center shadow-sm">
@@ -419,7 +419,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
           </div>
         </div>
         <div className="flex flex-col items-end gap-1 text-xs">
-          <div className="font-bold text-purple-800">{format(today, "EEEE", { locale: he })}</div>
+          <div className={`font-bold ${ct.toolbarText}`}>{format(today, "EEEE", { locale: he })}</div>
           {todayInfo.parsha && (
             <div className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
               <BookOpen className="w-3 h-3" /> פרשת {todayInfo.parsha}
@@ -441,7 +441,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
       </div>
 
       {/* Toolbar — arrows for step + big step (year/decade) */}
-      <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-3 border-2 border-pink-200">
+      <div className={`flex items-center justify-between gap-2 ${ct.toolbarBg} rounded-2xl p-3 border-2 ${ct.toolbarBorder}`}>
         {/* Right side: navigation arrows (RTL: right = back) */}
         <div className="flex items-center gap-0.5">
           <button
