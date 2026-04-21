@@ -131,17 +131,17 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
           tall ? "min-h-[100px] sm:min-h-[110px]" : "min-h-[88px]"
         } ${
           !inRange ? "opacity-30" : ""
-        } ${isSat ? "bg-blue-50/40" : ""} ${hasYomTov ? "bg-amber-50/60" : ""} ${
-          isToday ? "ring-2 ring-yellow-400 ring-inset bg-yellow-50/70 z-10" : ""
+        } ${isSat ? ct.satBg : ""} ${hasYomTov ? ct.yomTovBg : ""} ${
+          isToday ? `ring-2 ${ct.todayRing} ring-inset ${ct.todayBg} z-10` : ""
         }`}
       >
         {/* Top: dates — Hebrew dominant */}
         <div className="flex items-start justify-between leading-tight">
-          <span className={`text-[9px] ${isToday ? "text-yellow-700" : "text-muted-foreground"}`}>
+          <span className={`text-[9px] ${isToday ? ct.todayText : "text-muted-foreground"}`}>
             {format(day, "d")}
           </span>
           <div className="flex flex-col items-end">
-            <span className={`text-sm font-black ${isToday ? "text-yellow-700" : "text-purple-700"}`}>
+            <span className={`text-sm font-black ${isToday ? ct.todayText : ct.hebDateText}`}>
               {heb.hebDay}
             </span>
             {heb.isRoshChodesh && (
