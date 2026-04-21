@@ -92,13 +92,14 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
   useEffect(() => {
     const applyConfig = () => {
       const config = loadHeartsConfig();
-      if (!config.enabled) { setItems([]); return; }
+      if (!config.enabled) { setItems([]); return config; }
       setDisplayStyle(config.displayStyle);
       setFloatAnim(config.floatAnimation);
       setFloatSizeScale(Math.min(2, Math.max(0.5, config.floatSizeScale || 1)));
       setFloatSpeedScale(Math.min(2.5, Math.max(0.4, config.floatSpeedScale || 1)));
       setFloatDensityScale(Math.min(2.5, Math.max(0.4, config.floatDensityScale || 1)));
       setReducedMotion(!!config.reducedMotion);
+      return config;
     };
 
     const config = applyConfig();
