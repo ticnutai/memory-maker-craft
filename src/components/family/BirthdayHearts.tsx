@@ -89,6 +89,32 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
   const [floatDensityScale, setFloatDensityScale] = useState(1);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const [floatingEffects, setFloatingEffects] = useState<FloatingEffect[]>(["sparkles", "confetti", "pop"]);
+  const [floatingIndependent, setFloatingIndependent] = useState(true);
+  const [clickBurst, setClickBurst] = useState<{ x: number; y: number; color: string } | null>(null);
+  const burstTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const triggerClickBurst = useCallback((e: React.MouseEvent, color: string) => {
+    if (floatingEffects.length === 0) return;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setClickBurst({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, color });
+    if (burstTimer.current) clearTimeout(burstTimer.current);
+    burstTimer.current = setTimeout(() => setClickBurst(null), 1200);
+    if (floatingEffects.includes("pop")) {
+      try {
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.2);
+      } catch {}
+    }
+  }, [floatingEffects]);
 
   useEffect(() => {
     const applyConfig = () => {
@@ -101,6 +127,8 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
       setFloatSpeedScale(Math.min(2.5, Math.max(0.4, config.floatSpeedScale || 1)));
       setFloatDensityScale(Math.min(2.5, Math.max(0.4, config.floatDensityScale || 1)));
       setReducedMotion(!!config.reducedMotion);
+      setFloatingEffects(config.floatingEffects ?? ["sparkles", "confetti", "pop"]);
+      setFloatingIndependent(config.floatingIndependent !== false);
       return config;
     };
 
