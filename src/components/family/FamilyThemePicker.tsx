@@ -36,6 +36,9 @@ interface ThemePickerProps {
   onJoinByCode: (code: string) => Promise<FamilyCollage | null>;
   slideshow: SlideshowConfig;
   onSlideshowChange: (cfg: SlideshowConfig) => void;
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }
 
 export default function FamilyThemePicker({
@@ -43,8 +46,14 @@ export default function FamilyThemePicker({
   collages = [], deviceId, homeCollageId,
   onSetHomeCollage, onOpenCollage, onCreateCollage, onDeleteCollage, onJoinByCode,
   slideshow, onSlideshowChange,
+  externalOpen, onExternalOpenChange, hideTrigger,
 }: ThemePickerProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen ?? internalOpen;
+  const setOpen = (v: boolean) => {
+    setInternalOpen(v);
+    onExternalOpenChange?.(v);
+  };
   const [tab, setTab] = useState<"collages" | "themes" | "slideshow">("collages");
   const [showCustom, setShowCustom] = useState(false);
   const [joinCode, setJoinCode] = useState("");
@@ -189,15 +198,16 @@ export default function FamilyThemePicker({
 
   return (
     <>
-      {/* Trigger — matches the other top-left nav icons (w-6 h-6, icon w-3.5 h-3.5) */}
-      <button
-        onClick={() => setOpen(true)}
-        className="w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 text-foreground/40 hover:text-foreground/70"
-        title="קולאז׳ים וערכות נושא"
-        aria-label="קולאז׳ים וערכות נושא"
-      >
-        <Palette className="w-3.5 h-3.5" />
-      </button>
+      {!hideTrigger && (
+        <button
+          onClick={() => setOpen(true)}
+          className="w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 text-foreground/40 hover:text-foreground/70"
+          title="קולאז׳ים וערכות נושא"
+          aria-label="קולאז׳ים וערכות נושא"
+        >
+          <Palette className="w-3.5 h-3.5" />
+        </button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">

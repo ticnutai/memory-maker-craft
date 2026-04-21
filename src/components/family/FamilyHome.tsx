@@ -17,7 +17,19 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-export default function FamilyHome() {
+interface FamilyHomeProps {
+  externalFamilyCodeOpen?: boolean;
+  onFamilyCodeOpenChange?: (open: boolean) => void;
+  externalThemePickerOpen?: boolean;
+  onThemePickerOpenChange?: (open: boolean) => void;
+}
+
+export default function FamilyHome({
+  externalFamilyCodeOpen,
+  onFamilyCodeOpenChange,
+  externalThemePickerOpen,
+  onThemePickerOpenChange,
+}: FamilyHomeProps) {
   const familyCtx = useFamily();
   const { collages, loading, createCollage, updateCollage, deleteCollage, joinByCode, deviceId } = useFamilyCollages(familyCtx.familyDeviceIds);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -119,37 +131,39 @@ export default function FamilyHome() {
     <div className="min-h-screen relative">
       <FamilyDecorations type={theme.decoration ?? "none"} />
 
-      {/* Family code manager — top-left alongside theme picker */}
-      <div className="fixed top-[max(0.5rem,env(safe-area-inset-top))] left-[210px] z-[91]">
-        <FamilyCodeManager
-          family={familyCtx.family}
-          members={familyCtx.members}
-          isAdmin={familyCtx.isAdmin}
-          deviceId={familyCtx.deviceId}
-          onCreateFamily={familyCtx.createFamily}
-          onJoinByCode={familyCtx.joinByCode}
-          onLeaveFamily={familyCtx.leaveFamily}
-          onUpdateNickname={familyCtx.updateNickname}
-        />
-      </div>
+      {/* Family code manager — rendered hidden, controlled externally via sidebar */}
+      <FamilyCodeManager
+        family={familyCtx.family}
+        members={familyCtx.members}
+        isAdmin={familyCtx.isAdmin}
+        deviceId={familyCtx.deviceId}
+        onCreateFamily={familyCtx.createFamily}
+        onJoinByCode={familyCtx.joinByCode}
+        onLeaveFamily={familyCtx.leaveFamily}
+        onUpdateNickname={familyCtx.updateNickname}
+        hideTrigger
+        externalOpen={externalFamilyCodeOpen}
+        onExternalOpenChange={onFamilyCodeOpenChange}
+      />
 
-      {/* Theme/Collages icon — same style as other top-left nav icons */}
-      <div className="fixed top-[max(0.5rem,env(safe-area-inset-top))] left-[170px] z-[91]">
-        <FamilyThemePicker
-          current={theme}
-          onChange={setTheme}
-          collages={collages}
-          deviceId={deviceId}
-          homeCollageId={homeCollageId}
-          onSetHomeCollage={setHomeCollageId}
-          onOpenCollage={(id) => setActiveId(id)}
-          onCreateCollage={handleCreate}
-          onDeleteCollage={deleteCollage}
-          onJoinByCode={joinByCode}
-          slideshow={slideshow}
-          onSlideshowChange={setSlideshow}
-        />
-      </div>
+      {/* Theme/Collages — rendered hidden, controlled externally via sidebar */}
+      <FamilyThemePicker
+        current={theme}
+        onChange={setTheme}
+        collages={collages}
+        deviceId={deviceId}
+        homeCollageId={homeCollageId}
+        onSetHomeCollage={setHomeCollageId}
+        onOpenCollage={(id) => setActiveId(id)}
+        onCreateCollage={handleCreate}
+        onDeleteCollage={deleteCollage}
+        onJoinByCode={joinByCode}
+        slideshow={slideshow}
+        onSlideshowChange={setSlideshow}
+        hideTrigger
+        externalOpen={externalThemePickerOpen}
+        onExternalOpenChange={onThemePickerOpenChange}
+      />
 
       <div className="relative z-10 pt-20 pb-12 px-4 max-w-5xl mx-auto">
         {/* Hero header */}

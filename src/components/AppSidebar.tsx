@@ -1,4 +1,4 @@
-import { Home, Cake, Gamepad2, Map, Train, ChevronDown, Pin, PinOff, Settings, LogIn, LogOut, User, Shield } from "lucide-react";
+import { Home, Cake, Gamepad2, Map, Train, ChevronDown, Pin, PinOff, Settings, LogIn, LogOut, User, Shield, Users, Palette } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,6 +10,8 @@ interface AppSidebarProps {
   active: SidebarSection;
   onSelect: (section: SidebarSection) => void;
   onOpenSettings: () => void;
+  onOpenFamilyCode?: () => void;
+  onOpenThemePicker?: () => void;
 }
 
 const games: { key: SidebarSection; title: string; icon: typeof Gamepad2 }[] = [
@@ -20,7 +22,7 @@ const games: { key: SidebarSection; title: string; icon: typeof Gamepad2 }[] = [
 
 const PIN_KEY = "app-sidebar-pinned";
 
-export default function AppSidebar({ active, onSelect, onOpenSettings }: AppSidebarProps) {
+export default function AppSidebar({ active, onSelect, onOpenSettings, onOpenFamilyCode, onOpenThemePicker }: AppSidebarProps) {
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [pinned, setPinned] = useState<boolean>(() => {
@@ -113,6 +115,20 @@ export default function AppSidebar({ active, onSelect, onOpenSettings }: AppSide
               <Cake className="h-4 w-4 shrink-0" />
               <span>ימי הולדת</span>
             </button>
+            <button
+              onClick={() => { onOpenThemePicker?.(); if (!pinned) setHoverOpen(false); }}
+              className={cn(baseBtn)}
+            >
+              <Palette className="h-4 w-4 shrink-0" />
+              <span>קולאז׳ים וערכות</span>
+            </button>
+            <button
+              onClick={() => { onOpenFamilyCode?.(); if (!pinned) setHoverOpen(false); }}
+              className={cn(baseBtn)}
+            >
+              <Users className="h-4 w-4 shrink-0" />
+              <span>ניהול משפחה</span>
+            </button>
           </div>
 
           <div className="space-y-1">
@@ -173,7 +189,7 @@ export default function AppSidebar({ active, onSelect, onOpenSettings }: AppSide
             className={cn(baseBtn)}
           >
             <Settings className="h-4 w-4 shrink-0" />
-            <span>הגדרות</span>
+            <span>הגדרות משחקים</span>
           </button>
         </div>
       </aside>
