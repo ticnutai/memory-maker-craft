@@ -141,13 +141,12 @@ export default function FamilyThemePicker({
     }
     saveHomeCollageId(id);
     onSetHomeCollage(id);
-    // Auto-enable slideshow when setting a home collage
-    if (!slideshow.enabled) {
-      const next = { ...slideshow, enabled: true };
-      saveSlideshowConfig(next);
-      onSlideshowChange(next);
-    }
-    toast.success("הקולאז׳ נקבע כדף הבית 🏠 + Slideshow הופעל");
+
+    const next = { ...slideshow, enabled: true, collageId: null };
+    saveSlideshowConfig(next);
+    onSlideshowChange(next);
+
+    toast.success("הקולאז׳ נקבע לדף הבית ומוצג עכשיו");
   };
 
   const clearHome = () => {
