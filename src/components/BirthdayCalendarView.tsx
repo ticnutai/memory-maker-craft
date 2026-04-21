@@ -481,7 +481,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
         </div>
 
         {/* Center: title */}
-        <h3 className="text-sm font-black text-purple-800 flex-1 text-center flex flex-col leading-tight">
+        <h3 className={`text-sm font-black ${ct.toolbarText} flex-1 text-center flex flex-col leading-tight`}>
           {getTitle()}
         </h3>
 
