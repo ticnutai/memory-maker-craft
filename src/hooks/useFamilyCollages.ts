@@ -482,7 +482,7 @@ export function useFamilyPhotos(collageId: string | null) {
 
     await supabase
       .from("family_photos")
-      .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
+      .update({ deleted_at: new Date().toISOString(), deleted_by: userId } as never)
       .eq("id", id);
     await refresh();
   }, [refresh, requireAuthenticatedUser, photos, isAdmin]);
