@@ -42,6 +42,10 @@ export interface HeartsDisplayConfig {
   floatPreset: FloatPresetSelection;
   /** Which event types to show (empty = all) */
   eventTypes: string[];
+  /** Floating effects to play on click */
+  floatingEffects: FloatingEffect[];
+  /** Whether floating items move together or independently */
+  floatingIndependent: boolean;
 }
 
 const DEFAULTS: HeartsDisplayConfig = {
@@ -57,6 +61,8 @@ const DEFAULTS: HeartsDisplayConfig = {
   reducedMotion: false,
   floatPreset: "balanced",
   eventTypes: [],
+  floatingEffects: ["sparkles", "confetti", "pop"],
+  floatingIndependent: true,
 };
 
 export function loadHeartsConfig(): HeartsDisplayConfig {
