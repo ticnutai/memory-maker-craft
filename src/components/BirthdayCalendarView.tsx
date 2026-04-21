@@ -361,7 +361,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
       const hebEnd = getHebDayInfo(we);
       return (
         <>
-          <span className="text-purple-800 font-black">
+          <span className={`${ct.toolbarText} font-black`}>
             {hebStart.hebDay} {hebStart.hebMonth}
             {hebStart.hebMonth !== hebEnd.hebMonth ? ` — ${hebEnd.hebDay} ${hebEnd.hebMonth}` : ` — ${hebEnd.hebDay}`}
             {" "}{getHebYearLabel(ws)}
@@ -378,7 +378,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
       const hebYr = getHebYearLabel(new Date(cursor.getFullYear(), cursor.getMonth(), 15));
       return (
         <>
-          <span className="text-purple-800 font-black">
+          <span className={`${ct.toolbarText} font-black`}>
             {hebMonthStart}{hebMonthStart !== hebMonthEnd ? ` - ${hebMonthEnd}` : ""} {hebYr}
           </span>
           <span className="text-[10px] text-muted-foreground">
@@ -390,7 +390,7 @@ export default function BirthdayCalendarView({ birthdays, familyEvents = [], acc
     const hebYr = getHebYearLabel(new Date(cursor.getFullYear(), 6, 1));
     return (
       <>
-        <span className="text-purple-800 font-black">{hebYr}</span>
+        <span className={`${ct.toolbarText} font-black`}>{hebYr}</span>
         <span className="text-[10px] text-muted-foreground">{cursor.getFullYear()}</span>
       </>
     );
