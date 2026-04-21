@@ -79,6 +79,73 @@ function shortDisplayName(name: string): string {
   return `${trimmed.slice(0, 19)}…`;
 }
 
+/* ── Drag hook ── */
+function useDraggable(enabled: boolean) {
+  const dragState = useRef<{
+    idx: number;
+    startX: number;
+    startY: number;
+    origX: number;
+    origY: number;
+  } | null>(null);
+  const [dragOffsets, setDragOffsets] = useState<Record<number, { x: number; y: number }>>({});
+
+  const onPointerDown = useCallback(
+    (idx: number, e: React.PointerEvent) => {
+      if (!enabled) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const el = e.currentTarget as HTMLElement;
+      el.setPointerCapture(e.pointerId);
+      const rect = el.getBoundingClientRect();
+      dragState.current = {
+        idx,
+        startX: e.clientX,
+        startY: e.clientY,
+        origX: dragOffsets[idx]?.x ?? 0,
+        origY: dragOffsets[idx]?.y ?? 0,
+      };
+      // Pause animation while dragging
+      el.style.animationPlayState = "paused";
+    },
+    [enabled, dragOffsets]
+  );
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!dragState.current) return;
+      const { idx, startX, startY, origX, origY } = dragState.current;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      setDragOffsets((prev) => ({ ...prev, [idx]: { x: origX + dx, y: origY + dy } }));
+    },
+    []
+  );
+
+  const onPointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      if (!dragState.current) return;
+      const el = e.currentTarget as HTMLElement;
+      el.style.animationPlayState = "";
+      dragState.current = null;
+    },
+    []
+  );
+
+  return { dragOffsets, onPointerDown, onPointerMove, onPointerUp };
+}
+
+/* ── Stable random positions for full-page items ── */
+function generatePositions(count: number, speedScale: number, independent: boolean) {
+  return Array.from({ length: count }, (_, i) => ({
+    x: 5 + ((i * 37 + 13) % 80),
+    y: 5 + ((i * 53 + 7) % 75),
+    delay: (i * 0.6) % 4,
+    duration: (8 + (i % 5) * 2) / speedScale,
+    drift: independent ? i : 0,
+  }));
+}
+
 export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: boolean; familyDeviceIds?: string[] }) {
   const [items, setItems] = useState<UpcomingItem[]>([]);
   const [displayStyle, setDisplayStyle] = useState<HeartsDisplayStyle>("hearts");
@@ -91,8 +158,12 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [floatingEffects, setFloatingEffects] = useState<FloatingEffect[]>(["sparkles", "confetti", "pop"]);
   const [floatingIndependent, setFloatingIndependent] = useState(true);
+  const [floatFullPage, setFloatFullPage] = useState(false);
+  const [draggableEnabled, setDraggableEnabled] = useState(true);
   const [clickBurst, setClickBurst] = useState<{ x: number; y: number; color: string } | null>(null);
   const burstTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  const { dragOffsets, onPointerDown, onPointerMove, onPointerUp } = useDraggable(draggableEnabled);
 
   const triggerClickBurst = useCallback((e: React.MouseEvent, color: string) => {
     if (floatingEffects.length === 0) return;
@@ -129,6 +200,8 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
       setReducedMotion(!!config.reducedMotion);
       setFloatingEffects(config.floatingEffects ?? ["sparkles", "confetti", "pop"]);
       setFloatingIndependent(config.floatingIndependent !== false);
+      setFloatFullPage(!!config.floatFullPage);
+      setDraggableEnabled(config.draggable !== false);
       return config;
     };
 
@@ -262,7 +335,238 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
     </div>
   );
 
-  // ─── HEARTS ───
+  const animKeyframes = `
+    @keyframes heartFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes heartDrift { 0% { transform: translate(0, 0); } 25% { transform: translate(12px, -8px); } 50% { transform: translate(-8px, -14px); } 75% { transform: translate(6px, -4px); } 100% { transform: translate(0, 0); } }
+    @keyframes heartPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+    @keyframes heartSwing { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(6deg); } 75% { transform: rotate(-6deg); } }
+    @keyframes heartWander { 0% { transform: translate(0,0) rotate(0); } 20% { transform: translate(15px,-10px) rotate(3deg); } 40% { transform: translate(-10px,-18px) rotate(-2deg); } 60% { transform: translate(8px,-6px) rotate(4deg); } 80% { transform: translate(-12px,-12px) rotate(-3deg); } 100% { transform: translate(0,0) rotate(0); } }
+    @keyframes itemReveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes floatingBalloon0 {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(20px, -30px) rotate(3deg); }
+      50% { transform: translate(-15px, -50px) rotate(-2deg); }
+      75% { transform: translate(10px, -20px) rotate(4deg); }
+    }
+    @keyframes floatingBalloon1 {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      30% { transform: translate(-25px, -20px) rotate(-4deg); }
+      60% { transform: translate(18px, -45px) rotate(3deg); }
+      80% { transform: translate(-8px, -15px) rotate(-1deg); }
+    }
+    @keyframes floatingBalloon2 {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      20% { transform: translate(15px, -40px) rotate(2deg); }
+      50% { transform: translate(-20px, -25px) rotate(-3deg); }
+      70% { transform: translate(12px, -35px) rotate(5deg); }
+    }
+    @keyframes floatingBalloon3 {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      35% { transform: translate(-12px, -35px) rotate(-2deg); }
+      55% { transform: translate(22px, -18px) rotate(4deg); }
+      85% { transform: translate(-5px, -40px) rotate(-3deg); }
+    }
+    @keyframes floatingBalloonGroup {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-30px); }
+    }
+    @keyframes burstParticle {
+      0% { opacity: 1; transform: translate(0,0) scale(0.5); }
+      100% { opacity: 0; transform: translate(var(--burst-x, 30px), var(--burst-y, -60px)) scale(1.2); }
+    }
+    @keyframes burstConfetti {
+      0% { opacity: 1; transform: translate(0,0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--burst-x, 30px), var(--burst-y, -60px)) scale(0.5); }
+    }
+  `;
+
+  const getFloatAnimName = (i: number) => {
+    if (floatAnimType === "bounce") return "heartFloat";
+    if (floatAnimType === "drift") return "heartDrift";
+    if (floatAnimType === "pulse") return "heartPulse";
+    if (floatAnimType === "swing") return "heartSwing";
+    return "heartWander";
+  };
+
+  const getFullPageAnimName = (i: number) =>
+    floatingIndependent ? `floatingBalloon${i % 4}` : "floatingBalloonGroup";
+
+  // Drag style helper
+  const dragStyle = (idx: number): React.CSSProperties => {
+    const off = dragOffsets[idx];
+    if (!off) return {};
+    return { transform: `translate(${off.x}px, ${off.y}px)`, zIndex: 50 };
+  };
+
+  const dragProps = (idx: number) =>
+    draggableEnabled
+      ? {
+          onPointerDown: (e: React.PointerEvent) => onPointerDown(idx, e),
+          onPointerMove,
+          onPointerUp,
+          style: { touchAction: "none" as const, cursor: "grab" },
+        }
+      : {};
+
+  /* ── Click burst overlay ── */
+  const burstOverlay = clickBurst && (
+    <div className="fixed inset-0 pointer-events-none z-[100]" aria-hidden="true">
+      {floatingEffects.includes("sparkles") &&
+        Array.from({ length: 12 }).map((_, i) => {
+          const angle = (i / 12) * Math.PI * 2;
+          const dist = 30 + Math.random() * 40;
+          return (
+            <span
+              key={`sp-${i}`}
+              className="absolute text-lg"
+              style={{
+                left: clickBurst.x,
+                top: clickBurst.y,
+                animation: `burstParticle 0.8s ease-out forwards`,
+                transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px)`,
+                opacity: 0,
+              }}
+            >
+              ✨
+            </span>
+          );
+        })}
+      {floatingEffects.includes("confetti") &&
+        Array.from({ length: 16 }).map((_, i) => (
+          <span
+            key={`cf-${i}`}
+            className="absolute w-2 h-2 rounded-full"
+            style={{
+              left: clickBurst.x,
+              top: clickBurst.y,
+              background: ["#f472b6", "#60a5fa", "#34d399", "#fbbf24", "#a78bfa", "#fb923c"][i % 6],
+              animation: `burstConfetti 1s ease-out forwards`,
+              animationDelay: `${i * 0.03}s`,
+              opacity: 0,
+              ["--burst-x" as any]: `${(Math.random() - 0.5) * 120}px`,
+              ["--burst-y" as any]: `${-40 - Math.random() * 80}px`,
+            }}
+          />
+        ))}
+    </div>
+  );
+
+  /* ═══════════════════════════════════════════
+     Full-page floating overlay (for any style)
+     ═══════════════════════════════════════════ */
+  const useFullPage = floatFullPage || displayStyle === "floating";
+
+  if (useFullPage) {
+    const positions = generatePositions(renderedItems.length, floatSpeedScale, floatingIndependent);
+    const isHeartShape = displayStyle === "hearts";
+    const isBubbleShape = displayStyle === "bubbles" || displayStyle === "floating";
+
+    return (
+      <>
+        {monthShowcase}
+        <div className="fixed inset-0 pointer-events-none z-[15]" aria-hidden="false">
+          {renderedItems.map((item, i) => {
+            const key = `${item.eventType}-${item.name}-${i}`;
+            const size = (isHeartShape ? 96 : 80) * floatSizeScale;
+            const pos = positions[i];
+            const animName = getFullPageAnimName(i);
+            const dOff = dragOffsets[i];
+            const baseLeft = pos.x;
+            const baseTop = pos.y;
+
+            return (
+              <div
+                key={key}
+                className="absolute pointer-events-auto group"
+                {...dragProps(i)}
+                style={{
+                  left: `${baseLeft}%`,
+                  top: `${baseTop}%`,
+                  width: `${size}px`,
+                  height: `${size}px`,
+                  animation: reducedMotion ? undefined : `${animName} ${pos.duration}s ease-in-out infinite`,
+                  animationDelay: `${pos.delay}s`,
+                  filter: `drop-shadow(0 6px 20px ${item.color}50)`,
+                  zIndex: dOff ? 50 : 15,
+                  ...(dOff ? { transform: `translate(${dOff.x}px, ${dOff.y}px)` } : {}),
+                  touchAction: draggableEnabled ? "none" : undefined,
+                  cursor: draggableEnabled ? "grab" : "pointer",
+                }}
+              >
+                {/* Heart shape */}
+                {isHeartShape ? (
+                  <button
+                    type="button"
+                    className="relative w-full h-full flex items-center justify-center transition-transform hover:scale-110"
+                    onClick={(e) => { triggerClickBurst(e, item.color); setExpandedKey((prev) => (prev === key ? null : key)); }}
+                    title={`${item.name} · ${item.eventLabel} · ${daysLabel(item.daysUntil)}`}
+                  >
+                    <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
+                      <path d="M50 88 C25 65 5 50 5 30 C5 15 15 5 30 5 C38 5 45 10 50 18 C55 10 62 5 70 5 C85 5 95 15 95 30 C95 50 75 65 50 88Z" fill={item.color} opacity="0.85" />
+                      <path d="M50 88 C25 65 5 50 5 30 C5 15 15 5 30 5 C38 5 45 10 50 18 C55 10 62 5 70 5 C85 5 95 15 95 30 C95 50 75 65 50 88Z" fill="none" stroke="white" strokeWidth="1.5" opacity="0.3" />
+                    </svg>
+                    <div className="relative z-10 text-center pt-1 px-1">
+                      <div className="text-lg sm:text-xl leading-none">{item.emoji}</div>
+                      <div className="text-[9px] sm:text-[10px] font-bold text-white leading-tight mt-0.5"
+                        style={{ maxWidth: `${size * 0.58}px`, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", wordBreak: "break-word" }}>
+                        {shortDisplayName(item.name)}
+                      </div>
+                      {item.hebDate && <div className="text-[7px] sm:text-[8px] text-white/80 leading-tight mt-0.5 font-medium">{item.hebDate}</div>}
+                    </div>
+                  </button>
+                ) : (
+                  /* Bubble/circle shape */
+                  <button
+                    type="button"
+                    className="rounded-full w-full h-full flex flex-col items-center justify-center text-white border-2 border-white/40 shadow-xl transition-transform hover:scale-125"
+                    style={{ background: `linear-gradient(135deg, ${item.color}, ${item.color}bb)` }}
+                    onClick={(e) => { triggerClickBurst(e, item.color); setExpandedKey((prev) => (prev === key ? null : key)); }}
+                    title={`${item.name} · ${item.eventLabel} · ${daysLabel(item.daysUntil)}`}
+                  >
+                    <span className="text-xl leading-none">{item.emoji}</span>
+                    <span className="text-[8px] font-bold leading-tight mt-0.5 px-1 text-center"
+                      style={{ maxWidth: `${size * 0.7}px`, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      {shortDisplayName(item.name)}
+                    </span>
+                    <span className="text-[7px] opacity-80">{item.hebDate}</span>
+                  </button>
+                )}
+
+                {/* Days badge */}
+                <div className="absolute -top-1 -right-1 text-[9px] font-black rounded-full px-1.5 py-0.5 shadow-md"
+                  style={{ background: item.daysUntil === 0 ? "#fbbf24" : isDark ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.92)", color: item.daysUntil === 0 ? "#000" : isDark ? "#fff" : "#333" }}>
+                  {item.daysUntil === 0 ? "🎉" : item.daysUntil}
+                </div>
+
+                {isHeartShape && (
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[7px] sm:text-[8px] font-bold px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap"
+                    style={{ background: isDark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.85)", color: item.color, backdropFilter: "blur(4px)" }}>
+                    {item.eventLabel}
+                  </div>
+                )}
+
+                {/* Expanded tooltip */}
+                {expandedKey === key && (
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-30 min-w-[170px] max-w-[220px] rounded-xl border p-2 text-center shadow-lg pointer-events-auto"
+                    style={{ background: isDark ? "rgba(20,20,20,0.92)" : "rgba(255,255,255,0.95)", borderColor: `${item.color}60` }}>
+                    <div className={`text-xs font-black ${isDark ? "text-white" : "text-foreground"}`}>{item.name}</div>
+                    <div className={`text-[10px] mt-1 ${isDark ? "text-white/70" : "text-muted-foreground"}`}>
+                      {item.eventLabel} · {daysLabel(item.daysUntil)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {burstOverlay}
+        <style>{animKeyframes}</style>
+      </>
+    );
+  }
+
+  // ─── HEARTS (inline) ───
   if (displayStyle === "hearts") {
     return (
       <>
@@ -272,15 +576,21 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
           const key = `${item.eventType}-${item.name}-${i}`;
           const heartSize = 96 * floatSizeScale;
           const textWidth = Math.max(52, heartSize * 0.58);
+          const dOff = dragOffsets[i];
           return (
           <div
             key={key}
             className="relative group"
-            style={floatEnabled ? { animation: `${floatAnimType === "bounce" ? "heartFloat" : floatAnimType === "drift" ? "heartDrift" : floatAnimType === "pulse" ? "heartPulse" : floatAnimType === "swing" ? "heartSwing" : "heartWander"} ${3 / floatSpeedScale}s ease-in-out infinite`, animationDelay: `${i * 0.35}s` } : undefined}
+            {...dragProps(i)}
+            style={{
+              ...(floatEnabled ? { animation: `${getFloatAnimName(i)} ${3 / floatSpeedScale}s ease-in-out infinite`, animationDelay: `${i * 0.35}s` } : {}),
+              ...(dOff ? { transform: `translate(${dOff.x}px, ${dOff.y}px)`, zIndex: 50 } : {}),
+              touchAction: draggableEnabled ? "none" : undefined,
+            }}
           >
             <button
               type="button"
-              onClick={() => setExpandedKey((prev) => (prev === key ? null : key))}
+              onClick={(e) => { triggerClickBurst(e, item.color); setExpandedKey((prev) => (prev === key ? null : key)); }}
               className="relative flex items-center justify-center cursor-pointer transition-transform hover:scale-110"
               style={{ width: `${heartSize}px`, height: `${heartSize}px`, filter: `drop-shadow(0 4px 16px ${item.color}60)` }}
               title={`${item.name} · ${item.eventLabel}`}
@@ -291,17 +601,8 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
               </svg>
               <div className="relative z-10 text-center pt-1 px-1">
                 <div className="text-lg sm:text-xl leading-none">{item.emoji}</div>
-                <div
-                  className="text-[9px] sm:text-[10px] font-bold text-white leading-tight mt-0.5"
-                  style={{
-                    maxWidth: `${textWidth}px`,
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    wordBreak: "break-word",
-                  }}
-                >
+                <div className="text-[9px] sm:text-[10px] font-bold text-white leading-tight mt-0.5"
+                  style={{ maxWidth: `${textWidth}px`, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", wordBreak: "break-word" }}>
                   {shortDisplayName(item.name)}
                 </div>
                 {item.hebDate && <div className="text-[7px] sm:text-[8px] text-white/80 leading-tight mt-0.5 font-medium">{item.hebDate}</div>}
@@ -331,20 +632,14 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
           </div>
         );
         })}
-        <style>{`
-          @keyframes heartFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-          @keyframes heartDrift { 0% { transform: translate(0, 0); } 25% { transform: translate(12px, -8px); } 50% { transform: translate(-8px, -14px); } 75% { transform: translate(6px, -4px); } 100% { transform: translate(0, 0); } }
-          @keyframes heartPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
-          @keyframes heartSwing { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(6deg); } 75% { transform: rotate(-6deg); } }
-          @keyframes heartWander { 0% { transform: translate(0,0) rotate(0); } 20% { transform: translate(15px,-10px) rotate(3deg); } 40% { transform: translate(-10px,-18px) rotate(-2deg); } 60% { transform: translate(8px,-6px) rotate(4deg); } 80% { transform: translate(-12px,-12px) rotate(-3deg); } 100% { transform: translate(0,0) rotate(0); } }
-          @keyframes itemReveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-        `}</style>
+        {burstOverlay}
+        <style>{animKeyframes}</style>
       </div>
       </>
     );
   }
 
-  // ─── BUBBLES ───
+  // ─── BUBBLES (inline) ───
   if (displayStyle === "bubbles") {
     return (
       <>
@@ -353,31 +648,28 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
         {renderedItems.map((item, i) => {
           const bubbleSize = 82 * floatSizeScale;
           const key = `${item.eventType}-${item.name}-${i}`;
+          const dOff = dragOffsets[i];
           return (
           <div
             key={key}
             className="relative group"
-            style={floatEnabled ? { animation: `${floatAnimType === "bounce" ? "heartFloat" : floatAnimType === "drift" ? "heartDrift" : floatAnimType === "pulse" ? "heartPulse" : floatAnimType === "swing" ? "heartSwing" : "heartWander"} ${3 / floatSpeedScale}s ease-in-out infinite`, animationDelay: `${i * 0.3}s` } : undefined}
+            {...dragProps(i)}
+            style={{
+              ...(floatEnabled ? { animation: `${getFloatAnimName(i)} ${3 / floatSpeedScale}s ease-in-out infinite`, animationDelay: `${i * 0.3}s` } : {}),
+              ...(dOff ? { transform: `translate(${dOff.x}px, ${dOff.y}px)`, zIndex: 50 } : {}),
+              touchAction: draggableEnabled ? "none" : undefined,
+            }}
           >
             <button
               type="button"
-              onClick={() => setExpandedKey((prev) => (prev === key ? null : key))}
+              onClick={(e) => { triggerClickBurst(e, item.color); setExpandedKey((prev) => (prev === key ? null : key)); }}
               className="rounded-full flex flex-col items-center justify-center text-white cursor-pointer transition-transform hover:scale-110 shadow-lg border-2 border-white/30"
               style={{ width: `${bubbleSize}px`, height: `${bubbleSize}px`, background: `linear-gradient(135deg, ${item.color}, ${item.color}cc)` }}
               title={`${item.name} · ${item.eventLabel}`}
             >
               <span className="text-xl sm:text-2xl">{item.emoji}</span>
-              <span
-                className="text-[8px] sm:text-[9px] font-bold leading-tight mt-0.5 px-1"
-                style={{
-                  maxWidth: `${bubbleSize * 0.72}px`,
-                  display: "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                  wordBreak: "break-word",
-                }}
-              >
+              <span className="text-[8px] sm:text-[9px] font-bold leading-tight mt-0.5 px-1"
+                style={{ maxWidth: `${bubbleSize * 0.72}px`, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", wordBreak: "break-word" }}>
                 {shortDisplayName(item.name)}
               </span>
               <span className="text-[7px] sm:text-[8px] opacity-80">{item.hebDate}</span>
@@ -397,193 +689,9 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
           </div>
         );
         })}
-        <style>{`
-          @keyframes heartFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-          @keyframes heartDrift { 0% { transform: translate(0, 0); } 25% { transform: translate(12px, -8px); } 50% { transform: translate(-8px, -14px); } 75% { transform: translate(6px, -4px); } 100% { transform: translate(0, 0); } }
-          @keyframes heartPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
-          @keyframes heartSwing { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(6deg); } 75% { transform: rotate(-6deg); } }
-          @keyframes heartWander { 0% { transform: translate(0,0) rotate(0); } 20% { transform: translate(15px,-10px) rotate(3deg); } 40% { transform: translate(-10px,-18px) rotate(-2deg); } 60% { transform: translate(8px,-6px) rotate(4deg); } 80% { transform: translate(-12px,-12px) rotate(-3deg); } 100% { transform: translate(0,0) rotate(0); } }
-        `}</style>
+        {burstOverlay}
+        <style>{animKeyframes}</style>
       </div>
-      </>
-    );
-  }
-
-  // ─── FLOATING (fullscreen balloons) ───
-  if (displayStyle === "floating") {
-    // Generate stable random positions for each item
-    const positions = renderedItems.map((_, i) => ({
-      x: 5 + ((i * 37 + 13) % 80),
-      y: 5 + ((i * 53 + 7) % 75),
-      delay: (i * 0.6) % 4,
-      duration: (8 + (i % 5) * 2) / floatSpeedScale,
-      drift: floatingIndependent ? i : 0,
-    }));
-
-    return (
-      <>
-        {monthShowcase}
-        {/* Floating items across the page */}
-        <div className="fixed inset-0 pointer-events-none z-[15]" aria-hidden="false">
-          {renderedItems.map((item, i) => {
-            const key = `${item.eventType}-${item.name}-${i}`;
-            const bubbleSize = 80 * floatSizeScale;
-            const pos = positions[i];
-            const animName = floatingIndependent
-              ? `floatingBalloon${i % 4}`
-              : "floatingBalloonGroup";
-            return (
-              <button
-                key={key}
-                type="button"
-                className="absolute pointer-events-auto cursor-pointer transition-transform hover:scale-125 group"
-                style={{
-                  left: `${pos.x}%`,
-                  top: `${pos.y}%`,
-                  width: `${bubbleSize}px`,
-                  height: `${bubbleSize}px`,
-                  animation: reducedMotion ? undefined : `${animName} ${pos.duration}s ease-in-out infinite`,
-                  animationDelay: `${pos.delay}s`,
-                  filter: `drop-shadow(0 6px 20px ${item.color}50)`,
-                  zIndex: 15,
-                }}
-                onClick={(e) => {
-                  triggerClickBurst(e, item.color);
-                  setExpandedKey((prev) => (prev === key ? null : key));
-                }}
-                title={`${item.name} · ${item.eventLabel} · ${daysLabel(item.daysUntil)}`}
-              >
-                <div
-                  className="rounded-full w-full h-full flex flex-col items-center justify-center text-white border-2 border-white/40 shadow-xl"
-                  style={{ background: `linear-gradient(135deg, ${item.color}, ${item.color}bb)` }}
-                >
-                  <span className="text-xl leading-none">{item.emoji}</span>
-                  <span
-                    className="text-[8px] font-bold leading-tight mt-0.5 px-1 text-center"
-                    style={{
-                      maxWidth: `${bubbleSize * 0.7}px`,
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {shortDisplayName(item.name)}
-                  </span>
-                  <span className="text-[7px] opacity-80">{item.hebDate}</span>
-                </div>
-                {/* Days badge */}
-                <div
-                  className="absolute -top-1 -right-1 text-[9px] font-black rounded-full px-1.5 py-0.5 shadow-md"
-                  style={{
-                    background: item.daysUntil === 0 ? "#fbbf24" : isDark ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.92)",
-                    color: item.daysUntil === 0 ? "#000" : isDark ? "#fff" : "#333",
-                  }}
-                >
-                  {item.daysUntil === 0 ? "🎉" : item.daysUntil}
-                </div>
-
-                {/* Expanded tooltip */}
-                {expandedKey === key && (
-                  <div
-                    className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-30 min-w-[170px] max-w-[220px] rounded-xl border p-2 text-center shadow-lg pointer-events-auto"
-                    style={{
-                      background: isDark ? "rgba(20,20,20,0.92)" : "rgba(255,255,255,0.95)",
-                      borderColor: `${item.color}60`,
-                    }}
-                  >
-                    <div className={`text-xs font-black ${isDark ? "text-white" : "text-foreground"}`}>{item.name}</div>
-                    <div className={`text-[10px] mt-1 ${isDark ? "text-white/70" : "text-muted-foreground"}`}>
-                      {item.eventLabel} · {daysLabel(item.daysUntil)}
-                    </div>
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Click burst effects */}
-        {clickBurst && (
-          <div className="fixed inset-0 pointer-events-none z-[100]" aria-hidden="true">
-            {floatingEffects.includes("sparkles") &&
-              Array.from({ length: 12 }).map((_, i) => {
-                const angle = (i / 12) * Math.PI * 2;
-                const dist = 30 + Math.random() * 40;
-                return (
-                  <span
-                    key={`sp-${i}`}
-                    className="absolute text-lg"
-                    style={{
-                      left: clickBurst.x,
-                      top: clickBurst.y,
-                      animation: `burstParticle 0.8s ease-out forwards`,
-                      transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px)`,
-                      opacity: 0,
-                    }}
-                  >
-                    ✨
-                  </span>
-                );
-              })}
-            {floatingEffects.includes("confetti") &&
-              Array.from({ length: 16 }).map((_, i) => (
-                <span
-                  key={`cf-${i}`}
-                  className="absolute w-2 h-2 rounded-full"
-                  style={{
-                    left: clickBurst.x,
-                    top: clickBurst.y,
-                    background: ["#f472b6", "#60a5fa", "#34d399", "#fbbf24", "#a78bfa", "#fb923c"][i % 6],
-                    animation: `burstConfetti 1s ease-out forwards`,
-                    animationDelay: `${i * 0.03}s`,
-                    opacity: 0,
-                    ["--burst-x" as any]: `${(Math.random() - 0.5) * 120}px`,
-                    ["--burst-y" as any]: `${-40 - Math.random() * 80}px`,
-                  }}
-                />
-              ))}
-          </div>
-        )}
-
-        <style>{`
-          @keyframes floatingBalloon0 {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(20px, -30px) rotate(3deg); }
-            50% { transform: translate(-15px, -50px) rotate(-2deg); }
-            75% { transform: translate(10px, -20px) rotate(4deg); }
-          }
-          @keyframes floatingBalloon1 {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            30% { transform: translate(-25px, -20px) rotate(-4deg); }
-            60% { transform: translate(18px, -45px) rotate(3deg); }
-            80% { transform: translate(-8px, -15px) rotate(-1deg); }
-          }
-          @keyframes floatingBalloon2 {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            20% { transform: translate(15px, -40px) rotate(2deg); }
-            50% { transform: translate(-20px, -25px) rotate(-3deg); }
-            70% { transform: translate(12px, -35px) rotate(5deg); }
-          }
-          @keyframes floatingBalloon3 {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            35% { transform: translate(-12px, -35px) rotate(-2deg); }
-            55% { transform: translate(22px, -18px) rotate(4deg); }
-            85% { transform: translate(-5px, -40px) rotate(-3deg); }
-          }
-          @keyframes floatingBalloonGroup {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-30px); }
-          }
-          @keyframes burstParticle {
-            0% { opacity: 1; transform: translate(0,0) scale(0.5); }
-            100% { opacity: 0; transform: translate(var(--burst-x, 30px), var(--burst-y, -60px)) scale(1.2); }
-          }
-          @keyframes burstConfetti {
-            0% { opacity: 1; transform: translate(0,0) scale(1); }
-            100% { opacity: 0; transform: translate(var(--burst-x, 30px), var(--burst-y, -60px)) scale(0.5); }
-          }
-        `}</style>
       </>
     );
   }
