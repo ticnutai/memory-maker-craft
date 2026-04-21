@@ -1,22 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff, LogIn, UserPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 type Mode = "login" | "register";
 
 export default function AuthPage() {
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (loading || !user) return;
+    navigate("/", { replace: true });
+  }, [loading, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +47,7 @@ export default function AuthPage() {
         });
         if (error) throw error;
         toast.success("התחברת בהצלחה!");
+        navigate("/", { replace: true });
       }
     } catch (err: any) {
       toast.error(err.message || "שגיאה בהתחברות");

@@ -10,14 +10,12 @@ import FamilyQuoteRotator from "./FamilyQuoteRotator";
 import BirthdayHearts from "./BirthdayHearts";
 import FamilyCodeManager from "./FamilyCodeManager";
 import { useFamily } from "@/hooks/useFamily";
-import { useAuth } from "@/hooks/useAuth";
 import {
   loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
   loadSlideshowConfig, saveSlideshowConfig, SlideshowConfig, normalizeSlideshowConfig, resetSlideshowConfig,
 } from "@/lib/familyThemes";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
 
 interface FamilyHomeProps {
   externalFamilyCodeOpen?: boolean;
@@ -32,7 +30,6 @@ export default function FamilyHome({
   externalThemePickerOpen,
   onThemePickerOpenChange,
 }: FamilyHomeProps) {
-  const { user } = useAuth();
   const familyCtx = useFamily();
   const { collages, loading, createCollage, updateCollage, deleteCollage, joinByCode, deviceId } = useFamilyCollages(familyCtx.familyDeviceIds);
   const bootstrappingHomeRef = useRef(false);
@@ -43,9 +40,8 @@ export default function FamilyHome({
   const [slideshow, setSlideshow] = useState<SlideshowConfig>(() => loadSlideshowConfig());
   const [pageClock, setPageClock] = useState(() => new Date());
 
-  const persistSlideshow = async (nextInput: SlideshowConfig, options?: { syncCloud?: boolean; touchUpdatedAt?: boolean }) => {
+  const persistSlideshow = async (nextInput: SlideshowConfig, options?: { touchUpdatedAt?: boolean }) => {
     const touchUpdatedAt = options?.touchUpdatedAt !== false;
-    const syncCloud = options?.syncCloud !== false;
     const next = normalizeSlideshowConfig({
       ...nextInput,
       updatedAt: touchUpdatedAt ? new Date().toISOString() : nextInput.updatedAt,
@@ -53,26 +49,12 @@ export default function FamilyHome({
 
     saveSlideshowConfig(next, { touchUpdatedAt: false });
     setSlideshow(next);
-
-    if (!syncCloud || !user) return;
-
-    await supabase.from("user_preferences").upsert({
-      user_id: user.id,
-      slideshow_config: next as unknown as Json,
-      updated_at: next.updatedAt,
-    });
   };
 
   const resetSlideshowPreferences = async () => {
     const next = resetSlideshowConfig();
     setSlideshow(next);
-    if (user) {
-      await supabase.from("user_preferences").upsert({
-        user_id: user.id,
-        slideshow_config: next as unknown as Json,
-        updated_at: next.updatedAt,
-      });
-    }
+    saveSlideshowConfig(next, { touchUpdatedAt: false });
     toast.success("העדפות הסליידשואו אופסו");
   };
 
@@ -85,50 +67,6 @@ export default function FamilyHome({
       void persistSlideshow(next);
     }
   };
-
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-
-    (async () => {
-      const local = loadSlideshowConfig();
-      const { data } = await supabase
-        .from("user_preferences")
-        .select("slideshow_config, updated_at")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (cancelled) return;
-
-      const rawCloud = (data?.slideshow_config ?? null) as Partial<SlideshowConfig> | null;
-      if (!rawCloud) {
-        await supabase.from("user_preferences").upsert({
-          user_id: user.id,
-          slideshow_config: local as unknown as Json,
-          updated_at: local.updatedAt || new Date().toISOString(),
-        });
-        return;
-      }
-
-      const cloudCfg = normalizeSlideshowConfig(rawCloud);
-      const localTs = Date.parse(local.updatedAt || "");
-      const cloudTs = Date.parse(cloudCfg.updatedAt || (data?.updated_at ?? ""));
-      const useCloud = Number.isFinite(cloudTs) && (!Number.isFinite(localTs) || cloudTs >= localTs);
-
-      if (useCloud) {
-        saveSlideshowConfig(cloudCfg, { touchUpdatedAt: false });
-        setSlideshow(cloudCfg);
-      } else {
-        await supabase.from("user_preferences").upsert({
-          user_id: user.id,
-          slideshow_config: local as unknown as Json,
-          updated_at: local.updatedAt || new Date().toISOString(),
-        });
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [user]);
 
   // Apply theme to body so it covers the entire page (under the icons too)
   useEffect(() => {
