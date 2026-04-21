@@ -153,9 +153,16 @@ export default function FamilyHome({
     return () => { cancelled = true; };
   }, [user]);
 
-  const applyHomeCollage = (id: string | null, options?: { followHomeInSlideshow?: boolean }) => {
+  const applyHomeCollage = async (id: string | null, options?: { followHomeInSlideshow?: boolean }) => {
+    // Always save locally
     saveHomeCollageId(id);
     setHomeCollageId(id);
+
+    // Admin: also save globally to families table
+    if (isAdmin && familyCtx.family?.id) {
+      const ok = await saveGlobalHomeCollageId(familyCtx.family.id, id);
+      if (ok && id) toast.success("הקולאז׳ נשמר כברירת מחדל לכולם");
+    }
 
     if (options?.followHomeInSlideshow) {
       const next = { ...slideshow, enabled: true, autoStart: true, collageId: null };
