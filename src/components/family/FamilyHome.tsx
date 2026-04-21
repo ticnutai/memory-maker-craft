@@ -49,6 +49,7 @@ export default function FamilyHome({
   const [quickAnimOpen, setQuickAnimOpen] = useState(false);
   const [animCfg, setAnimCfg] = useState(() => loadHeartsConfig());
   const [smartAnalysis, setSmartAnalysis] = useState<SmartHomeAnalysis | null>(null);
+  const [smartBusyId, setSmartBusyId] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
   const applyAnimationPreset = (preset: FloatPresetId) => {
@@ -67,6 +68,104 @@ export default function FamilyHome({
     };
     setAnimCfg(next);
     saveHeartsConfig(next);
+  };
+
+  const getActionLabel = (recommendationId: string): string | null => {
+    switch (recommendationId) {
+      case "set-home-collage":
+        return "החל כבר עכשיו";
+      case "enable-slideshow":
+        return "הפעל סליידשואו";
+      case "motion-conflict":
+        return "איזון נגישות";
+      case "more-collages":
+        return "צור קולאז׳ חכם";
+      default:
+        return null;
+    }
+  };
+
+  const runSmartAction = async (recommendationId: string) => {
+    setSmartBusyId(recommendationId);
+    try {
+      if (recommendationId === "set-home-collage") {
+        if (homeCollageId) {
+          toast.info("כבר מוגדר קולאז׳ בית");
+          return;
+        }
+        if (!photoCollages[0]?.id) {
+          toast.info("אין קולאז׳ים זמינים להגדרה כדף בית");
+          return;
+        }
+        await applyHomeCollage(photoCollages[0].id, { followHomeInSlideshow: false });
+        toast.success("קולאז׳ הבית הוגדר בהצלחה");
+        return;
+      }
+
+      if (recommendationId === "enable-slideshow") {
+        const next = {
+          ...slideshow,
+          enabled: true,
+          autoStart: true,
+          collageId: null,
+          showClock: true,
+        };
+        await persistSlideshow(next);
+        toast.success("הסליידשואו הופעל אוטומטית");
+        return;
+      }
+
+      if (recommendationId === "motion-conflict") {
+        applyAnimationPreset("soft");
+        updateAnimCfg({ reducedMotion: true, floatSpeedScale: 0.9, floatDensityScale: 0.9 });
+        toast.success("בוצע איזון בין אנימציות לנגישות");
+        return;
+      }
+
+      if (recommendationId === "more-collages") {
+        if (!user) {
+          toast.error("יש להתחבר כדי ליצור קולאז׳");
+          return;
+        }
+        const existing = new Set(photoCollages.map((c) => c.name.trim()));
+        const suggestions = [
+          { name: "אירועים משפחתיים", emoji: "🎉" },
+          { name: "רגעים מצחיקים", emoji: "😂" },
+          { name: "חגים ושבתות", emoji: "🕯️" },
+        ];
+        const candidate = suggestions.find((s) => !existing.has(s.name)) ?? { name: `קולאז׳ ${collages.length + 1}`, emoji: "✨" };
+        await createCollage({ name: candidate.name, emoji: candidate.emoji });
+        toast.success(`נוצר קולאז׳ חדש: ${candidate.name}`);
+        return;
+      }
+
+      toast.info("להמלצה הזו אין יישום אוטומטי כרגע");
+    } catch {
+      toast.error("שגיאה ביישום ההמלצה החכמה");
+    } finally {
+      setSmartBusyId(null);
+    }
+  };
+
+  const applyAllSmartActions = async () => {
+    if (!smartAnalysis) return;
+    const actionable = smartAnalysis.recommendations
+      .map((rec) => rec.id)
+      .filter((id) => !!getActionLabel(id));
+    if (actionable.length === 0) {
+      toast.info("אין כרגע פעולות חכמות ליישום אוטומטי");
+      return;
+    }
+
+    setSmartBusyId("all");
+    try {
+      for (const id of actionable.slice(0, 4)) {
+        await runSmartAction(id);
+      }
+      toast.success("הפעולות החכמות הושלמו");
+    } finally {
+      setSmartBusyId(null);
+    }
   };
 
   const updateAnimCfg = (patch: Partial<typeof animCfg>) => {
@@ -661,10 +760,20 @@ export default function FamilyHome({
 
         {smartAnalysis && (
           <section className={`mb-5 rounded-2xl border p-3 sm:p-4 ${isDark ? "bg-white/5 border-white/15" : "bg-white/75 border-white/90"}`}>
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <h2 className={`text-sm sm:text-base font-black ${isDark ? "text-white" : "text-foreground"}`}>Smart Insights</h2>
-              <div className={`text-xs sm:text-sm font-black px-2.5 py-1 rounded-full ${smartAnalysis.score >= 85 ? "bg-emerald-500 text-white" : smartAnalysis.score >= 65 ? "bg-amber-500 text-white" : "bg-rose-500 text-white"}`}>
-                ציון בית חכם: {smartAnalysis.score}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => { void applyAllSmartActions(); }}
+                  disabled={smartBusyId === "all"}
+                  className="text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-full border bg-background/70 hover:bg-background disabled:opacity-60"
+                >
+                  {smartBusyId === "all" ? "מיישם..." : "יישם הכול"}
+                </button>
+                <div className={`text-xs sm:text-sm font-black px-2.5 py-1 rounded-full ${smartAnalysis.score >= 85 ? "bg-emerald-500 text-white" : smartAnalysis.score >= 65 ? "bg-amber-500 text-white" : "bg-rose-500 text-white"}`}>
+                  ציון בית חכם: {smartAnalysis.score}
+                </div>
               </div>
             </div>
 
@@ -679,6 +788,16 @@ export default function FamilyHome({
                   </div>
                   <div className={`text-sm font-bold mt-1 ${isDark ? "text-white" : "text-foreground"}`}>{rec.title}</div>
                   <div className={`text-xs mt-1 ${isDark ? "text-white/75" : "text-muted-foreground"}`}>{rec.description}</div>
+                  {getActionLabel(rec.id) && (
+                    <button
+                      type="button"
+                      onClick={() => { void runSmartAction(rec.id); }}
+                      disabled={smartBusyId === rec.id || smartBusyId === "all"}
+                      className="mt-2 text-[11px] font-bold px-2.5 py-1 rounded-lg border bg-background/70 hover:bg-background disabled:opacity-60"
+                    >
+                      {smartBusyId === rec.id ? "מיישם..." : getActionLabel(rec.id)}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
