@@ -417,7 +417,12 @@ export default function FamilyAlbums() {
         <div className="flex items-center gap-1 mb-4 text-sm flex-wrap">
           <button
             onClick={() => setCurrentFolderId(null)}
-            className={`px-2 py-1 rounded-md transition-colors ${!currentFolderId ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+            onDragOver={(e) => handleDragOver(e, null)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, null)}
+            className={`px-2 py-1 rounded-md transition-colors ${
+              dragOverId === null && dragItemId ? "ring-2 ring-primary bg-primary/15" : ""
+            } ${!currentFolderId ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
           >
             🏠 הכל
           </button>
