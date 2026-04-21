@@ -32,7 +32,7 @@ export default function HomeNav({ active, onSelect, onOpenThemePicker }: HomeNav
 
   return (
     <nav
-      className="fixed top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 px-1.5 py-1 rounded-full bg-background/40 backdrop-blur-sm border border-border/20"
+      className="fixed top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 px-1.5 py-1"
       dir="rtl"
     >
       {navItems.map((item) => (
