@@ -31,20 +31,23 @@ export default function HomeNav({ active, onSelect, onOpenThemePicker }: HomeNav
   };
 
   return (
-    <nav className="fixed top-4 left-4 z-50 flex flex-col gap-1 min-w-[170px]" dir="rtl">
+    <nav
+      className="fixed top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 px-1.5 py-1 rounded-full bg-background/40 backdrop-blur-sm border border-border/20"
+      dir="rtl"
+    >
       {navItems.map((item) => (
         <button
           key={item.key}
           onClick={() => handleClick(item.key)}
           className={cn(
-            "flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-sm transition-all duration-200",
-            "bg-background/70 backdrop-blur-md border border-border/40 shadow-sm",
-            "hover:bg-accent/60 hover:shadow-md hover:scale-[1.02]",
-            isActive(item.key) &&
-              "bg-primary/10 border-primary/30 text-primary font-medium shadow-md"
+            "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all duration-200",
+            "hover:bg-accent/40",
+            isActive(item.key)
+              ? "bg-primary/15 text-primary font-medium"
+              : "text-foreground/70"
           )}
         >
-          <item.icon className="h-4 w-4 shrink-0" />
+          <item.icon className="h-3.5 w-3.5 shrink-0" />
           <span>{item.label}</span>
         </button>
       ))}
