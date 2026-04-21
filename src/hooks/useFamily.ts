@@ -52,13 +52,12 @@ export function useFamily() {
     let membership: { family_id: string } | null = null;
 
     if (user) {
-      const { data: byUser } = await supabase
+      const { data: byUserRows } = await supabase
         .from("family_members")
         .select("family_id")
         .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-      membership = byUser as { family_id: string } | null;
+        .limit(1);
+      membership = ((byUserRows as Array<{ family_id: string }> | null)?.[0] ?? null);
     }
 
     if (!membership) {
