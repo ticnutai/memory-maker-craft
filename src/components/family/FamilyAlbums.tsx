@@ -138,7 +138,33 @@ export default function FamilyAlbums() {
     void purgeExpiredArchived();
   }, [purgeExpiredArchived]);
 
-  const openEditDialog = (c: FamilyCollage) => {
+  // Multi-select helpers
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const deleteSelected = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    const label = `למחוק ${selectedIds.size} פריטים?`;
+    if (!confirm(label)) return;
+    for (const id of selectedIds) {
+      try {
+        await deleteCollage(id, { permanent: isAdmin });
+      } catch (e: any) {
+        console.error("Failed to delete", id, e);
+      }
+    }
+    setSelectedIds(new Set());
+    setSelectMode(false);
+    toast.success(`${selectedIds.size} פריטים נמחקו`);
+  }, [selectedIds, deleteCollage, isAdmin]);
+
+
     setEditingAlbum(c);
     setEditDraft({
       name: c.name,
