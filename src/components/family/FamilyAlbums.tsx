@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useFamilyCollages, useFamilyPhotos, FamilyCollage } from "@/hooks/useFamilyCollages";
+import { useFamilyCollages, FamilyCollage } from "@/hooks/useFamilyCollages";
 import { useFamily } from "@/hooks/useFamily";
 import { useAuth } from "@/hooks/useAuth";
 import CollageView from "./CollageView";
