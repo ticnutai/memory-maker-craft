@@ -164,7 +164,7 @@ export default function FamilyAlbums() {
     toast.success(`${selectedIds.size} פריטים נמחקו`);
   }, [selectedIds, deleteCollage, isAdmin]);
 
-
+  const openEditDialog = (c: FamilyCollage) => {
     setEditingAlbum(c);
     setEditDraft({
       name: c.name,
