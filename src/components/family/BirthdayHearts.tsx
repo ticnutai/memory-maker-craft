@@ -5,7 +5,7 @@ import { he } from "date-fns/locale";
 import { HDate } from "@hebcal/core";
 import { toHebrewNumeral } from "@/lib/hebrewCalendar";
 import { getDeviceId } from "@/lib/deviceId";
-import { HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, HeartsDisplayStyle, FloatAnimationType } from "@/lib/heartsDisplayConfig";
+import { HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, HeartsDisplayStyle, FloatAnimationType, FloatingEffect } from "@/lib/heartsDisplayConfig";
 
 const HEB_MONTH_NAMES: Record<string, string> = {
   Nisan: "ניסן", Iyyar: "אייר", Sivan: "סיון", Tamuz: "תמוז",
