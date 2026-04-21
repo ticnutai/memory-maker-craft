@@ -46,6 +46,10 @@ export interface HeartsDisplayConfig {
   floatingEffects: FloatingEffect[];
   /** Whether floating items move together or independently */
   floatingIndependent: boolean;
+  /** Whether items float across the full page (all styles) */
+  floatFullPage: boolean;
+  /** Whether items are draggable by mouse/touch */
+  draggable: boolean;
 }
 
 const DEFAULTS: HeartsDisplayConfig = {
@@ -63,6 +67,8 @@ const DEFAULTS: HeartsDisplayConfig = {
   eventTypes: [],
   floatingEffects: ["sparkles", "confetti", "pop"],
   floatingIndependent: true,
+  floatFullPage: false,
+  draggable: true,
 };
 
 export function loadHeartsConfig(): HeartsDisplayConfig {
