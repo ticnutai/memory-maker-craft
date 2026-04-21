@@ -1059,7 +1059,8 @@ export default function FamilyAlbums() {
                     const { isShared, isHome, childCount, canManage } = getItemInfo(c);
                     return (
                       <div key={c.id} {...dragProps(c)} className={`flex items-center gap-3 rounded-xl border px-3 py-2 transition-all cursor-pointer group ${dragClass(c, isHome)}`} onClick={() => itemClick(c)}>
-                        {user && <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 flex-shrink-0 cursor-grab" />}
+                        {renderCheckbox(c)}
+                        {user && !selectMode && <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 flex-shrink-0 cursor-grab" />}
                         <span className="text-2xl flex-shrink-0">{c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}</span>
                         <div className="flex-1 min-w-0">
                           <div className="font-bold text-sm truncate flex items-center gap-1">
