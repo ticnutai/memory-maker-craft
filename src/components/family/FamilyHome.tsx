@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Plus, Sparkles, Heart, Image as ImageIcon, Settings2, X, CalendarDays, Gamepad2, Download, Upload, DatabaseBackup, RotateCcw } from "lucide-react";
+import { Plus, Sparkles, Heart, Image as ImageIcon, Settings2, X, CalendarDays, Gamepad2, Download, Upload, DatabaseBackup, RotateCcw, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFamilyCollages } from "@/hooks/useFamilyCollages";
 import CollageView from "./CollageView";
@@ -19,7 +19,17 @@ import {
 import { FloatEnvironment, FloatPresetId, FloatingEffect, HeartsDisplayStyle, getFloatPresetPatch, hasSavedHeartsConfig, HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, saveHeartsConfig } from "@/lib/heartsDisplayConfig";
 import { analyzeSmartHome, type SmartHomeAnalysis } from "@/lib/smartInsights";
 import { buildWeeklyFamilyPlan, getQuickGameSuggestions, pickActivityOfTheDay } from "@/lib/familyActivities";
-import { exportSiteBackup, isValidSiteBackupPayload, restoreSiteBackup } from "@/lib/siteBackup";
+import {
+  decryptSiteBackupPayload,
+  encryptSiteBackupPayload,
+  exportSiteBackup,
+  isValidEncryptedBackupEnvelope,
+  isValidSiteBackupPayload,
+  loadBackupHistory,
+  pushBackupHistory,
+  restoreSiteBackup,
+  type BackupHistoryItem,
+} from "@/lib/siteBackup";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
@@ -55,6 +65,8 @@ export default function FamilyHome({
   const [activitySeed, setActivitySeed] = useState(() => new Date().toISOString().slice(0, 10));
   const [dataOpBusy, setDataOpBusy] = useState(false);
   const [fileActionMode, setFileActionMode] = useState<"import" | "restore">("import");
+  const [restoreMode, setRestoreMode] = useState<"merge" | "replace">("merge");
+  const [backupHistory, setBackupHistory] = useState<BackupHistoryItem[]>(() => loadBackupHistory());
   const importFileRef = useRef<HTMLInputElement | null>(null);
   const isMobile = useIsMobile();
 
@@ -487,17 +499,24 @@ export default function FamilyHome({
     setActivitySeed(next.toISOString().slice(0, 10));
   };
 
-  const downloadBackupFile = (jsonContent: string, prefix: string) => {
+  const downloadBackupFile = (jsonContent: string, prefix: string): { fileName: string; sizeBytes: number } => {
     const blob = new Blob([jsonContent], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-");
+    const fileName = `${prefix}-${timestamp}.json`;
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${prefix}-${timestamp}.json`;
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+    return { fileName, sizeBytes: blob.size };
+  };
+
+  const addHistory = (entry: Omit<BackupHistoryItem, "id" | "createdAt">) => {
+    const next = pushBackupHistory(entry);
+    setBackupHistory(next);
   };
 
   const handleExportLike = async (kind: "export" | "backup") => {
@@ -509,10 +528,49 @@ export default function FamilyHome({
         deviceIds: familyCtx.familyDeviceIds ?? [familyCtx.deviceId],
         currentDeviceId: familyCtx.deviceId,
       });
-      downloadBackupFile(JSON.stringify(payload, null, 2), kind === "backup" ? "memory-maker-backup" : "memory-maker-export");
+      const file = downloadBackupFile(JSON.stringify(payload, null, 2), kind === "backup" ? "memory-maker-backup" : "memory-maker-export");
+      addHistory({
+        kind,
+        fileName: file.fileName,
+        sizeBytes: file.sizeBytes,
+        encrypted: false,
+      });
       toast.success(kind === "backup" ? "הגיבוי נוצר בהצלחה" : "הייצוא נוצר בהצלחה");
     } catch {
       toast.error(kind === "backup" ? "שגיאה ביצירת גיבוי" : "שגיאה בייצוא מידע");
+    } finally {
+      setDataOpBusy(false);
+    }
+  };
+
+  const handleEncryptedBackup = async () => {
+    const pwd = window.prompt("הכנס סיסמה לגיבוי מוצפן");
+    if (!pwd) return;
+    const verify = window.prompt("אימות סיסמה");
+    if (pwd !== verify) {
+      toast.error("הסיסמאות לא תואמות");
+      return;
+    }
+
+    setDataOpBusy(true);
+    try {
+      const payload = await exportSiteBackup({
+        userId: user?.id ?? null,
+        familyId: familyCtx.family?.id ?? null,
+        deviceIds: familyCtx.familyDeviceIds ?? [familyCtx.deviceId],
+        currentDeviceId: familyCtx.deviceId,
+      });
+      const encrypted = await encryptSiteBackupPayload(payload, pwd);
+      const file = downloadBackupFile(JSON.stringify(encrypted, null, 2), "memory-maker-backup-encrypted");
+      addHistory({
+        kind: "backup",
+        fileName: file.fileName,
+        sizeBytes: file.sizeBytes,
+        encrypted: true,
+      });
+      toast.success("גיבוי מוצפן נוצר בהצלחה");
+    } catch {
+      toast.error("שגיאה ביצירת גיבוי מוצפן");
     } finally {
       setDataOpBusy(false);
     }
@@ -532,14 +590,32 @@ export default function FamilyHome({
     try {
       const raw = await file.text();
       const parsed = JSON.parse(raw);
-      if (!isValidSiteBackupPayload(parsed)) {
+      let payload = parsed;
+
+      if (isValidEncryptedBackupEnvelope(parsed)) {
+        const pwd = window.prompt("הכנס סיסמה לפענוח הקובץ");
+        if (!pwd) {
+          toast.info("הייבוא בוטל");
+          return;
+        }
+        payload = await decryptSiteBackupPayload(parsed, pwd);
+      }
+
+      if (!isValidSiteBackupPayload(payload)) {
         toast.error("קובץ לא תקין לייבוא/שחזור");
         return;
       }
 
-      const result = await restoreSiteBackup(parsed, {
+      if (fileActionMode === "restore" && restoreMode === "replace") {
+        const ok = window.confirm("שחזור במצב החלפה ידרוס מידע קיים בתחום המשפחה/מכשיר. להמשיך?");
+        if (!ok) return;
+      }
+
+      const mode = fileActionMode === "restore" ? restoreMode : "merge";
+      const result = await restoreSiteBackup(payload, {
         restoreCloud: true,
         restoreLocalStorage: true,
+        mode,
       });
 
       const restoredCount = Object.values(result.restoredTables).reduce((acc, n) => acc + n, 0);
@@ -548,6 +624,14 @@ export default function FamilyHome({
       } else {
         toast.success(`${fileActionMode === "restore" ? "שחזור" : "ייבוא"} הושלם (${restoredCount} פריטים)`);
       }
+
+      addHistory({
+        kind: "restore",
+        fileName: file.name,
+        sizeBytes: file.size,
+        encrypted: isValidEncryptedBackupEnvelope(parsed),
+        mode,
+      });
 
       await familyCtx.refresh();
       window.dispatchEvent(new Event(HEARTS_CONFIG_UPDATED_EVENT));
@@ -951,7 +1035,27 @@ export default function FamilyHome({
             <div className={`text-[11px] ${isDark ? "text-white/70" : "text-muted-foreground"}`}>קובץ JSON מאובטח לשמירה והחזרה</div>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+            <span className={`text-[11px] ${isDark ? "text-white/70" : "text-muted-foreground"}`}>מצב שחזור:</span>
+            <button
+              type="button"
+              disabled={dataOpBusy}
+              onClick={() => setRestoreMode("merge")}
+              className={`text-[11px] px-2 py-1 rounded-full border ${restoreMode === "merge" ? "bg-primary text-primary-foreground border-primary" : "bg-background/70"}`}
+            >
+              מיזוג
+            </button>
+            <button
+              type="button"
+              disabled={dataOpBusy}
+              onClick={() => setRestoreMode("replace")}
+              className={`text-[11px] px-2 py-1 rounded-full border ${restoreMode === "replace" ? "bg-rose-500 text-white border-rose-500" : "bg-background/70"}`}
+            >
+              החלפה
+            </button>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-5 gap-2">
             <button
               type="button"
               disabled={dataOpBusy}
@@ -979,11 +1083,39 @@ export default function FamilyHome({
             <button
               type="button"
               disabled={dataOpBusy}
+              onClick={() => { void handleEncryptedBackup(); }}
+              className="rounded-xl border px-2 py-2 text-xs font-bold flex items-center justify-center gap-1.5 bg-background/70 hover:bg-background disabled:opacity-60"
+            >
+              <Lock className="w-3.5 h-3.5" /> גיבוי מוצפן
+            </button>
+            <button
+              type="button"
+              disabled={dataOpBusy}
               onClick={() => triggerFileAction("restore")}
               className="rounded-xl border px-2 py-2 text-xs font-bold flex items-center justify-center gap-1.5 bg-background/70 hover:bg-background disabled:opacity-60"
             >
               <RotateCcw className="w-3.5 h-3.5" /> שחזור גיבוי
             </button>
+          </div>
+
+          <div className={`mt-3 rounded-xl border p-2.5 ${isDark ? "bg-white/5 border-white/10" : "bg-background/70 border-muted"}`}>
+            <div className={`text-[11px] font-black ${isDark ? "text-white/80" : "text-muted-foreground"}`}>היסטוריית פעולות אחרונות</div>
+            {backupHistory.length === 0 ? (
+              <div className={`text-[11px] mt-1 ${isDark ? "text-white/70" : "text-muted-foreground"}`}>עדיין אין פעולות שמורות</div>
+            ) : (
+              <div className="mt-1.5 space-y-1 max-h-28 overflow-y-auto">
+                {backupHistory.slice(0, 6).map((item) => (
+                  <div key={item.id} className={`text-[11px] flex items-center justify-between gap-2 ${isDark ? "text-white/85" : "text-foreground"}`}>
+                    <span className="truncate">{item.fileName}</span>
+                    <span className={isDark ? "text-white/65" : "text-muted-foreground"}>
+                      {item.kind === "backup" ? "גיבוי" : item.kind === "restore" ? "שחזור" : "ייצוא"}
+                      {item.encrypted ? " • מוצפן" : ""}
+                      {item.mode ? ` • ${item.mode === "replace" ? "החלפה" : "מיזוג"}` : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <input

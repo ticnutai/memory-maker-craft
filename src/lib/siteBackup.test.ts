@@ -1,4 +1,4 @@
-import { isValidSiteBackupPayload } from "@/lib/siteBackup";
+import { isValidEncryptedBackupEnvelope, isValidSiteBackupPayload } from "@/lib/siteBackup";
 
 describe("siteBackup payload validator", () => {
   it("accepts valid payload shape", () => {
@@ -22,5 +22,21 @@ describe("siteBackup payload validator", () => {
   it("rejects invalid payload shape", () => {
     expect(isValidSiteBackupPayload({})).toBe(false);
     expect(isValidSiteBackupPayload({ signature: "wrong", version: 1, cloud: {} })).toBe(false);
+  });
+
+  it("validates encrypted backup envelope shape", () => {
+    const validEncrypted = {
+      signature: "memory-maker-site-backup-encrypted",
+      version: 1,
+      createdAt: new Date().toISOString(),
+      algorithm: "AES-GCM",
+      iterations: 150000,
+      saltBase64: "QQ==",
+      ivBase64: "QQ==",
+      payloadBase64: "QQ==",
+    };
+
+    expect(isValidEncryptedBackupEnvelope(validEncrypted)).toBe(true);
+    expect(isValidEncryptedBackupEnvelope({ signature: "x" })).toBe(false);
   });
 });
