@@ -322,36 +322,46 @@ export default function FamilyAlbums() {
     e.preventDefault();
     setDragOverId(null);
     setDragItemId(null);
-    const itemId = e.dataTransfer.getData("text/plain");
-    if (!itemId || itemId === targetFolderId) return;
-    
-    const item = collages.find(c => c.id === itemId);
-    if (!item) return;
-    if (item.parent_id === targetFolderId) return; // already there
+    const raw = e.dataTransfer.getData("text/plain");
+    if (!raw) return;
 
-    // Prevent dropping a folder into itself or its descendant
-    if (targetFolderId) {
-      let parentId: string | null = targetFolderId;
-      while (parentId) {
-        if (parentId === itemId) {
-          toast.error("לא ניתן להעביר תיקייה לתוך עצמה");
-          return;
+    // Parse multi-item or single-item payload
+    let itemIds: string[];
+    try { itemIds = JSON.parse(raw); } catch { itemIds = [raw]; }
+    if (!Array.isArray(itemIds)) itemIds = [raw];
+    itemIds = itemIds.filter(id => id !== targetFolderId);
+    if (itemIds.length === 0) return;
+
+    let moved = 0;
+    for (const itemId of itemIds) {
+      const item = collages.find(c => c.id === itemId);
+      if (!item || item.parent_id === targetFolderId) continue;
+      // Cycle check
+      if (targetFolderId) {
+        let parentId: string | null = targetFolderId;
+        let cycle = false;
+        while (parentId) {
+          if (parentId === itemId) { cycle = true; break; }
+          const parent = collages.find(c => c.id === parentId);
+          parentId = parent?.parent_id ?? null;
         }
-        const parent = collages.find(c => c.id === parentId);
-        parentId = parent?.parent_id ?? null;
+        if (cycle) { if (itemIds.length === 1) toast.error("לא ניתן להעביר תיקייה לתוך עצמה"); continue; }
       }
+      try {
+        await updateCollage(itemId, { parent_id: targetFolderId } as Partial<FamilyCollage>);
+        moved++;
+      } catch { /* skip */ }
     }
-
-    try {
-      await updateCollage(itemId, { parent_id: targetFolderId } as Partial<FamilyCollage>);
-      const targetName = targetFolderId
-        ? collages.find(c => c.id === targetFolderId)?.name ?? "תיקייה"
-        : "שורש";
-      toast.success(`"${item.name}" הועבר ל-${targetName}`);
-    } catch {
-      toast.error("שגיאה בהעברה");
+    const targetName = targetFolderId
+      ? collages.find(c => c.id === targetFolderId)?.name ?? "תיקייה"
+      : "שורש";
+    if (moved > 0) {
+      toast.success(moved === 1
+        ? `"${collages.find(c => c.id === itemIds[0])?.name ?? ""}" הועבר ל-${targetName}`
+        : `${moved} פריטים הועברו ל-${targetName}`);
     }
-  }, [collages, updateCollage]);
+    if (selectedIds.size > 0) clearSelection();
+  }, [collages, updateCollage, selectedIds, clearSelection]);
 
   // ─── External File Drop (from OS) ───
   const isExternalFileDrag = useCallback((e: React.DragEvent) => {
