@@ -669,6 +669,10 @@ export default function FamilyAlbums() {
                 );
               })}
             </div>
+            <Button size="sm" variant={selectMode ? "default" : "outline"} onClick={() => { setSelectMode(m => !m); if (selectMode) clearSelection(); }} disabled={!user}>
+              <CheckSquare className="w-4 h-4 ml-1" />
+              בחירה
+            </Button>
             <Button size="sm" variant={showArchived ? "default" : "outline"} onClick={() => setShowArchived((v) => !v)}>
               <Archive className="w-4 h-4 ml-1" />
               {showArchived ? "מצב ארכיון" : "ארכיון"}
