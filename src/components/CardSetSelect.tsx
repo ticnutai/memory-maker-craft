@@ -5,14 +5,16 @@ import { CardData, CardSetType, GameSettings, getCardSets } from "@/lib/gameData
 import { BUILT_IN_MELODIES } from "@/lib/melodies";
 import {
   Upload, Volume2, VolumeX, Music, Trash2, Cloud, Loader2,
-  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move, Paintbrush, Code2, FolderOpen, Edit2
+  Image, Palette, LayoutGrid, Cake, Mic, Settings, X, Plus, Layers, Grid3X3, Move, Paintbrush, Code2, FolderOpen, Edit2, Shield
 } from "lucide-react";
 import DevPanel from "@/components/DevPanel";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import BirthdayManager from "@/components/BirthdayManager";
 import CloudGallery from "@/components/CloudGallery";
 import CustomCardSets from "@/components/CustomCardSets";
+import AdminPanel from "@/components/AdminPanel";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
+import { useAuth } from "@/hooks/useAuth";
 import { getBgThemes } from "@/components/ThemeBackground";
 import { supabase } from "@/integrations/supabase/client";
 import FloatingPanel from "@/components/FloatingPanel";
@@ -27,7 +29,7 @@ interface CardSetSelectProps {
   settingsOnly?: boolean;
 }
 
-type SettingsTabId = "general" | "music" | "cards" | "themes" | "gallery" | "custom-sets" | "birthdays" | "recordings" | "dev";
+type SettingsTabId = "general" | "music" | "cards" | "themes" | "gallery" | "custom-sets" | "birthdays" | "recordings" | "admin" | "dev";
 
 const BACK_ICONS = ["⭐", "❓", "🎴", "🃏", "💫", "🌟", "🎯", "🔮", "🎪", "🎨"];
 const BACK_COLORS = [
