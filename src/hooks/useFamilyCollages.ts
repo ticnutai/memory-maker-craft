@@ -129,25 +129,15 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
   }, []);
 
   const refresh = useCallback(async () => {
-    const joinedIds = getJoinedCollageIds();
-    // Fetch own collages (all family devices) + joined (shared) collages
-    const { data: own } = await supabase
+    // Fetch ALL collages (visible to everyone)
+    const { data } = await supabase
       .from("family_collages")
-      .select("*")
-      .in("device_id", queryDeviceIds);
-    let joined: FamilyCollage[] = [];
-    if (joinedIds.length > 0) {
-      const { data } = await supabase
-        .from("family_collages")
-        .select("*")
-        .in("id", joinedIds);
-      joined = (data ?? []) as FamilyCollage[];
-    }
-    const all = [...((own ?? []) as FamilyCollage[]), ...joined.filter(j => !(own ?? []).some(o => o.id === j.id))];
+      .select("*");
+    const all = ((data ?? []) as FamilyCollage[]);
     all.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || b.created_at.localeCompare(a.created_at));
     setCollages(all);
     setLoading(false);
-  }, [deviceId, queryDeviceIds.join(",")]);
+  }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
 
