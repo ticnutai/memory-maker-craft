@@ -142,6 +142,8 @@ export default function FamilyHome({
         onLeaveFamily={familyCtx.leaveFamily}
         onUpdateNickname={familyCtx.updateNickname}
         hideTrigger
+        externalOpen={externalFamilyCodeOpen}
+        onExternalOpenChange={onFamilyCodeOpenChange}
       />
 
       {/* Theme/Collages — rendered hidden, controlled externally via sidebar */}
@@ -159,6 +161,8 @@ export default function FamilyHome({
         slideshow={slideshow}
         onSlideshowChange={setSlideshow}
         hideTrigger
+        externalOpen={externalThemePickerOpen}
+        onExternalOpenChange={onThemePickerOpenChange}
       />
 
       <div className="relative z-10 pt-20 pb-12 px-4 max-w-5xl mx-auto">
