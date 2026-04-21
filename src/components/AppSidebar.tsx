@@ -1,4 +1,4 @@
-import { Home, Cake, Gamepad2, Map, Train, ChevronDown, Pin, PinOff, Settings, LogIn, LogOut, User, Shield } from "lucide-react";
+import { Home, Cake, Gamepad2, Map, Train, ChevronDown, Pin, PinOff, Settings, LogIn, LogOut, User, Shield, Users, Palette } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,6 +10,8 @@ interface AppSidebarProps {
   active: SidebarSection;
   onSelect: (section: SidebarSection) => void;
   onOpenSettings: () => void;
+  onOpenFamilyCode?: () => void;
+  onOpenThemePicker?: () => void;
 }
 
 const games: { key: SidebarSection; title: string; icon: typeof Gamepad2 }[] = [
@@ -20,7 +22,7 @@ const games: { key: SidebarSection; title: string; icon: typeof Gamepad2 }[] = [
 
 const PIN_KEY = "app-sidebar-pinned";
 
-export default function AppSidebar({ active, onSelect, onOpenSettings }: AppSidebarProps) {
+export default function AppSidebar({ active, onSelect, onOpenSettings, onOpenFamilyCode, onOpenThemePicker }: AppSidebarProps) {
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [pinned, setPinned] = useState<boolean>(() => {
