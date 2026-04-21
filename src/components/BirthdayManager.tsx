@@ -388,11 +388,11 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
             </button>
           </div>
 
-          {/* Enable/disable toggle */}
+          {/* Enable/disable toggle with settings icon */}
           <div className="flex items-center justify-between p-3 rounded-xl border bg-muted/30">
             <label className="text-xs font-bold text-muted-foreground flex items-center gap-2">
               {heartsConfig.enabled ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-              הצגת לבבות בדף הבית
+              הצגת ימי הולדת בדף הבית
             </label>
             <button
               type="button"
