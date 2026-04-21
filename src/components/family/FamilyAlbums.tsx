@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Plus, FolderPlus, KeyRound, Trash2, Users, ChevronLeft,
   Home as HomeIcon, FolderOpen, Image as ImageIcon, Filter, Tag, CalendarDays, User,
-  Pencil, Eye, Search, Archive, RotateCcw,
+  Pencil, Eye, Search, Archive, RotateCcw, GripVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
