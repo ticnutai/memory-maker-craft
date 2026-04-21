@@ -168,8 +168,7 @@ export default function FamilyHome() {
           </p>
         </header>
 
-        {/* Birthday hearts reminder */}
-        <BirthdayHearts isDark={isDark} />
+        <BirthdayHearts isDark={isDark} familyDeviceIds={familyCtx.familyDeviceIds} />
 
         {loading && <div className="text-center text-foreground/60">טוען…</div>}
 

@@ -60,7 +60,7 @@ function getNextOccurrence(dateStr: string): { date: Date; daysUntil: number } {
   return { date: next, daysUntil: differenceInDays(next, today) };
 }
 
-export default function BirthdayHearts({ isDark }: { isDark?: boolean }) {
+export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: boolean; familyDeviceIds?: string[] }) {
   const [items, setItems] = useState<UpcomingItem[]>([]);
 
   useEffect(() => {
@@ -69,11 +69,12 @@ export default function BirthdayHearts({ isDark }: { isDark?: boolean }) {
 
     const deviceId = getDeviceId();
     if (!deviceId) return;
+    const queryIds = familyDeviceIds && familyDeviceIds.length > 0 ? familyDeviceIds : [deviceId];
 
     (async () => {
       const [{ data: birthdays }, { data: events }] = await Promise.all([
-        supabase.from("birthdays").select("name, birth_date, emoji, color").eq("device_id", deviceId),
-        supabase.from("family_events").select("name, event_date, emoji, color, event_type, recurring").eq("device_id", deviceId),
+        supabase.from("birthdays").select("name, birth_date, emoji, color").in("device_id", queryIds),
+        supabase.from("family_events").select("name, event_date, emoji, color, event_type, recurring").in("device_id", queryIds),
       ]);
 
       const now = new Date();
