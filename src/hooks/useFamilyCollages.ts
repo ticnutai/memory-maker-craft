@@ -48,6 +48,13 @@ export interface FamilyCollage {
   year_tag: number | null;
   family_tag: string | null;
   event_tag: string | null;
+  description: string | null;
+  tags: string[] | null;
+  location_tag: string | null;
+  cover_url: string | null;
+  archived_at: string | null;
+  archived_by: string | null;
+  purge_after: string | null;
 }
 
 export interface FamilyPhoto {
@@ -77,6 +84,31 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
   const [collages, setCollages] = useState<FamilyCollage[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const getDepth = useCallback((items: FamilyCollage[], parentId: string | null): number => {
+    let depth = 0;
+    let current = parentId;
+    while (current) {
+      const folder = items.find((c) => c.id === current);
+      if (!folder) break;
+      depth += 1;
+      current = folder.parent_id;
+      if (depth > 10) break;
+    }
+    return depth;
+  }, []);
+
+  const wouldCreateCycle = useCallback((items: FamilyCollage[], sourceId: string, nextParentId: string | null): boolean => {
+    if (!nextParentId) return false;
+    let current = nextParentId;
+    while (current) {
+      if (current === sourceId) return true;
+      const folder = items.find((c) => c.id === current);
+      if (!folder) break;
+      current = folder.parent_id;
+    }
+    return false;
+  }, []);
+
   const refresh = useCallback(async () => {
     const joinedIds = getJoinedCollageIds();
     // Fetch own collages (all family devices) + joined (shared) collages
@@ -101,6 +133,9 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
   useEffect(() => { refresh(); }, [refresh]);
 
   const createCollage = useCallback(async (partial: Partial<FamilyCollage> = {}) => {
+    const depth = getDepth(collages, partial.parent_id ?? null);
+    if (depth >= 5) throw new Error("max-depth-reached");
+
     const { data, error } = await supabase
       .from("family_collages")
       .insert({
@@ -117,29 +152,66 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
         year_tag: partial.year_tag ?? null,
         family_tag: partial.family_tag ?? null,
         event_tag: partial.event_tag ?? null,
+        description: partial.description ?? null,
+        tags: partial.tags ?? [],
+        location_tag: partial.location_tag ?? null,
+        cover_url: partial.cover_url ?? null,
       } as never)
       .select()
       .single();
     if (error) throw error;
     await refresh();
     return data as FamilyCollage;
-  }, [deviceId, refresh]);
+  }, [deviceId, refresh, collages, getDepth]);
 
   const updateCollage = useCallback(async (id: string, patch: Partial<FamilyCollage>) => {
+    if (patch.parent_id !== undefined) {
+      if (wouldCreateCycle(collages, id, patch.parent_id ?? null)) {
+        throw new Error("invalid-folder-cycle");
+      }
+      const depth = getDepth(collages, patch.parent_id ?? null);
+      if (depth >= 5) throw new Error("max-depth-reached");
+    }
+
     await supabase.from("family_collages").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
     await refresh();
-  }, [refresh]);
+  }, [refresh, collages, wouldCreateCycle, getDepth]);
 
-  const deleteCollage = useCallback(async (id: string) => {
+  const deleteCollage = useCallback(async (id: string, options?: { permanent?: boolean }) => {
     const c = collages.find(x => x.id === id);
     if (c && c.device_id !== deviceId) {
       // Joined collage — just leave it locally
       removeJoinedCollageId(id);
-    } else {
+    } else if (options?.permanent) {
       await supabase.from("family_collages").delete().eq("id", id);
+    } else {
+      const now = new Date();
+      const purgeAfter = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      await supabase.from("family_collages").update({
+        archived_at: now.toISOString(),
+        archived_by: deviceId,
+        purge_after: purgeAfter,
+        updated_at: now.toISOString(),
+      }).eq("id", id);
     }
     await refresh();
   }, [collages, deviceId, refresh]);
+
+  const restoreCollage = useCallback(async (id: string) => {
+    await supabase.from("family_collages").update({
+      archived_at: null,
+      archived_by: null,
+      purge_after: null,
+      updated_at: new Date().toISOString(),
+    }).eq("id", id);
+    await refresh();
+  }, [refresh]);
+
+  const purgeExpiredArchived = useCallback(async () => {
+    const nowIso = new Date().toISOString();
+    await supabase.from("family_collages").delete().not("purge_after", "is", null).lte("purge_after", nowIso);
+    await refresh();
+  }, [refresh]);
 
   const joinByCode = useCallback(async (code: string): Promise<FamilyCollage | null> => {
     const cleanCode = code.trim().toLowerCase();
@@ -155,7 +227,18 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
     return data as FamilyCollage;
   }, [refresh]);
 
-  return { collages, loading, refresh, createCollage, updateCollage, deleteCollage, joinByCode, deviceId };
+  return {
+    collages,
+    loading,
+    refresh,
+    createCollage,
+    updateCollage,
+    deleteCollage,
+    restoreCollage,
+    purgeExpiredArchived,
+    joinByCode,
+    deviceId,
+  };
 }
 
 export function useFamilyPhotos(collageId: string | null) {

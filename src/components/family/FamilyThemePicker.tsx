@@ -34,6 +34,7 @@ interface ThemePickerProps {
   onCreateCollage: (partial?: Partial<FamilyCollage>) => Promise<FamilyCollage>;
   onDeleteCollage: (id: string) => void;
   onJoinByCode: (code: string) => Promise<FamilyCollage | null>;
+  isAdmin?: boolean;
   slideshow: SlideshowConfig;
   onSlideshowChange: (cfg: SlideshowConfig) => void;
   onResetSlideshow?: () => void;
@@ -46,6 +47,7 @@ export default function FamilyThemePicker({
   current, onChange,
   collages = [], deviceId, homeCollageId,
   onSetHomeCollage, onOpenCollage, onCreateCollage, onDeleteCollage, onJoinByCode,
+  isAdmin = false,
   slideshow, onSlideshowChange,
   onResetSlideshow,
   externalOpen, onExternalOpenChange, hideTrigger,
@@ -69,6 +71,7 @@ export default function FamilyThemePicker({
   const [showFilters, setShowFilters] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewFolder, setShowNewFolder] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const existing = loadCustomTheme();
   const [custom, setCustom] = useState<FamilyTheme>(existing ?? {
@@ -109,13 +112,17 @@ export default function FamilyThemePicker({
     if (filterCategory) items = items.filter(c => c.category === filterCategory);
     if (filterYear) items = items.filter(c => c.year_tag === filterYear);
     if (filterFamily) items = items.filter(c => c.family_tag === filterFamily);
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      items = items.filter((c) => [c.name, c.family_tag ?? "", c.event_tag ?? "", ...(c.tags ?? [])].some((v) => v.toLowerCase().includes(q)));
+    }
     // Sort: folders first, then by sort_order
     return items.sort((a, b) => {
       if (a.is_folder && !b.is_folder) return -1;
       if (!a.is_folder && b.is_folder) return 1;
       return (a.sort_order ?? 0) - (b.sort_order ?? 0);
     });
-  }, [collages, currentFolderId, filterCategory, filterYear, filterFamily]);
+  }, [collages, currentFolderId, filterCategory, filterYear, filterFamily, searchQuery]);
 
   // Unique years and family tags for filter chips
   const availableYears = useMemo(() => [...new Set(collages.map(c => c.year_tag).filter(Boolean) as number[])].sort((a, b) => b - a), [collages]);
@@ -159,11 +166,19 @@ export default function FamilyThemePicker({
   };
 
   const handleCreate = async () => {
+    if (!isAdmin) {
+      toast.error("רק אדמין משפחה יכול ליצור אלבומים/תיקיות");
+      return;
+    }
     await onCreateCollage({ parent_id: currentFolderId } as Partial<FamilyCollage>);
     setOpen(false);
   };
 
   const handleCreateFolder = async () => {
+    if (!isAdmin) {
+      toast.error("רק אדמין משפחה יכול ליצור תתי-תיקיות");
+      return;
+    }
     if (!newFolderName.trim()) return;
     try {
       await onCreateCollage({
@@ -228,16 +243,18 @@ export default function FamilyThemePicker({
             <TabsContent value="collages" className="space-y-3 mt-4">
               {/* Action buttons */}
               <div className="flex gap-2">
-                <Button onClick={handleCreate} className="flex-1" size="sm" style={{ background: current.accent, color: "white" }}>
+                <Button onClick={handleCreate} className="flex-1" size="sm" style={{ background: current.accent, color: "white" }} disabled={!isAdmin}>
                   <Plus className="w-4 h-4 ml-1" /> קולאז׳ חדש
                 </Button>
-                <Button onClick={() => setShowNewFolder(v => !v)} variant="outline" size="sm">
+                <Button onClick={() => setShowNewFolder(v => !v)} variant="outline" size="sm" disabled={!isAdmin}>
                   <FolderOpen className="w-4 h-4 ml-1" /> תיקייה
                 </Button>
                 <Button onClick={() => setShowFilters(v => !v)} variant={hasActiveFilters ? "default" : "outline"} size="sm">
                   <Filter className="w-3.5 h-3.5" />
                 </Button>
               </div>
+
+              <Input placeholder="חיפוש חכם בתיקיות/תגיות" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="h-8" />
 
               {/* New folder form */}
               {showNewFolder && (
@@ -250,7 +267,7 @@ export default function FamilyThemePicker({
                     className="h-8 text-sm"
                     dir="rtl"
                   />
-                  <Button onClick={handleCreateFolder} size="sm" disabled={!newFolderName.trim()}>📁 צור</Button>
+                  <Button onClick={handleCreateFolder} size="sm" disabled={!newFolderName.trim() || !isAdmin}>📁 צור</Button>
                 </div>
               )}
 
@@ -423,6 +440,10 @@ export default function FamilyThemePicker({
                       )}
                       <button
                         onClick={() => {
+                          if (!isAdmin) {
+                            toast.error("רק אדמין משפחה יכול למחוק");
+                            return;
+                          }
                           const msg = c.is_folder ? `למחוק את התיקייה "${c.name}" וכל תוכנה?` : isShared ? `לעזוב את "${c.name}"?` : `למחוק את "${c.name}"?`;
                           if (confirm(msg)) {
                             if (homeCollageId === c.id) clearHome();

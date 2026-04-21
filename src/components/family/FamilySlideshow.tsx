@@ -38,10 +38,6 @@ function transitionClass(t: SlideTransition, active: boolean): string {
   }
 }
 
-function formatTime(d: Date): string {
-  return d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
-}
-
 export default function FamilySlideshow({ photos, config, onOpenCollage, onConfigChange }: SlideshowProps) {
   const ordered = useMemo(() => config.shuffle ? shuffleArr(photos) : photos, [photos, config.shuffle]);
   const [idx, setIdx] = useState(() => Math.max(0, config.lastSlideIndex || 0));
@@ -49,7 +45,6 @@ export default function FamilySlideshow({ photos, config, onOpenCollage, onConfi
   const [fullscreen, setFullscreen] = useState(false);
   const [muted, setMuted] = useState(config.mediaMuted !== false);
   const [showSettings, setShowSettings] = useState(false);
-  const [clock, setClock] = useState(new Date());
   const [ended, setEnded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -57,13 +52,6 @@ export default function FamilySlideshow({ photos, config, onOpenCollage, onConfi
 
   const current = ordered[idx];
   const isVideo = current?.media_type === "video";
-
-  // Clock tick
-  useEffect(() => {
-    if (!config.showClock) return;
-    const id = setInterval(() => setClock(new Date()), 30000);
-    return () => clearInterval(id);
-  }, [config.showClock]);
 
   // Background music
   useEffect(() => {
@@ -225,13 +213,6 @@ export default function FamilySlideshow({ photos, config, onOpenCollage, onConfi
         </div>
       )}
 
-      {/* Clock overlay */}
-      {config.showClock && (
-        <div className="absolute top-3 left-3 bg-black/50 text-white text-sm px-3 py-1 rounded-full backdrop-blur-sm font-mono z-20">
-          {formatTime(clock)}
-        </div>
-      )}
-
       {/* Counter pill */}
       <div className="absolute top-3 right-3 bg-black/50 text-white text-xs px-2.5 py-1 rounded-full backdrop-blur-sm flex items-center gap-1">
         {isVideo && <span>🎬</span>}
@@ -330,7 +311,7 @@ export default function FamilySlideshow({ photos, config, onOpenCollage, onConfi
 
       {/* Progress dots */}
       {ordered.length <= 12 && (
-        <div className="absolute top-12 left-3 flex gap-1 z-20">
+        <div className="absolute top-3 left-3 flex gap-1 z-20">
           {ordered.map((_, i) => (
             <button
               key={i}

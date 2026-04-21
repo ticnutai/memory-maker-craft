@@ -41,6 +41,7 @@ export default function FamilyHome({
   const [theme, setTheme] = useState<FamilyTheme>(() => loadFamilyTheme());
   const [homePreviewPhotos, setHomePreviewPhotos] = useState<{ url: string; caption: string | null; media_type: string; thumbnail_url: string | null }[]>([]);
   const [slideshow, setSlideshow] = useState<SlideshowConfig>(() => loadSlideshowConfig());
+  const [pageClock, setPageClock] = useState(() => new Date());
 
   const persistSlideshow = async (nextInput: SlideshowConfig, options?: { syncCloud?: boolean; touchUpdatedAt?: boolean }) => {
     const touchUpdatedAt = options?.touchUpdatedAt !== false;
@@ -187,6 +188,12 @@ export default function FamilyHome({
     void persistSlideshow(next);
   }, [slideshow, photoCollages]);
 
+  useEffect(() => {
+    if (!slideshow.showClock) return;
+    const timer = window.setInterval(() => setPageClock(new Date()), 30000);
+    return () => window.clearInterval(timer);
+  }, [slideshow.showClock]);
+
   const homeCollage = photoCollages.find(c => c.id === homeCollageId);
 
   // Determine the source collage for slideshow & preview (slideshow can override)
@@ -271,6 +278,7 @@ export default function FamilyHome({
         onCreateCollage={handleCreate}
         onDeleteCollage={deleteCollage}
         onJoinByCode={joinByCode}
+        isAdmin={familyCtx.isAdmin}
         slideshow={slideshow}
         onSlideshowChange={(cfg) => { void persistSlideshow(cfg); }}
         onResetSlideshow={resetSlideshowPreferences}
@@ -330,6 +338,13 @@ export default function FamilyHome({
         {/* Home collage display — clean, photos only. Editing happens via the 🎨 icon above. */}
         {!loading && displayCollage && (
           <div className="max-w-3xl mx-auto">
+            {slideshow.enabled && slideshow.autoStart && slideshow.showClock && homePreviewPhotos.length > 0 && (
+              <div className="mb-2 flex justify-start">
+                <div className="bg-black/60 text-white text-sm px-3 py-1 rounded-full backdrop-blur-sm font-mono">
+                  {pageClock.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                </div>
+              </div>
+            )}
             {slideshow.enabled && slideshow.autoStart && homePreviewPhotos.length > 0 ? (
               <FamilySlideshow
                 photos={homePreviewPhotos}
