@@ -9,7 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   FAMILY_THEMES, FamilyTheme, loadCustomTheme, saveFamilyTheme,
-  saveHomeCollageId, SlideshowConfig, SlideTransition, saveSlideshowConfig,
+  saveHomeCollageId, SlideshowConfig, SlideTransition,
 } from "@/lib/familyThemes";
 import { FamilyCollage } from "@/hooks/useFamilyCollages";
 import { toast } from "sonner";
@@ -36,6 +36,7 @@ interface ThemePickerProps {
   onJoinByCode: (code: string) => Promise<FamilyCollage | null>;
   slideshow: SlideshowConfig;
   onSlideshowChange: (cfg: SlideshowConfig) => void;
+  onResetSlideshow?: () => void;
   externalOpen?: boolean;
   onExternalOpenChange?: (open: boolean) => void;
   hideTrigger?: boolean;
@@ -46,6 +47,7 @@ export default function FamilyThemePicker({
   collages = [], deviceId, homeCollageId,
   onSetHomeCollage, onOpenCollage, onCreateCollage, onDeleteCollage, onJoinByCode,
   slideshow, onSlideshowChange,
+  onResetSlideshow,
   externalOpen, onExternalOpenChange, hideTrigger,
 }: ThemePickerProps) {
   const [internalOpen, setInternalOpen] = useState(false);
@@ -85,6 +87,8 @@ export default function FamilyThemePicker({
   // ─── Computed: folder tree, breadcrumb, filters ───
   const allThemes = existing ? [...FAMILY_THEMES, existing] : FAMILY_THEMES;
   const selectableCollages = useMemo(() => collages.filter((c) => !c.is_folder), [collages]);
+  const hasHomeSource = !!homeCollageId && selectableCollages.some((c) => c.id === homeCollageId);
+  const effectiveSlideshowSourceId = slideshow.collageId ?? (hasHomeSource ? homeCollageId : (selectableCollages[0]?.id ?? null));
 
   // Build breadcrumb path
   const breadcrumb = useMemo(() => {
@@ -142,8 +146,7 @@ export default function FamilyThemePicker({
     saveHomeCollageId(id);
     onSetHomeCollage(id);
 
-    const next = { ...slideshow, enabled: true, collageId: null };
-    saveSlideshowConfig(next);
+    const next = { ...slideshow, enabled: true, autoStart: true, collageId: null };
     onSlideshowChange(next);
 
     toast.success("הקולאז׳ נקבע לדף הבית ומוצג עכשיו");
@@ -452,8 +455,11 @@ export default function FamilyThemePicker({
                 <Switch
                   checked={slideshow.enabled}
                   onCheckedChange={(v) => {
-                    const next = { ...slideshow, enabled: v };
-                    saveSlideshowConfig(next);
+                    const next = {
+                      ...slideshow,
+                      enabled: v,
+                      collageId: v ? (effectiveSlideshowSourceId ?? null) : slideshow.collageId,
+                    };
                     onSlideshowChange(next);
                   }}
                 />
@@ -467,16 +473,20 @@ export default function FamilyThemePicker({
                   onChange={(e) => {
                     const v = e.target.value === "__home__" ? null : e.target.value;
                     const next = { ...slideshow, collageId: v };
-                    saveSlideshowConfig(next);
                     onSlideshowChange(next);
                   }}
                   className="w-full h-10 px-3 rounded-md border bg-background text-sm mt-1"
                 >
-                  <option value="__home__">📍 השתמש בקולאז׳ של דף הבית</option>
+                  <option value="__home__">
+                    {hasHomeSource ? "📍 השתמש בקולאז׳ של דף הבית" : "📍 אין קולאז׳ דף בית - בחר קולאז׳ ידני"}
+                  </option>
                   {selectableCollages.map(c => (
                     <option key={c.id} value={c.id}>{c.emoji ?? "📸"} {c.name}</option>
                   ))}
                 </select>
+                {!hasHomeSource && (
+                  <p className="text-[10px] text-amber-600 mt-1">אין כרגע קולאז׳ לדף הבית, לכן מומלץ לבחור מקור ידני מהרשימה.</p>
+                )}
               </div>
 
               {/* Image duration */}
@@ -494,7 +504,6 @@ export default function FamilyThemePicker({
                   step={500}
                   onValueChange={([v]) => {
                     const next = { ...slideshow, intervalMs: v };
-                    saveSlideshowConfig(next);
                     onSlideshowChange(next);
                   }}
                   className="mt-2"
@@ -516,7 +525,6 @@ export default function FamilyThemePicker({
                   step={5000}
                   onValueChange={([v]) => {
                     const next = { ...slideshow, videoMaxMs: v };
-                    saveSlideshowConfig(next);
                     onSlideshowChange(next);
                   }}
                   className="mt-2"
@@ -538,7 +546,6 @@ export default function FamilyThemePicker({
                       key={t.id}
                       onClick={() => {
                         const next = { ...slideshow, transition: t.id };
-                        saveSlideshowConfig(next);
                         onSlideshowChange(next);
                       }}
                       className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
@@ -561,7 +568,6 @@ export default function FamilyThemePicker({
                     checked={slideshow.showCaption}
                     onCheckedChange={(v) => {
                       const next = { ...slideshow, showCaption: v };
-                      saveSlideshowConfig(next);
                       onSlideshowChange(next);
                     }}
                   />
@@ -572,7 +578,6 @@ export default function FamilyThemePicker({
                     checked={slideshow.autoCaptions}
                     onCheckedChange={(v) => {
                       const next = { ...slideshow, autoCaptions: v };
-                      saveSlideshowConfig(next);
                       onSlideshowChange(next);
                     }}
                   />
@@ -583,7 +588,6 @@ export default function FamilyThemePicker({
                     checked={slideshow.shuffle}
                     onCheckedChange={(v) => {
                       const next = { ...slideshow, shuffle: v };
-                      saveSlideshowConfig(next);
                       onSlideshowChange(next);
                     }}
                   />
@@ -594,7 +598,6 @@ export default function FamilyThemePicker({
                     checked={slideshow.loop}
                     onCheckedChange={(v) => {
                       const next = { ...slideshow, loop: v };
-                      saveSlideshowConfig(next);
                       onSlideshowChange(next);
                     }}
                   />
@@ -605,11 +608,19 @@ export default function FamilyThemePicker({
                     checked={slideshow.showClock}
                     onCheckedChange={(v) => {
                       const next = { ...slideshow, showClock: v };
-                      saveSlideshowConfig(next);
                       onSlideshowChange(next);
                     }}
                   />
                 </div>
+              </div>
+
+              <div className="pt-1">
+                <button
+                  onClick={() => onResetSlideshow?.()}
+                  className="w-full h-9 rounded-lg border border-destructive/30 text-destructive text-xs font-bold hover:bg-destructive/10 transition-colors"
+                >
+                  אפס העדפות סליידשואו
+                </button>
               </div>
 
               {/* Background music volume */}
@@ -627,7 +638,6 @@ export default function FamilyThemePicker({
                   step={0.05}
                   onValueChange={([v]) => {
                     const next = { ...slideshow, bgMusicVolume: v };
-                    saveSlideshowConfig(next);
                     onSlideshowChange(next);
                   }}
                   className="mt-2"

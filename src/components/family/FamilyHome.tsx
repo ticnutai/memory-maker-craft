@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Sparkles, Heart, Image as ImageIcon, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFamilyCollages } from "@/hooks/useFamilyCollages";
@@ -10,12 +10,14 @@ import FamilyQuoteRotator from "./FamilyQuoteRotator";
 import BirthdayHearts from "./BirthdayHearts";
 import FamilyCodeManager from "./FamilyCodeManager";
 import { useFamily } from "@/hooks/useFamily";
+import { useAuth } from "@/hooks/useAuth";
 import {
   loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
-  loadSlideshowConfig, saveSlideshowConfig, SlideshowConfig,
+  loadSlideshowConfig, saveSlideshowConfig, SlideshowConfig, normalizeSlideshowConfig, resetSlideshowConfig,
 } from "@/lib/familyThemes";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 interface FamilyHomeProps {
   externalFamilyCodeOpen?: boolean;
@@ -30,24 +32,102 @@ export default function FamilyHome({
   externalThemePickerOpen,
   onThemePickerOpenChange,
 }: FamilyHomeProps) {
+  const { user } = useAuth();
   const familyCtx = useFamily();
   const { collages, loading, createCollage, updateCollage, deleteCollage, joinByCode, deviceId } = useFamilyCollages(familyCtx.familyDeviceIds);
+  const bootstrappingHomeRef = useRef(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [homeCollageId, setHomeCollageId] = useState<string | null>(() => loadHomeCollageId());
   const [theme, setTheme] = useState<FamilyTheme>(() => loadFamilyTheme());
   const [homePreviewPhotos, setHomePreviewPhotos] = useState<{ url: string; caption: string | null; media_type: string; thumbnail_url: string | null }[]>([]);
   const [slideshow, setSlideshow] = useState<SlideshowConfig>(() => loadSlideshowConfig());
 
+  const persistSlideshow = async (nextInput: SlideshowConfig, options?: { syncCloud?: boolean; touchUpdatedAt?: boolean }) => {
+    const touchUpdatedAt = options?.touchUpdatedAt !== false;
+    const syncCloud = options?.syncCloud !== false;
+    const next = normalizeSlideshowConfig({
+      ...nextInput,
+      updatedAt: touchUpdatedAt ? new Date().toISOString() : nextInput.updatedAt,
+    });
+
+    saveSlideshowConfig(next, { touchUpdatedAt: false });
+    setSlideshow(next);
+
+    if (!syncCloud || !user) return;
+
+    await supabase.from("user_preferences").upsert({
+      user_id: user.id,
+      slideshow_config: next as unknown as Json,
+      updated_at: next.updatedAt,
+    });
+  };
+
+  const resetSlideshowPreferences = async () => {
+    const next = resetSlideshowConfig();
+    setSlideshow(next);
+    if (user) {
+      await supabase.from("user_preferences").upsert({
+        user_id: user.id,
+        slideshow_config: next as unknown as Json,
+        updated_at: next.updatedAt,
+      });
+    }
+    toast.success("העדפות הסליידשואו אופסו");
+  };
+
   const applyHomeCollage = (id: string | null, options?: { followHomeInSlideshow?: boolean }) => {
     saveHomeCollageId(id);
     setHomeCollageId(id);
 
     if (options?.followHomeInSlideshow) {
-      const next = { ...slideshow, enabled: true, collageId: null };
-      saveSlideshowConfig(next);
-      setSlideshow(next);
+      const next = { ...slideshow, enabled: true, autoStart: true, collageId: null };
+      void persistSlideshow(next);
     }
   };
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    (async () => {
+      const local = loadSlideshowConfig();
+      const { data } = await supabase
+        .from("user_preferences")
+        .select("slideshow_config, updated_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      const rawCloud = (data?.slideshow_config ?? null) as Partial<SlideshowConfig> | null;
+      if (!rawCloud) {
+        await supabase.from("user_preferences").upsert({
+          user_id: user.id,
+          slideshow_config: local as unknown as Json,
+          updated_at: local.updatedAt || new Date().toISOString(),
+        });
+        return;
+      }
+
+      const cloudCfg = normalizeSlideshowConfig(rawCloud);
+      const localTs = Date.parse(local.updatedAt || "");
+      const cloudTs = Date.parse(cloudCfg.updatedAt || (data?.updated_at ?? ""));
+      const useCloud = Number.isFinite(cloudTs) && (!Number.isFinite(localTs) || cloudTs >= localTs);
+
+      if (useCloud) {
+        saveSlideshowConfig(cloudCfg, { touchUpdatedAt: false });
+        setSlideshow(cloudCfg);
+      } else {
+        await supabase.from("user_preferences").upsert({
+          user_id: user.id,
+          slideshow_config: local as unknown as Json,
+          updated_at: local.updatedAt || new Date().toISOString(),
+        });
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [user]);
 
   // Apply theme to body so it covers the entire page (under the icons too)
   useEffect(() => {
@@ -58,14 +138,39 @@ export default function FamilyHome({
 
   const photoCollages = collages.filter((c) => !c.is_folder);
 
+  // Create a real, editable "Home" collage if there are no collages yet.
+  useEffect(() => {
+    if (loading || bootstrappingHomeRef.current) return;
+    if (photoCollages.length > 0) return;
+
+    bootstrappingHomeRef.current = true;
+    (async () => {
+      try {
+        const created = await createCollage({ name: "דף הבית", emoji: "🏠" });
+        applyHomeCollage(created.id);
+      } catch {
+        toast.error("שגיאה ביצירת קולאז׳ דף הבית");
+      } finally {
+        bootstrappingHomeRef.current = false;
+      }
+    })();
+  }, [loading, photoCollages.length, createCollage]);
+
   // Auto-set home collage to first one if none selected
   useEffect(() => {
     if (loading) return;
+
+    const namedHomeId = photoCollages.find((c) => c.name.trim() === "דף הבית")?.id ?? null;
     const firstPhotoCollageId = photoCollages[0]?.id ?? null;
     const hasValidHome = homeCollageId ? photoCollages.some((c) => c.id === homeCollageId) : false;
 
     if (!hasValidHome && homeCollageId) {
       applyHomeCollage(firstPhotoCollageId);
+      return;
+    }
+
+    if (!homeCollageId && namedHomeId) {
+      applyHomeCollage(namedHomeId);
       return;
     }
 
@@ -79,14 +184,14 @@ export default function FamilyHome({
     if (photoCollages.some((c) => c.id === slideshow.collageId)) return;
 
     const next = { ...slideshow, collageId: null };
-    saveSlideshowConfig(next);
-    setSlideshow(next);
+    void persistSlideshow(next);
   }, [slideshow, photoCollages]);
 
   const homeCollage = photoCollages.find(c => c.id === homeCollageId);
 
   // Determine the source collage for slideshow & preview (slideshow can override)
-  const slideshowCollageId = slideshow.collageId ?? homeCollageId;
+  const fallbackSlideshowCollageId = photoCollages[0]?.id ?? null;
+  const slideshowCollageId = slideshow.collageId ?? homeCollageId ?? fallbackSlideshowCollageId;
   const displayCollageId = slideshow.enabled ? slideshowCollageId : homeCollageId;
   const displayCollage = photoCollages.find((c) => c.id === displayCollageId);
 
@@ -167,7 +272,8 @@ export default function FamilyHome({
         onDeleteCollage={deleteCollage}
         onJoinByCode={joinByCode}
         slideshow={slideshow}
-        onSlideshowChange={setSlideshow}
+        onSlideshowChange={(cfg) => { void persistSlideshow(cfg); }}
+        onResetSlideshow={resetSlideshowPreferences}
         hideTrigger
         externalOpen={externalThemePickerOpen}
         onExternalOpenChange={onThemePickerOpenChange}
@@ -224,12 +330,12 @@ export default function FamilyHome({
         {/* Home collage display — clean, photos only. Editing happens via the 🎨 icon above. */}
         {!loading && displayCollage && (
           <div className="max-w-3xl mx-auto">
-            {slideshow.enabled && homePreviewPhotos.length > 0 ? (
+            {slideshow.enabled && slideshow.autoStart && homePreviewPhotos.length > 0 ? (
               <FamilySlideshow
                 photos={homePreviewPhotos}
                 config={slideshow}
                 onOpenCollage={() => {}}
-                onConfigChange={(cfg) => { setSlideshow(cfg); }}
+                onConfigChange={(cfg) => { void persistSlideshow(cfg); }}
               />
             ) : homePreviewPhotos.length > 0 ? (
               <div

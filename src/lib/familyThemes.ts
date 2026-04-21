@@ -126,7 +126,10 @@ export function saveHomeCollageId(id: string | null) {
 // Slideshow configuration
 export type SlideTransition = "fade" | "slide" | "zoom" | "ken-burns";
 export interface SlideshowConfig {
+  version: number;
+  updatedAt: string;
   enabled: boolean;
+  autoStart: boolean;
   collageId: string | null; // null = use home collage
   intervalMs: number;       // image display duration 1500 - 30000
   videoMaxMs: number;       // max video play duration 5000 - 120000, 0 = full
@@ -138,10 +141,15 @@ export interface SlideshowConfig {
   autoCaptions: boolean;    // show filename/date when no caption
   bgMusicUrl: string | null; // optional background music URL
   bgMusicVolume: number;    // 0-1
+  lastSlideIndex: number;
+  mediaMuted: boolean;
 }
 const SLIDESHOW_KEY = "family-home-slideshow-config";
 export const DEFAULT_SLIDESHOW: SlideshowConfig = {
+  version: 1,
+  updatedAt: "",
   enabled: false,
+  autoStart: true,
   collageId: null,
   intervalMs: 3000,
   videoMaxMs: 0,
@@ -153,14 +161,42 @@ export const DEFAULT_SLIDESHOW: SlideshowConfig = {
   autoCaptions: false,
   bgMusicUrl: null,
   bgMusicVolume: 0.3,
+  lastSlideIndex: 0,
+  mediaMuted: true,
 };
+
+export function normalizeSlideshowConfig(input: Partial<SlideshowConfig> | null | undefined): SlideshowConfig {
+  const merged = { ...DEFAULT_SLIDESHOW, ...(input ?? {}) };
+  return {
+    ...merged,
+    version: Number.isFinite(merged.version) ? Math.max(1, Math.floor(merged.version)) : 1,
+    updatedAt: typeof merged.updatedAt === "string" ? merged.updatedAt : "",
+    intervalMs: Math.min(30000, Math.max(1500, Number(merged.intervalMs) || DEFAULT_SLIDESHOW.intervalMs)),
+    videoMaxMs: Math.min(120000, Math.max(0, Number(merged.videoMaxMs) || 0)),
+    bgMusicVolume: Math.min(1, Math.max(0, Number(merged.bgMusicVolume) || 0)),
+    lastSlideIndex: Math.max(0, Math.floor(Number(merged.lastSlideIndex) || 0)),
+    mediaMuted: merged.mediaMuted !== false,
+    autoStart: merged.autoStart !== false,
+  };
+}
+
 export function loadSlideshowConfig(): SlideshowConfig {
   try {
     const raw = localStorage.getItem(SLIDESHOW_KEY);
-    if (raw) return { ...DEFAULT_SLIDESHOW, ...JSON.parse(raw) };
+    if (raw) return normalizeSlideshowConfig(JSON.parse(raw));
   } catch { /* fall through */ }
-  return DEFAULT_SLIDESHOW;
+  return normalizeSlideshowConfig(DEFAULT_SLIDESHOW);
 }
-export function saveSlideshowConfig(cfg: SlideshowConfig) {
-  localStorage.setItem(SLIDESHOW_KEY, JSON.stringify(cfg));
+export function saveSlideshowConfig(cfg: SlideshowConfig, options?: { touchUpdatedAt?: boolean }) {
+  const touchUpdatedAt = options?.touchUpdatedAt !== false;
+  const normalized = normalizeSlideshowConfig(cfg);
+  const next = touchUpdatedAt ? { ...normalized, updatedAt: new Date().toISOString() } : normalized;
+  localStorage.setItem(SLIDESHOW_KEY, JSON.stringify(next));
+}
+
+export function resetSlideshowConfig(): SlideshowConfig {
+  localStorage.removeItem(SLIDESHOW_KEY);
+  const next = normalizeSlideshowConfig({ ...DEFAULT_SLIDESHOW, updatedAt: new Date().toISOString() });
+  localStorage.setItem(SLIDESHOW_KEY, JSON.stringify(next));
+  return next;
 }

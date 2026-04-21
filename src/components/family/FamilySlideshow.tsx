@@ -44,10 +44,10 @@ function formatTime(d: Date): string {
 
 export default function FamilySlideshow({ photos, config, onOpenCollage, onConfigChange }: SlideshowProps) {
   const ordered = useMemo(() => config.shuffle ? shuffleArr(photos) : photos, [photos, config.shuffle]);
-  const [idx, setIdx] = useState(0);
+  const [idx, setIdx] = useState(() => Math.max(0, config.lastSlideIndex || 0));
   const [paused, setPaused] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(config.mediaMuted !== false);
   const [showSettings, setShowSettings] = useState(false);
   const [clock, setClock] = useState(new Date());
   const [ended, setEnded] = useState(false);
@@ -94,8 +94,24 @@ export default function FamilySlideshow({ photos, config, onOpenCollage, onConfi
     else bgAudioRef.current.play().catch(() => {});
   }, [paused]);
 
-  // Reset on photos change
-  useEffect(() => { setIdx(0); setEnded(false); }, [ordered.length]);
+  // Keep index in bounds when source changes
+  useEffect(() => {
+    const maxIndex = Math.max(0, ordered.length - 1);
+    setIdx((prev) => Math.min(prev, maxIndex));
+    setEnded(false);
+  }, [ordered.length]);
+
+  useEffect(() => {
+    setMuted(config.mediaMuted !== false);
+  }, [config.mediaMuted]);
+
+  useEffect(() => {
+    if (config.lastSlideIndex !== idx) {
+      const next = { ...config, lastSlideIndex: idx };
+      saveSlideshowConfig(next);
+      onConfigChange?.(next);
+    }
+  }, [idx, config, onConfigChange]);
 
   const advance = useCallback(() => {
     if (idx >= ordered.length - 1 && !config.loop) {
@@ -247,7 +263,17 @@ export default function FamilySlideshow({ photos, config, onOpenCollage, onConfi
             {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
           </button>
           {ordered.some(p => p.media_type === "video") && (
-            <button onClick={() => setMuted(m => !m)} className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 backdrop-blur-sm" aria-label={muted ? "הפעל סאונד" : "השתק"}>
+            <button
+              onClick={() => {
+                setMuted((prev) => {
+                  const nextMuted = !prev;
+                  updateConfig({ mediaMuted: nextMuted });
+                  return nextMuted;
+                });
+              }}
+              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 backdrop-blur-sm"
+              aria-label={muted ? "הפעל סאונד" : "השתק"}
+            >
               {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
           )}
