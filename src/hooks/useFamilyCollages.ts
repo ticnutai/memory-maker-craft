@@ -253,12 +253,13 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
     if (!canManage) throw new Error("forbidden");
     if (c?.locked_by_admin && !isAdmin) throw new Error("locked-by-admin");
 
-    if (c && c.device_id !== deviceId) {
-      // Joined collage — just leave it locally
+    // Admin can always delete from DB; non-admin with foreign device just leaves locally
+    if (c && c.device_id !== deviceId && !isAdmin) {
       removeJoinedCollageId(id);
-    } else if (options?.permanent) {
-      if (!isAdmin) throw new Error("admin-only");
-      await supabase.from("family_collages").delete().eq("id", id);
+    } else if (options?.permanent || isAdmin) {
+      // Admin always does hard delete
+      const { error } = await supabase.from("family_collages").delete().eq("id", id);
+      if (error) throw error;
     } else {
       const now = new Date();
       const purgeAfter = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -269,7 +270,6 @@ export function useFamilyCollages(familyDeviceIds?: string[]) {
         updated_at: now.toISOString(),
       }).eq("id", id);
 
-      // Fallback: if archive columns don't exist yet, perform hard delete.
       if (error && isMissingColumnError(error)) {
         ({ error } = await supabase.from("family_collages").delete().eq("id", id));
       }
