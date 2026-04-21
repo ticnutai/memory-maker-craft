@@ -20,6 +20,8 @@ const Index = () => {
   const [cardSetType, setCardSetType] = useState<CardSetType>("animals");
   const [customCards, setCustomCards] = useState<CardData[] | undefined>();
   const [showSettings, setShowSettings] = useState(false);
+  const [openFamilyCode, setOpenFamilyCode] = useState(false);
+  const [openThemePicker, setOpenThemePicker] = useState(false);
 
   const settings = toGameSettings();
 
@@ -53,6 +55,8 @@ const Index = () => {
           active={tab}
           onSelect={handleSelect}
           onOpenSettings={() => setShowSettings(true)}
+          onOpenFamilyCode={() => setOpenFamilyCode(true)}
+          onOpenThemePicker={() => setOpenThemePicker(true)}
         />
       )}
 
@@ -74,7 +78,12 @@ const Index = () => {
             <BirthdayManager theme="girl" familyDeviceIds={familyDeviceIds} />
           </div>
         ) : (
-          <FamilyHome />
+          <FamilyHome
+            externalFamilyCodeOpen={openFamilyCode}
+            onFamilyCodeOpenChange={setOpenFamilyCode}
+            externalThemePickerOpen={openThemePicker}
+            onThemePickerOpenChange={setOpenThemePicker}
+          />
         )}
       </div>
 
