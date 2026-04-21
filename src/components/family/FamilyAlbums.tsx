@@ -70,6 +70,10 @@ export default function FamilyAlbums() {
   });
   const [dragItemId, setDragItemId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [externalDragOver, setExternalDragOver] = useState(false);
+  const [externalDropTarget, setExternalDropTarget] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const dropCounterRef = useRef(0);
 
   // Persist view mode to cloud + localStorage
   const changeViewMode = useCallback(async (mode: AlbumViewMode) => {
