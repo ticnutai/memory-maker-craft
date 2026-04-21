@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Plus, FolderPlus, KeyRound, Trash2, Users, ChevronLeft,
   Home as HomeIcon, FolderOpen, Image as ImageIcon, Filter, Tag, CalendarDays, User,
-  Pencil, Eye, Search, Archive, RotateCcw,
+  Pencil, Eye, Search, Archive, RotateCcw, GripVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +52,8 @@ export default function FamilyAlbums() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+  const [dragItemId, setDragItemId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
 
   // Filters
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
@@ -195,6 +197,58 @@ export default function FamilyAlbums() {
 
   const toggleFolder = (id: string) => setExpandedFolders((prev) => ({ ...prev, [id]: !prev[id] }));
 
+  // ─── Drag & Drop ───
+  const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData("text/plain", id);
+    e.dataTransfer.effectAllowed = "move";
+    setDragItemId(id);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, targetId: string | null) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverId(targetId);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOverId(null);
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent, targetFolderId: string | null) => {
+    e.preventDefault();
+    setDragOverId(null);
+    setDragItemId(null);
+    const itemId = e.dataTransfer.getData("text/plain");
+    if (!itemId || itemId === targetFolderId) return;
+    
+    const item = collages.find(c => c.id === itemId);
+    if (!item) return;
+    if (item.parent_id === targetFolderId) return; // already there
+
+    // Prevent dropping a folder into itself or its descendant
+    if (targetFolderId) {
+      let parentId: string | null = targetFolderId;
+      while (parentId) {
+        if (parentId === itemId) {
+          toast.error("לא ניתן להעביר תיקייה לתוך עצמה");
+          return;
+        }
+        const parent = collages.find(c => c.id === parentId);
+        parentId = parent?.parent_id ?? null;
+      }
+    }
+
+    try {
+      await updateCollage(itemId, { parent_id: targetFolderId } as Partial<FamilyCollage>);
+      const targetName = targetFolderId
+        ? collages.find(c => c.id === targetFolderId)?.name ?? "תיקייה"
+        : "שורש";
+      toast.success(`"${item.name}" הועבר ל-${targetName}`);
+    } catch {
+      toast.error("שגיאה בהעברה");
+    }
+  }, [collages, updateCollage]);
+
   const availableYears = useMemo(() => [...new Set(collages.map(c => c.year_tag).filter(Boolean) as number[])].sort((a, b) => b - a), [collages]);
   const availableFamilies = useMemo(() => [...new Set(collages.map(c => c.family_tag).filter(Boolean) as string[])].sort(), [collages]);
   const hasActiveFilters = !!(filterCategory || filterYear || filterFamily);
@@ -212,9 +266,12 @@ export default function FamilyAlbums() {
             setCurrentFolderId(folder.id);
             if (children.length > 0) toggleFolder(folder.id);
           }}
+          onDragOver={(e) => handleDragOver(e, folder.id)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => { e.stopPropagation(); handleDrop(e, folder.id); }}
           className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-right text-sm transition-colors ${
-            currentFolderId === folder.id ? "bg-primary/15 text-primary" : "hover:bg-muted"
-          }`}
+            dragOverId === folder.id ? "ring-2 ring-primary bg-primary/15" : ""
+          } ${currentFolderId === folder.id ? "bg-primary/15 text-primary" : "hover:bg-muted"}`}
           style={{ paddingRight: `${8 + depth * 12}px` }}
         >
           <span className="text-base">{folder.emoji ?? "📁"}</span>
@@ -363,7 +420,12 @@ export default function FamilyAlbums() {
         <div className="flex items-center gap-1 mb-4 text-sm flex-wrap">
           <button
             onClick={() => setCurrentFolderId(null)}
-            className={`px-2 py-1 rounded-md transition-colors ${!currentFolderId ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+            onDragOver={(e) => handleDragOver(e, null)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, null)}
+            className={`px-2 py-1 rounded-md transition-colors ${
+              dragOverId === null && dragItemId ? "ring-2 ring-primary bg-primary/15" : ""
+            } ${!currentFolderId ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
           >
             🏠 הכל
           </button>
@@ -553,8 +615,18 @@ export default function FamilyAlbums() {
               return (
                 <div
                   key={c.id}
+                  draggable={!!user}
+                  onDragStart={(e) => handleDragStart(e, c.id)}
+                  onDragEnd={() => { setDragItemId(null); setDragOverId(null); }}
+                  onDragOver={c.is_folder ? (e) => handleDragOver(e, c.id) : undefined}
+                  onDragLeave={c.is_folder ? handleDragLeave : undefined}
+                  onDrop={c.is_folder ? (e) => handleDrop(e, c.id) : undefined}
                   className={`rounded-xl border p-4 transition-all cursor-pointer group ${
-                    isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md"
+                    dragOverId === c.id && c.is_folder
+                      ? "ring-2 ring-primary border-primary bg-primary/15 scale-[1.02]"
+                      : dragItemId === c.id
+                        ? "opacity-40 scale-95"
+                        : isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md"
                   }`}
                   onClick={() => {
                     if (c.is_folder) setCurrentFolderId(c.id);
@@ -562,6 +634,9 @@ export default function FamilyAlbums() {
                   }}
                 >
                   <div className="flex items-start gap-3">
+                    {user && (
+                      <GripVertical className="w-4 h-4 mt-3 text-muted-foreground/50 flex-shrink-0 cursor-grab active:cursor-grabbing" />
+                    )}
                     <span className="text-4xl flex-shrink-0">
                       {c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}
                     </span>
