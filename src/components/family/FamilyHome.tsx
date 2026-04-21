@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Plus, Sparkles, Heart, Image as ImageIcon, Settings2 } from "lucide-react";
+import { Plus, Sparkles, Heart, Image as ImageIcon, Settings2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFamilyCollages } from "@/hooks/useFamilyCollages";
 import CollageView from "./CollageView";
@@ -15,9 +15,11 @@ import {
   loadFamilyTheme, FamilyTheme, loadHomeCollageId, saveHomeCollageId,
   loadSlideshowConfig, saveSlideshowConfig, SlideshowConfig, normalizeSlideshowConfig, resetSlideshowConfig,
 } from "@/lib/familyThemes";
+import { FloatEnvironment, FloatPresetId, getFloatPresetPatch, hasSavedHeartsConfig, HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, saveHeartsConfig } from "@/lib/heartsDisplayConfig";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FamilyHomeProps {
   externalFamilyCodeOpen?: boolean;
@@ -42,6 +44,38 @@ export default function FamilyHome({
   const [homePreviewPhotos, setHomePreviewPhotos] = useState<{ url: string; caption: string | null; media_type: string; thumbnail_url: string | null }[]>([]);
   const [slideshow, setSlideshow] = useState<SlideshowConfig>(() => loadSlideshowConfig());
   const [pageClock, setPageClock] = useState(() => new Date());
+  const [quickAnimOpen, setQuickAnimOpen] = useState(false);
+  const [animCfg, setAnimCfg] = useState(() => loadHeartsConfig());
+  const isMobile = useIsMobile();
+
+  const applyAnimationPreset = (preset: FloatPresetId) => {
+    const prefersReduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    const lowPower = (nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4;
+
+    const next = {
+      ...loadHeartsConfig(),
+      floatPreset: preset,
+      ...getFloatPresetPatch(preset, {
+        isMobile,
+        prefersReducedMotion: prefersReduced,
+        lowPowerDevice: lowPower,
+      }),
+    };
+    setAnimCfg(next);
+    saveHeartsConfig(next);
+  };
+
+  const updateAnimCfg = (patch: Partial<typeof animCfg>) => {
+    const explicitPreset = (patch as { floatPreset?: typeof animCfg.floatPreset }).floatPreset;
+    const next = {
+      ...animCfg,
+      ...patch,
+      floatPreset: explicitPreset ?? "custom",
+    };
+    setAnimCfg(next);
+    saveHeartsConfig(next);
+  };
 
   const isSchemaMismatchError = (err: any) => {
     const text = `${err?.message ?? ""} ${err?.details ?? ""} ${err?.hint ?? ""}`.toLowerCase();
@@ -193,6 +227,17 @@ export default function FamilyHome({
     return () => window.clearInterval(timer);
   }, [slideshow.showClock]);
 
+  useEffect(() => {
+    if (hasSavedHeartsConfig()) return;
+    applyAnimationPreset("balanced");
+  }, [isMobile]);
+
+  useEffect(() => {
+    const sync = () => setAnimCfg(loadHeartsConfig());
+    window.addEventListener(HEARTS_CONFIG_UPDATED_EVENT, sync);
+    return () => window.removeEventListener(HEARTS_CONFIG_UPDATED_EVENT, sync);
+  }, []);
+
   const homeCollage = photoCollages.find(c => c.id === homeCollageId);
 
   // Determine the source collage for slideshow & preview (slideshow can override)
@@ -290,6 +335,116 @@ export default function FamilyHome({
         externalOpen={externalThemePickerOpen}
         onExternalOpenChange={onThemePickerOpenChange}
       />
+
+      <div className="fixed bottom-4 left-4 z-30">
+        <button
+          type="button"
+          onClick={() => setQuickAnimOpen((v) => !v)}
+          className="h-11 w-11 rounded-full shadow-lg border border-white/40 backdrop-blur bg-white/85 text-foreground flex items-center justify-center hover:scale-105 transition-transform"
+          title="שליטה מהירה באנימציות"
+        >
+          {quickAnimOpen ? <X className="w-4 h-4" /> : <Settings2 className="w-4 h-4" />}
+        </button>
+
+        {quickAnimOpen && (
+          <div className="mt-2 w-[290px] rounded-2xl border border-white/40 bg-white/90 backdrop-blur-md shadow-xl p-3 space-y-2 text-right">
+            <div className="text-xs font-black">שליטה מהירה באנימציות</div>
+
+            <button
+              type="button"
+              onClick={() => applyAnimationPreset("balanced")}
+              className="w-full text-xs font-bold rounded-lg border px-2 py-1.5 bg-muted/40 hover:bg-muted/70"
+            >
+              איזון אוטומטי למכשיר הזה
+            </button>
+
+            <div className="grid grid-cols-3 gap-1.5">
+              {([
+                { id: "soft" as FloatPresetId, label: "עדין" },
+                { id: "balanced" as FloatPresetId, label: "מאוזן" },
+                { id: "rich" as FloatPresetId, label: "עשיר" },
+              ]).map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => applyAnimationPreset(preset.id)}
+                  className={`text-[11px] font-bold rounded-lg border px-2 py-1 ${
+                    animCfg.floatPreset === preset.id
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background hover:bg-muted/50"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span>{Math.round((animCfg.floatSizeScale ?? 1) * 100)}%</span>
+                <span>גודל</span>
+              </div>
+              <input type="range" min={0.5} max={2} step={0.1} value={animCfg.floatSizeScale ?? 1} onChange={(e) => updateAnimCfg({ floatSizeScale: Number(e.target.value) })} className="w-full" />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span>{Math.round((animCfg.floatSpeedScale ?? 1) * 100)}%</span>
+                <span>מהירות</span>
+              </div>
+              <input type="range" min={0.4} max={2.5} step={0.1} value={animCfg.floatSpeedScale ?? 1} onChange={(e) => updateAnimCfg({ floatSpeedScale: Number(e.target.value) })} className="w-full" />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span>{Math.round((animCfg.floatDensityScale ?? 1) * 100)}%</span>
+                <span>צפיפות</span>
+              </div>
+              <input type="range" min={0.4} max={2.5} step={0.1} value={animCfg.floatDensityScale ?? 1} onChange={(e) => updateAnimCfg({ floatDensityScale: Number(e.target.value) })} className="w-full" />
+            </div>
+
+            <div>
+              <div className="text-[11px] mb-1">סביבה</div>
+              <div className="flex flex-wrap gap-1">
+                {([
+                  { id: "theme" as FloatEnvironment, label: "🎨" },
+                  { id: "hearts" as FloatEnvironment, label: "❤️" },
+                  { id: "stars" as FloatEnvironment, label: "⭐" },
+                  { id: "confetti" as FloatEnvironment, label: "🎉" },
+                  { id: "bubbles" as FloatEnvironment, label: "🫧" },
+                  { id: "butterflies" as FloatEnvironment, label: "🦋" },
+                  { id: "snow" as FloatEnvironment, label: "❄️" },
+                  { id: "petals" as FloatEnvironment, label: "🌸" },
+                ]).map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => updateAnimCfg({ floatEnvironment: opt.id })}
+                    className={`px-2 py-1 text-xs rounded border ${
+                      (animCfg.floatEnvironment ?? "theme") === opt.id
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border px-2 py-1.5 bg-background/70">
+              <span className="text-[11px]">תנועה מופחתת</span>
+              <button
+                type="button"
+                onClick={() => updateAnimCfg({ reducedMotion: !animCfg.reducedMotion })}
+                className={`w-10 h-6 rounded-full transition-all relative ${animCfg.reducedMotion ? "bg-primary" : "bg-muted"}`}
+              >
+                <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${animCfg.reducedMotion ? "right-0.5" : "right-4"}`} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="relative z-10 pt-20 pb-12 px-4 max-w-5xl mx-auto">
         {/* Hero header */}

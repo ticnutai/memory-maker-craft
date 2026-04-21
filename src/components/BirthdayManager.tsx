@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send, CalendarPlus, Home, Eye, EyeOff, Settings2 } from "lucide-react";
-import { loadHeartsConfig, saveHeartsConfig, HeartsDisplayConfig, HeartsFilterMode, HeartsDisplayStyle } from "@/lib/heartsDisplayConfig";
+import { loadHeartsConfig, saveHeartsConfig, HeartsDisplayConfig, HeartsFilterMode, HeartsDisplayStyle, FloatEnvironment, FloatPresetId, getFloatPresetPatch } from "@/lib/heartsDisplayConfig";
 import { format, differenceInDays, addYears, isBefore, parseISO, getMonth, getDate } from "date-fns";
 import { he } from "date-fns/locale";
 import BirthdayCalendarView from "./BirthdayCalendarView";
 import BirthdayInviteDialog from "./BirthdayInviteDialog";
 import { getHebMonthsForYear, hebrewToGregorian, gregorianToHebrew, getCurrentHebYear, daysInHebMonth, toHebrewNumeral, toHebrewYear } from "@/lib/hebrewCalendar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Birthday {
   id: string;
@@ -173,10 +174,28 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
   const [hebYear, setHebYear] = useState<number>(getCurrentHebYear());
   const [hebMonth, setHebMonth] = useState<number>(7);
   const [hebDay, setHebDay] = useState<number>(1);
+  const isMobile = useIsMobile();
 
   const deviceId = getDeviceId();
   const queryIds = familyDeviceIds && familyDeviceIds.length > 0 ? familyDeviceIds : [deviceId];
   const accent = theme === "girl" ? "bg-game-pink" : "bg-game-blue";
+
+  const applyAnimationPreset = (preset: FloatPresetId) => {
+    const prefersReduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    const lowPower = (nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4;
+    const next = {
+      ...heartsConfig,
+      floatPreset: preset,
+      ...getFloatPresetPatch(preset, {
+        isMobile,
+        prefersReducedMotion: prefersReduced,
+        lowPowerDevice: lowPower,
+      }),
+    };
+    setHeartsConfig(next);
+    saveHeartsConfig(next);
+  };
 
   const loadBirthdays = useCallback(async () => {
     const [{ data: bData }, { data: eData }] = await Promise.all([
@@ -456,6 +475,138 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
                   </button>
                 </div>
               )}
+
+              {/* Float tuning */}
+              <div className="space-y-3 p-3 rounded-xl border bg-muted/20">
+                <div className="grid grid-cols-3 gap-1.5">
+                  {([
+                    { id: "soft" as FloatPresetId, label: "עדין" },
+                    { id: "balanced" as FloatPresetId, label: "מאוזן" },
+                    { id: "rich" as FloatPresetId, label: "עשיר" },
+                  ]).map((preset) => (
+                    <button
+                      key={preset.id}
+                      onClick={() => applyAnimationPreset(preset.id)}
+                      className={`text-[11px] font-bold rounded-lg border px-2 py-1 ${
+                        heartsConfig.floatPreset === preset.id
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background hover:bg-muted/60"
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-muted-foreground">🔎 גודל אלמנטים</label>
+                    <span className="text-[10px] text-muted-foreground">{Math.round((heartsConfig.floatSizeScale ?? 1) * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0.5}
+                    max={2}
+                    step={0.1}
+                    value={heartsConfig.floatSizeScale ?? 1}
+                    onChange={(e) => {
+                      const next = { ...heartsConfig, floatPreset: "custom" as const, floatSizeScale: Number(e.target.value) };
+                      setHeartsConfig(next);
+                      saveHeartsConfig(next);
+                    }}
+                    className="w-full mt-1"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-muted-foreground">⚡ מהירות אנימציה</label>
+                    <span className="text-[10px] text-muted-foreground">{Math.round((heartsConfig.floatSpeedScale ?? 1) * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0.4}
+                    max={2.5}
+                    step={0.1}
+                    value={heartsConfig.floatSpeedScale ?? 1}
+                    onChange={(e) => {
+                      const next = { ...heartsConfig, floatPreset: "custom" as const, floatSpeedScale: Number(e.target.value) };
+                      setHeartsConfig(next);
+                      saveHeartsConfig(next);
+                    }}
+                    className="w-full mt-1"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-muted-foreground">🧩 צפיפות אלמנטים</label>
+                    <span className="text-[10px] text-muted-foreground">{Math.round((heartsConfig.floatDensityScale ?? 1) * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0.4}
+                    max={2.5}
+                    step={0.1}
+                    value={heartsConfig.floatDensityScale ?? 1}
+                    onChange={(e) => {
+                      const next = { ...heartsConfig, floatPreset: "custom" as const, floatDensityScale: Number(e.target.value) };
+                      setHeartsConfig(next);
+                      saveHeartsConfig(next);
+                    }}
+                    className="w-full mt-1"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground mb-1.5 block">🌍 סביבת אנימציה</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {([
+                      { id: "theme" as FloatEnvironment, label: "🎨 לפי ערכה" },
+                      { id: "hearts" as FloatEnvironment, label: "❤️ לבבות" },
+                      { id: "stars" as FloatEnvironment, label: "⭐ כוכבים" },
+                      { id: "leaves" as FloatEnvironment, label: "🌿 עלים" },
+                      { id: "confetti" as FloatEnvironment, label: "🎉 קונפטי" },
+                      { id: "dots" as FloatEnvironment, label: "● נקודות" },
+                      { id: "bubbles" as FloatEnvironment, label: "🫧 בועות" },
+                      { id: "butterflies" as FloatEnvironment, label: "🦋 פרפרים" },
+                      { id: "snow" as FloatEnvironment, label: "❄️ שלג" },
+                      { id: "petals" as FloatEnvironment, label: "🌸 עלי כותרת" },
+                    ]).map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => {
+                          const next = { ...heartsConfig, floatPreset: "custom" as const, floatEnvironment: opt.id };
+                          setHeartsConfig(next);
+                          saveHeartsConfig(next);
+                        }}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 border ${
+                          (heartsConfig.floatEnvironment ?? "theme") === opt.id
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-2 rounded-lg border bg-background/70">
+                  <label className="text-xs font-bold text-muted-foreground">🛟 מצב תנועה מופחתת (נגישות/מכשיר חלש)</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = { ...heartsConfig, floatPreset: "custom" as const, reducedMotion: !heartsConfig.reducedMotion };
+                      setHeartsConfig(next);
+                      saveHeartsConfig(next);
+                    }}
+                    className={`w-10 h-6 rounded-full transition-all relative ${heartsConfig.reducedMotion ? "bg-primary" : "bg-muted"}`}
+                  >
+                    <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${heartsConfig.reducedMotion ? "right-0.5" : "right-4"}`} />
+                  </button>
+                </div>
+              </div>
 
               {/* Filter mode */}
               <div>

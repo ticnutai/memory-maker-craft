@@ -11,8 +11,10 @@ import {
   FAMILY_THEMES, FamilyTheme, loadCustomTheme, saveFamilyTheme,
   saveHomeCollageId, SlideshowConfig, SlideTransition,
 } from "@/lib/familyThemes";
+import { FloatEnvironment, FloatPresetId, getFloatPresetPatch, loadHeartsConfig, saveHeartsConfig } from "@/lib/heartsDisplayConfig";
 import { FamilyCollage } from "@/hooks/useFamilyCollages";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const CATEGORIES = [
   { id: "holidays", label: "🎉 חגים", emoji: "🎉" },
@@ -86,6 +88,29 @@ export default function FamilyThemePicker({
   });
   const [color1, setColor1] = useState("#fce7f3");
   const [color2, setColor2] = useState("#ddd6fe");
+  const [floatCfg, setFloatCfg] = useState(() => loadHeartsConfig());
+  const isMobile = useIsMobile();
+
+  const updateFloatCfg = (patch: Partial<ReturnType<typeof loadHeartsConfig>>) => {
+    const explicitPreset = (patch as { floatPreset?: ReturnType<typeof loadHeartsConfig>["floatPreset"] }).floatPreset;
+    const next = { ...floatCfg, ...patch, floatPreset: explicitPreset ?? "custom" };
+    setFloatCfg(next);
+    saveHeartsConfig(next);
+  };
+
+  const applyAnimationPreset = (preset: FloatPresetId) => {
+    const prefersReduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    const lowPower = (nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4;
+    updateFloatCfg({
+      floatPreset: preset,
+      ...getFloatPresetPatch(preset, {
+        isMobile,
+        prefersReducedMotion: prefersReduced,
+        lowPowerDevice: lowPower,
+      }),
+    });
+  };
 
   // ─── Computed: folder tree, breadcrumb, filters ───
   const allThemes = existing ? [...FAMILY_THEMES, existing] : FAMILY_THEMES;
@@ -668,6 +693,84 @@ export default function FamilyThemePicker({
 
             {/* Themes tab */}
             <TabsContent value="themes" className="mt-4">
+              <div className="mb-3 rounded-xl border p-3 bg-muted/20 space-y-2">
+                <div className="text-xs font-bold text-muted-foreground">שליטה מהירה באנימציות צפות</div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {([
+                    { id: "soft" as FloatPresetId, label: "עדין" },
+                    { id: "balanced" as FloatPresetId, label: "מאוזן" },
+                    { id: "rich" as FloatPresetId, label: "עשיר" },
+                  ]).map((preset) => (
+                    <button
+                      key={preset.id}
+                      onClick={() => applyAnimationPreset(preset.id)}
+                      className={`text-[11px] font-bold rounded-lg border px-2 py-1 ${
+                        floatCfg.floatPreset === preset.id
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background hover:bg-muted/60"
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-[10px]">גודל {Math.round((floatCfg.floatSizeScale ?? 1) * 100)}%</Label>
+                    <input
+                      type="range"
+                      min={0.5}
+                      max={2}
+                      step={0.1}
+                      value={floatCfg.floatSizeScale ?? 1}
+                      onChange={(e) => updateFloatCfg({ floatSizeScale: Number(e.target.value) })}
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[10px]">מהירות {Math.round((floatCfg.floatSpeedScale ?? 1) * 100)}%</Label>
+                    <input
+                      type="range"
+                      min={0.4}
+                      max={2.5}
+                      step={0.1}
+                      value={floatCfg.floatSpeedScale ?? 1}
+                      onChange={(e) => updateFloatCfg({ floatSpeedScale: Number(e.target.value) })}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-[10px]">סביבה</Label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {([
+                      { id: "theme" as FloatEnvironment, label: "🎨" },
+                      { id: "hearts" as FloatEnvironment, label: "❤️" },
+                      { id: "stars" as FloatEnvironment, label: "⭐" },
+                      { id: "confetti" as FloatEnvironment, label: "🎉" },
+                      { id: "bubbles" as FloatEnvironment, label: "🫧" },
+                      { id: "butterflies" as FloatEnvironment, label: "🦋" },
+                      { id: "snow" as FloatEnvironment, label: "❄️" },
+                      { id: "petals" as FloatEnvironment, label: "🌸" },
+                    ]).map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => updateFloatCfg({ floatEnvironment: opt.id })}
+                        className={`px-2 py-1 text-xs rounded border ${
+                          (floatCfg.floatEnvironment ?? "theme") === opt.id
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background"
+                        }`}
+                        title={opt.id}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 {allThemes.map((t) => (
                   <button
