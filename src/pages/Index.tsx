@@ -98,13 +98,15 @@ const Index = () => {
         )}
       </div>
 
-      {/* Settings panel — always available */}
-      <CardSetSelect
-        onSelectSet={handleCardSet}
-        settingsOpen={showSettings}
-        onSettingsToggle={setShowSettings}
-        settingsOnly={tab !== "memory" || screen !== "home"}
-      />
+      {/* Settings panel — only when not already showing CardSetSelect */}
+      {(tab !== "memory" || screen !== "home") && (
+        <CardSetSelect
+          onSelectSet={handleCardSet}
+          settingsOpen={showSettings}
+          onSettingsToggle={setShowSettings}
+          settingsOnly
+        />
+      )}
     </div>
   );
 };
