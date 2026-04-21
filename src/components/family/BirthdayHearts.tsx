@@ -5,7 +5,7 @@ import { he } from "date-fns/locale";
 import { HDate } from "@hebcal/core";
 import { toHebrewNumeral } from "@/lib/hebrewCalendar";
 import { getDeviceId } from "@/lib/deviceId";
-import { HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, HeartsDisplayStyle } from "@/lib/heartsDisplayConfig";
+import { HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, HeartsDisplayStyle, FloatAnimationType } from "@/lib/heartsDisplayConfig";
 
 const HEB_MONTH_NAMES: Record<string, string> = {
   Nisan: "ניסן", Iyyar: "אייר", Sivan: "סיון", Tamuz: "תמוז",
@@ -83,6 +83,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
   const [items, setItems] = useState<UpcomingItem[]>([]);
   const [displayStyle, setDisplayStyle] = useState<HeartsDisplayStyle>("hearts");
   const [floatAnim, setFloatAnim] = useState(true);
+  const [floatAnimType, setFloatAnimType] = useState<FloatAnimationType>("bounce");
   const [floatSizeScale, setFloatSizeScale] = useState(1);
   const [floatSpeedScale, setFloatSpeedScale] = useState(1);
   const [floatDensityScale, setFloatDensityScale] = useState(1);
@@ -95,6 +96,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
       if (!config.enabled) { setItems([]); return config; }
       setDisplayStyle(config.displayStyle);
       setFloatAnim(config.floatAnimation);
+      setFloatAnimType(config.floatAnimationType || "bounce");
       setFloatSizeScale(Math.min(2, Math.max(0.5, config.floatSizeScale || 1)));
       setFloatSpeedScale(Math.min(2.5, Math.max(0.4, config.floatSpeedScale || 1)));
       setFloatDensityScale(Math.min(2.5, Math.max(0.4, config.floatDensityScale || 1)));
