@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Sparkles, Heart, Image as ImageIcon, Settings2, X, CalendarDays, Gamepad2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { Plus, Sparkles, Heart, Image as ImageIcon, Settings2, X, CalendarDays, Gamepad2, Download, Upload, DatabaseBackup, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFamilyCollages } from "@/hooks/useFamilyCollages";
 import CollageView from "./CollageView";
@@ -19,6 +19,7 @@ import {
 import { FloatEnvironment, FloatPresetId, FloatingEffect, HeartsDisplayStyle, getFloatPresetPatch, hasSavedHeartsConfig, HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, saveHeartsConfig } from "@/lib/heartsDisplayConfig";
 import { analyzeSmartHome, type SmartHomeAnalysis } from "@/lib/smartInsights";
 import { buildWeeklyFamilyPlan, getQuickGameSuggestions, pickActivityOfTheDay } from "@/lib/familyActivities";
+import { exportSiteBackup, isValidSiteBackupPayload, restoreSiteBackup } from "@/lib/siteBackup";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
@@ -52,6 +53,9 @@ export default function FamilyHome({
   const [smartAnalysis, setSmartAnalysis] = useState<SmartHomeAnalysis | null>(null);
   const [smartBusyId, setSmartBusyId] = useState<string | null>(null);
   const [activitySeed, setActivitySeed] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dataOpBusy, setDataOpBusy] = useState(false);
+  const [fileActionMode, setFileActionMode] = useState<"import" | "restore">("import");
+  const importFileRef = useRef<HTMLInputElement | null>(null);
   const isMobile = useIsMobile();
 
   const weeklyPlan = useMemo(() => buildWeeklyFamilyPlan(activitySeed), [activitySeed]);
@@ -483,6 +487,77 @@ export default function FamilyHome({
     setActivitySeed(next.toISOString().slice(0, 10));
   };
 
+  const downloadBackupFile = (jsonContent: string, prefix: string) => {
+    const blob = new Blob([jsonContent], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-");
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${prefix}-${timestamp}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportLike = async (kind: "export" | "backup") => {
+    setDataOpBusy(true);
+    try {
+      const payload = await exportSiteBackup({
+        userId: user?.id ?? null,
+        familyId: familyCtx.family?.id ?? null,
+        deviceIds: familyCtx.familyDeviceIds ?? [familyCtx.deviceId],
+        currentDeviceId: familyCtx.deviceId,
+      });
+      downloadBackupFile(JSON.stringify(payload, null, 2), kind === "backup" ? "memory-maker-backup" : "memory-maker-export");
+      toast.success(kind === "backup" ? "הגיבוי נוצר בהצלחה" : "הייצוא נוצר בהצלחה");
+    } catch {
+      toast.error(kind === "backup" ? "שגיאה ביצירת גיבוי" : "שגיאה בייצוא מידע");
+    } finally {
+      setDataOpBusy(false);
+    }
+  };
+
+  const triggerFileAction = (mode: "import" | "restore") => {
+    setFileActionMode(mode);
+    importFileRef.current?.click();
+  };
+
+  const handleImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setDataOpBusy(true);
+    try {
+      const raw = await file.text();
+      const parsed = JSON.parse(raw);
+      if (!isValidSiteBackupPayload(parsed)) {
+        toast.error("קובץ לא תקין לייבוא/שחזור");
+        return;
+      }
+
+      const result = await restoreSiteBackup(parsed, {
+        restoreCloud: true,
+        restoreLocalStorage: true,
+      });
+
+      const restoredCount = Object.values(result.restoredTables).reduce((acc, n) => acc + n, 0);
+      if (result.errors.length > 0) {
+        toast.warning(`${fileActionMode === "restore" ? "שחזור" : "ייבוא"} הסתיים חלקית (${restoredCount} פריטים)`);
+      } else {
+        toast.success(`${fileActionMode === "restore" ? "שחזור" : "ייבוא"} הושלם (${restoredCount} פריטים)`);
+      }
+
+      await familyCtx.refresh();
+      window.dispatchEvent(new Event(HEARTS_CONFIG_UPDATED_EVENT));
+    } catch {
+      toast.error(fileActionMode === "restore" ? "שגיאה בשחזור גיבוי" : "שגיאה בייבוא מידע");
+    } finally {
+      setDataOpBusy(false);
+    }
+  };
+
   return (
     <div className="min-h-screen relative">
       <FamilyDecorations type={theme.decoration ?? "none"} />
@@ -868,6 +943,56 @@ export default function FamilyHome({
               ))}
             </div>
           </div>
+        </section>
+
+        <section className={`mb-5 rounded-2xl border p-3 sm:p-4 ${isDark ? "bg-white/5 border-white/15" : "bg-white/75 border-white/90"}`}>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 className={`text-sm sm:text-base font-black ${isDark ? "text-white" : "text-foreground"}`}>ייצוא, ייבוא, גיבוי ושחזור</h2>
+            <div className={`text-[11px] ${isDark ? "text-white/70" : "text-muted-foreground"}`}>קובץ JSON מאובטח לשמירה והחזרה</div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button
+              type="button"
+              disabled={dataOpBusy}
+              onClick={() => { void handleExportLike("export"); }}
+              className="rounded-xl border px-2 py-2 text-xs font-bold flex items-center justify-center gap-1.5 bg-background/70 hover:bg-background disabled:opacity-60"
+            >
+              <Download className="w-3.5 h-3.5" /> ייצוא מידע
+            </button>
+            <button
+              type="button"
+              disabled={dataOpBusy}
+              onClick={() => triggerFileAction("import")}
+              className="rounded-xl border px-2 py-2 text-xs font-bold flex items-center justify-center gap-1.5 bg-background/70 hover:bg-background disabled:opacity-60"
+            >
+              <Upload className="w-3.5 h-3.5" /> ייבוא מידע
+            </button>
+            <button
+              type="button"
+              disabled={dataOpBusy}
+              onClick={() => { void handleExportLike("backup"); }}
+              className="rounded-xl border px-2 py-2 text-xs font-bold flex items-center justify-center gap-1.5 bg-background/70 hover:bg-background disabled:opacity-60"
+            >
+              <DatabaseBackup className="w-3.5 h-3.5" /> גיבוי מלא
+            </button>
+            <button
+              type="button"
+              disabled={dataOpBusy}
+              onClick={() => triggerFileAction("restore")}
+              className="rounded-xl border px-2 py-2 text-xs font-bold flex items-center justify-center gap-1.5 bg-background/70 hover:bg-background disabled:opacity-60"
+            >
+              <RotateCcw className="w-3.5 h-3.5" /> שחזור גיבוי
+            </button>
+          </div>
+
+          <input
+            ref={importFileRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={(e) => { void handleImportFile(e); }}
+            className="hidden"
+          />
         </section>
 
         <BirthdayHearts isDark={isDark} familyDeviceIds={familyCtx.familyDeviceIds} />
