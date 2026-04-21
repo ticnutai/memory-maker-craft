@@ -670,144 +670,196 @@ export default function FamilyAlbums() {
           </div>
           )}
 
-            {/* Items grid */}
-            {!loading && visibleItems.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {visibleItems.map(c => {
-              const isShared = c.device_id !== deviceId;
-              const isHome = homeCollageId === c.id;
-              const childCount = c.is_folder ? collages.filter(x => x.parent_id === c.id).length : 0;
-              const canManage = !!user && (isAdmin || c.owner_user_id === user.id);
-              return (
-                <div
-                  key={c.id}
-                  draggable={!!user}
-                  onDragStart={(e) => handleDragStart(e, c.id)}
-                  onDragEnd={() => { setDragItemId(null); setDragOverId(null); }}
-                  onDragOver={c.is_folder ? (e) => handleDragOver(e, c.id) : undefined}
-                  onDragLeave={c.is_folder ? handleDragLeave : undefined}
-                  onDrop={c.is_folder ? (e) => handleDrop(e, c.id) : undefined}
-                  className={`rounded-xl border p-4 transition-all cursor-pointer group ${
-                    dragOverId === c.id && c.is_folder
-                      ? "ring-2 ring-primary border-primary bg-primary/15 scale-[1.02]"
-                      : dragItemId === c.id
-                        ? "opacity-40 scale-95"
-                        : isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md"
-                  }`}
-                  onClick={() => {
-                    if (c.is_folder) setCurrentFolderId(c.id);
-                    else setActiveId(c.id);
-                  }}
-                >
-                  <div className="flex items-start gap-3">
-                    {user && (
-                      <GripVertical className="w-4 h-4 mt-3 text-muted-foreground/50 flex-shrink-0 cursor-grab active:cursor-grabbing" />
-                    )}
-                    <span className="text-4xl flex-shrink-0">
-                      {c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-sm truncate flex items-center gap-1">
-                        {c.name}
-                        {isHome && <HomeIcon className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
-                        {isShared && <Users className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                        {c.is_folder ? (
-                          <span>{childCount} פריטים</span>
-                        ) : (
-                          <span>{isShared ? "משותף" : "שלי"} · קוד {c.share_code}</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 mt-1 flex-wrap">
-                        {c.category && (
-                          <span className="px-1.5 py-0.5 rounded bg-muted text-[10px]">
-                            {CATEGORIES.find(cat => cat.id === c.category)?.emoji ?? "📋"} {c.category}
-                          </span>
-                        )}
-                        {c.year_tag && <span className="text-[10px] text-muted-foreground">📅{c.year_tag}</span>}
-                        {c.family_tag && <span className="text-[10px] text-muted-foreground">👤{c.family_tag}</span>}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Actions - always visible on mobile, hover on desktop */}
-                  <div className="flex items-center gap-1 mt-3 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                    {!c.is_folder && (
-                      <>
-                        <button
-                          onClick={() => setActiveId(c.id)}
-                          className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                          title="פתח ועריכה — העלאת תמונות, סידור מחדש"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => openEditDialog(c)}
-                          className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                          title="ערוך פרטי אלבום"
-                          disabled={!canManage}
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => isHome ? clearHome() : setAsHome(c.id)}
-                          className={`p-1.5 rounded-md text-xs transition-colors ${
-                            isHome ? "text-primary bg-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                          }`}
-                          title={isHome ? "הסר מדף הבית" : "קבע כדף הבית"}
-                        >
-                          <HomeIcon className="w-3.5 h-3.5" />
-                        </button>
-                      </>
-                    )}
-                    {c.is_folder && (
-                      <button
-                        onClick={() => openEditDialog(c)}
-                        className="p-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                        title="ערוך שם תיקייה"
-                        disabled={!canManage}
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        if (!canManage) {
-                          toast.error("רק בעל התוכן או אדמין יכולים למחוק/לארכב");
-                          return;
-                        }
-                        const msg = showArchived
-                          ? `מחיקה סופית של "${c.name}"? לא ניתן לשחזר.`
-                          : c.is_folder
-                            ? `להעביר לארכיון את התיקייה "${c.name}" וכל תוכנה?`
-                            : isShared
-                              ? `לעזוב את "${c.name}"?`
-                              : `להעביר לארכיון את "${c.name}"?`;
-                        if (confirm(msg)) {
-                          if (homeCollageId === c.id) clearHome();
-                          deleteCollage(c.id, { permanent: showArchived && isAdmin });
-                        }
-                      }}
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                      title="מחק"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                    {!!c.archived_at && (
-                      <button
-                        onClick={() => restoreCollage(c.id)}
-                        className="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-100"
-                        title="שחזר מארכיון"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
+            {/* Items - view mode rendering */}
+            {!loading && visibleItems.length > 0 && (() => {
+              const dragProps = (c: FamilyCollage) => ({
+                draggable: !!user,
+                onDragStart: (e: React.DragEvent) => handleDragStart(e, c.id),
+                onDragEnd: () => { setDragItemId(null); setDragOverId(null); },
+                ...(c.is_folder ? {
+                  onDragOver: (e: React.DragEvent) => handleDragOver(e, c.id),
+                  onDragLeave: handleDragLeave,
+                  onDrop: (e: React.DragEvent) => handleDrop(e, c.id),
+                } : {}),
+              });
+
+              const dragClass = (c: FamilyCollage, isHome: boolean) =>
+                dragOverId === c.id && c.is_folder
+                  ? "ring-2 ring-primary border-primary bg-primary/15 scale-[1.02]"
+                  : dragItemId === c.id
+                    ? "opacity-40 scale-95"
+                    : isHome ? "bg-primary/10 border-primary shadow-md" : c.is_folder ? "bg-muted/30 hover:bg-muted/50" : "bg-background hover:bg-muted/30 hover:shadow-md";
+
+              const itemClick = (c: FamilyCollage) => {
+                if (c.is_folder) setCurrentFolderId(c.id);
+                else setActiveId(c.id);
+              };
+
+              const renderActions = (c: FamilyCollage, isHome: boolean, isShared: boolean, canManage: boolean) => (
+                <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                  {!c.is_folder && (
+                    <>
+                      <button onClick={() => setActiveId(c.id)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" title="פתח"><Eye className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => openEditDialog(c)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" title="ערוך" disabled={!canManage}><Pencil className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => isHome ? clearHome() : setAsHome(c.id)} className={`p-1.5 rounded-md text-xs transition-colors ${isHome ? "text-primary bg-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`} title={isHome ? "הסר מדף הבית" : "קבע כדף הבית"}><HomeIcon className="w-3.5 h-3.5" /></button>
+                    </>
+                  )}
+                  {c.is_folder && <button onClick={() => openEditDialog(c)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" title="ערוך" disabled={!canManage}><Pencil className="w-3.5 h-3.5" /></button>}
+                  <button onClick={() => { if (!canManage) { toast.error("רק בעל התוכן או אדמין יכולים למחוק/לארכב"); return; } const msg = showArchived ? `מחיקה סופית של "${c.name}"?` : c.is_folder ? `לארכב "${c.name}" וכל תוכנה?` : isShared ? `לעזוב "${c.name}"?` : `לארכב "${c.name}"?`; if (confirm(msg)) { if (homeCollageId === c.id) clearHome(); deleteCollage(c.id, { permanent: showArchived && isAdmin }); } }} className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10" title="מחק"><Trash2 className="w-3.5 h-3.5" /></button>
+                  {!!c.archived_at && <button onClick={() => restoreCollage(c.id)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted" title="שחזר"><RotateCcw className="w-3.5 h-3.5" /></button>}
                 </div>
               );
-            })}
-          </div>
-            )}
+
+              const getItemInfo = (c: FamilyCollage) => ({
+                isShared: c.device_id !== deviceId,
+                isHome: homeCollageId === c.id,
+                childCount: c.is_folder ? collages.filter(x => x.parent_id === c.id).length : 0,
+                canManage: !!user && (isAdmin || c.owner_user_id === user.id),
+              });
+
+              // ─── GRID VIEW ───
+              if (viewMode === "grid") return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {visibleItems.map(c => {
+                    const { isShared, isHome, childCount, canManage } = getItemInfo(c);
+                    return (
+                      <div key={c.id} {...dragProps(c)} className={`rounded-xl border p-4 transition-all cursor-pointer group ${dragClass(c, isHome)}`} onClick={() => itemClick(c)}>
+                        <div className="flex items-start gap-3">
+                          {user && <GripVertical className="w-4 h-4 mt-3 text-muted-foreground/50 flex-shrink-0 cursor-grab active:cursor-grabbing" />}
+                          <span className="text-4xl flex-shrink-0">{c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-sm truncate flex items-center gap-1">
+                              {c.name}
+                              {isHome && <HomeIcon className="w-3.5 h-3.5 text-primary flex-shrink-0" />}
+                              {isShared && <Users className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {c.is_folder ? `${childCount} פריטים` : `${isShared ? "משותף" : "שלי"} · קוד ${c.share_code}`}
+                            </div>
+                            <div className="flex items-center gap-1 mt-1 flex-wrap">
+                              {c.category && <span className="px-1.5 py-0.5 rounded bg-muted text-[10px]">{CATEGORIES.find(cat => cat.id === c.category)?.emoji ?? "📋"} {c.category}</span>}
+                              {c.year_tag && <span className="text-[10px] text-muted-foreground">📅{c.year_tag}</span>}
+                              {c.family_tag && <span className="text-[10px] text-muted-foreground">👤{c.family_tag}</span>}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 mt-3 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                          {renderActions(c, isHome, isShared, canManage)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+
+              // ─── LIST VIEW ───
+              if (viewMode === "list") return (
+                <div className="space-y-1.5">
+                  {visibleItems.map(c => {
+                    const { isShared, isHome, childCount, canManage } = getItemInfo(c);
+                    return (
+                      <div key={c.id} {...dragProps(c)} className={`flex items-center gap-3 rounded-xl border px-3 py-2 transition-all cursor-pointer group ${dragClass(c, isHome)}`} onClick={() => itemClick(c)}>
+                        {user && <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 flex-shrink-0 cursor-grab" />}
+                        <span className="text-2xl flex-shrink-0">{c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-sm truncate flex items-center gap-1">
+                            {c.name}
+                            {isHome && <HomeIcon className="w-3 h-3 text-primary" />}
+                            {isShared && <Users className="w-3 h-3 text-muted-foreground" />}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground flex-shrink-0">
+                          {c.category && <span className="hidden sm:inline">{CATEGORIES.find(cat => cat.id === c.category)?.emoji}</span>}
+                          {c.year_tag && <span className="hidden sm:inline">📅{c.year_tag}</span>}
+                          <span>{c.is_folder ? `${childCount} פריטים` : isShared ? "משותף" : c.share_code}</span>
+                        </div>
+                        <div className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex-shrink-0">
+                          {renderActions(c, isHome, isShared, canManage)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+
+              // ─── TABLE VIEW ───
+              if (viewMode === "table") return (
+                <div className="rounded-xl border overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/50 text-muted-foreground text-xs">
+                        <th className="text-right p-2 font-bold w-8"></th>
+                        <th className="text-right p-2 font-bold">שם</th>
+                        <th className="text-right p-2 font-bold hidden sm:table-cell">סוג</th>
+                        <th className="text-right p-2 font-bold hidden sm:table-cell">קטגוריה</th>
+                        <th className="text-right p-2 font-bold hidden md:table-cell">שנה</th>
+                        <th className="text-right p-2 font-bold">פרטים</th>
+                        <th className="text-right p-2 font-bold w-24">פעולות</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visibleItems.map(c => {
+                        const { isShared, isHome, childCount, canManage } = getItemInfo(c);
+                        return (
+                          <tr key={c.id} {...dragProps(c)} className={`border-t cursor-pointer group transition-colors hover:bg-muted/30 ${dragOverId === c.id && c.is_folder ? "bg-primary/10" : dragItemId === c.id ? "opacity-40" : ""}`} onClick={() => itemClick(c)}>
+                            <td className="p-2">{user && <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 cursor-grab" />}</td>
+                            <td className="p-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg">{c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}</span>
+                                <span className="font-bold truncate max-w-[200px]">{c.name}</span>
+                                {isHome && <HomeIcon className="w-3 h-3 text-primary flex-shrink-0" />}
+                                {isShared && <Users className="w-3 h-3 text-muted-foreground flex-shrink-0" />}
+                              </div>
+                            </td>
+                            <td className="p-2 text-muted-foreground hidden sm:table-cell">{c.is_folder ? "📁 תיקייה" : "📸 אלבום"}</td>
+                            <td className="p-2 text-muted-foreground hidden sm:table-cell">{c.category ? (CATEGORIES.find(cat => cat.id === c.category)?.label ?? c.category) : "—"}</td>
+                            <td className="p-2 text-muted-foreground hidden md:table-cell">{c.year_tag ?? "—"}</td>
+                            <td className="p-2 text-muted-foreground">{c.is_folder ? `${childCount} פריטים` : `קוד ${c.share_code}`}</td>
+                            <td className="p-2">
+                              <div className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                {renderActions(c, isHome, isShared, canManage)}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+
+              // ─── GALLERY VIEW ───
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  {visibleItems.map(c => {
+                    const { isShared, isHome, childCount, canManage } = getItemInfo(c);
+                    return (
+                      <div key={c.id} {...dragProps(c)} className={`rounded-xl border overflow-hidden transition-all cursor-pointer group ${dragClass(c, isHome)}`} onClick={() => itemClick(c)}>
+                        {/* Cover / Emoji area */}
+                        <div className="aspect-square flex items-center justify-center relative" style={{ background: c.is_folder ? "hsl(var(--muted))" : `linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--muted)))` }}>
+                          {c.cover_url ? (
+                            <img src={c.cover_url} alt={c.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-5xl">{c.is_folder ? (c.emoji ?? "📁") : (c.emoji ?? "📸")}</span>
+                          )}
+                          {user && <GripVertical className="absolute top-1 right-1 w-4 h-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />}
+                          {isHome && <HomeIcon className="absolute top-1 left-1 w-4 h-4 text-primary" />}
+                        </div>
+                        <div className="p-2">
+                          <div className="font-bold text-xs truncate">{c.name}</div>
+                          <div className="text-[10px] text-muted-foreground mt-0.5">
+                            {c.is_folder ? `${childCount} פריטים` : isShared ? "משותף" : c.share_code}
+                          </div>
+                        </div>
+                        <div className="px-2 pb-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                          {renderActions(c, isHome, isShared, canManage)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>
