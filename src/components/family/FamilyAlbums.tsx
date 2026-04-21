@@ -697,6 +697,24 @@ export default function FamilyAlbums() {
           ))}
         </div>
 
+        {/* Selection toolbar */}
+        {selectMode && (
+          <div className="mb-4 p-3 rounded-xl bg-primary/10 border border-primary/30 flex items-center gap-3 flex-wrap">
+            <span className="text-sm font-medium text-foreground">{selectedIds.size} נבחרו</span>
+            <Button size="sm" variant="outline" onClick={() => { const all = new Set(visibleItems.map(c => c.id)); setSelectedIds(all); }}>
+              <CheckSquare className="w-3.5 h-3.5 ml-1" /> בחר הכל
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setSelectedIds(new Set())}>
+              <XCircle className="w-3.5 h-3.5 ml-1" /> נקה בחירה
+            </Button>
+            {selectedIds.size > 0 && (
+              <Button size="sm" variant="destructive" onClick={deleteSelected}>
+                <Trash2 className="w-3.5 h-3.5 ml-1" /> מחק נבחרים
+              </Button>
+            )}
+          </div>
+        )}
+
         {/* Filters */}
         {showFilters && (
           <div className="mb-4 p-3 rounded-xl bg-muted/30 border space-y-2">
