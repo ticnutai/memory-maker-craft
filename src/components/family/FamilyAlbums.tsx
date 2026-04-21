@@ -16,7 +16,17 @@ import CollageView from "./CollageView";
 import { loadHomeCollageId, saveHomeCollageId, saveSlideshowConfig, loadSlideshowConfig } from "@/lib/familyThemes";
 import { toast } from "sonner";
 
-const CATEGORIES = [
+type AlbumViewMode = "grid" | "table" | "list" | "gallery";
+const VIEW_MODE_KEY = "family-albums-view-mode";
+
+const VIEW_MODES: { id: AlbumViewMode; label: string; icon: typeof LayoutGrid }[] = [
+  { id: "grid", label: "רשת", icon: LayoutGrid },
+  { id: "list", label: "רשימה", icon: List },
+  { id: "table", label: "טבלה", icon: Table2 },
+  { id: "gallery", label: "גלריה", icon: GalleryHorizontalEnd },
+];
+
+
   { id: "holidays", label: "🎉 חגים", emoji: "🎉" },
   { id: "trips", label: "✈️ טיולים", emoji: "✈️" },
   { id: "birthdays", label: "🎂 ימי הולדת", emoji: "🎂" },
