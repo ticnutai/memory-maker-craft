@@ -26,6 +26,7 @@ import {
   isValidEncryptedBackupEnvelope,
   isValidSiteBackupPayload,
   loadBackupHistory,
+  previewReplaceScope,
   pushBackupHistory,
   restoreSiteBackup,
   type BackupHistoryItem,
@@ -607,8 +608,14 @@ export default function FamilyHome({
       }
 
       if (fileActionMode === "restore" && restoreMode === "replace") {
-        const ok = window.confirm("שחזור במצב החלפה ידרוס מידע קיים בתחום המשפחה/מכשיר. להמשיך?");
-        if (!ok) return;
+        const preview = await previewReplaceScope(payload);
+        const typed = window.prompt(
+          `שחזור במצב החלפה ימחק בערך ${preview.total} רשומות קיימות.\nכדי להמשיך, הקלד בדיוק: מאשר החלפה`,
+        );
+        if ((typed ?? "").trim() !== "מאשר החלפה") {
+          toast.info("שחזור החלפה בוטל - אישור טקסט לא תואם");
+          return;
+        }
       }
 
       const mode = fileActionMode === "restore" ? restoreMode : "merge";
@@ -1053,6 +1060,11 @@ export default function FamilyHome({
             >
               החלפה
             </button>
+            {restoreMode === "replace" && (
+              <span className={`text-[10px] ${isDark ? "text-rose-200" : "text-rose-600"}`}>
+                נדרש אישור מוקלד: מאשר החלפה
+              </span>
+            )}
           </div>
 
           <div className="mt-3 grid grid-cols-2 sm:grid-cols-5 gap-2">

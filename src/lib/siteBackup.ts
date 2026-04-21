@@ -352,6 +352,94 @@ async function replaceCloudScope(payload: SiteBackupPayload): Promise<void> {
   }
 }
 
+async function countByIn(table: string, column: string, values: string[]): Promise<number> {
+  if (!values.length) return 0;
+  const { count } = await supabase
+    .from(table as any)
+    .select("id", { count: "exact", head: true })
+    .in(column as any, values as any);
+  return count ?? 0;
+}
+
+async function countByEq(table: string, column: string, value: string): Promise<number> {
+  const { count } = await supabase
+    .from(table as any)
+    .select("id", { count: "exact", head: true })
+    .eq(column as any, value as any);
+  return count ?? 0;
+}
+
+export async function previewReplaceScope(payload: SiteBackupPayload): Promise<{ counts: Record<string, number>; total: number }> {
+  const deviceIds = payload.scope.deviceIds ?? [];
+  const familyId = payload.scope.familyId;
+  const userId = payload.scope.userId;
+
+  const counts: Record<string, number> = {};
+
+  if (deviceIds.length > 0) {
+    const [
+      birthdays,
+      familyEvents,
+      familyCollages,
+      familyPhotos,
+      customAnimations,
+      voiceRecordings,
+      gameSettings,
+      reminderSettings,
+      familyRecipients,
+      customBgThemes,
+      customCardSets,
+      birthdayReminders,
+    ] = await Promise.all([
+      countByIn("birthdays", "device_id", deviceIds),
+      countByIn("family_events", "device_id", deviceIds),
+      countByIn("family_collages", "device_id", deviceIds),
+      countByIn("family_photos", "device_id", deviceIds),
+      countByIn("custom_animations", "device_id", deviceIds),
+      countByIn("voice_recordings", "device_id", deviceIds),
+      countByIn("game_settings", "device_id", deviceIds),
+      countByIn("reminder_settings", "device_id", deviceIds),
+      countByIn("family_recipients", "device_id", deviceIds),
+      countByIn("custom_bg_themes", "device_id", deviceIds),
+      countByIn("custom_card_sets", "device_id", deviceIds),
+      countByIn("birthday_reminders", "device_id", deviceIds),
+    ]);
+
+    counts.birthdays = birthdays;
+    counts.family_events = familyEvents;
+    counts.family_collages = familyCollages;
+    counts.family_photos = familyPhotos;
+    counts.custom_animations = customAnimations;
+    counts.voice_recordings = voiceRecordings;
+    counts.game_settings = gameSettings;
+    counts.reminder_settings = reminderSettings;
+    counts.family_recipients = familyRecipients;
+    counts.custom_bg_themes = customBgThemes;
+    counts.custom_card_sets = customCardSets;
+    counts.birthday_reminders = birthdayReminders;
+
+    if (customCardSets > 0) {
+      const { data: setRows } = await supabase.from("custom_card_sets").select("id").in("device_id", deviceIds);
+      const setIds = (setRows ?? []).map((row: any) => row.id as string);
+      counts.custom_card_items = await countByIn("custom_card_items", "set_id", setIds);
+    } else {
+      counts.custom_card_items = 0;
+    }
+  }
+
+  if (familyId) {
+    counts.family_members = await countByEq("family_members", "family_id", familyId);
+    counts.families = await countByEq("families", "id", familyId);
+  }
+
+  if (userId) {
+    counts.user_preferences = await countByEq("user_preferences", "user_id", userId);
+  }
+
+  const total = Object.values(counts).reduce((acc, n) => acc + n, 0);
+  return { counts, total };
+}
+
 export async function restoreSiteBackup(
   payload: SiteBackupPayload,
   options: RestoreSiteBackupOptions,
