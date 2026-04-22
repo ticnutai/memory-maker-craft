@@ -3,6 +3,12 @@ import CardSetSelect from "@/components/CardSetSelect";
 import GameBoard from "@/components/GameBoard";
 import TreasureHuntGame from "@/components/TreasureHuntGame";
 import TrainGame from "@/components/TrainGame";
+import FamilyTrivia from "@/components/FamilyTrivia";
+import FamilyPuzzle from "@/components/FamilyPuzzle";
+import WordSearchGame from "@/components/WordSearchGame";
+import FamilyBingo from "@/components/FamilyBingo";
+import ChainStoryGame from "@/components/ChainStoryGame";
+import DrawingBoard from "@/components/DrawingBoard";
 import FamilyHome from "@/components/family/FamilyHome";
 import FamilyAlbums from "@/components/family/FamilyAlbums";
 import BirthdayManager from "@/components/BirthdayManager";
@@ -44,7 +50,7 @@ const Index = () => {
     setCustomCards(undefined);
   };
 
-  const inGame = tab === "memory" && screen === "game";
+  const inGame = (tab === "memory" && screen === "game") || ["treasure", "train", "trivia", "puzzle", "wordsearch", "bingo", "chainstory", "drawing"].includes(tab);
 
   return (
     <div
@@ -80,6 +86,18 @@ const Index = () => {
           />
         ) : tab === "train" ? (
           <TrainGame onHome={() => handleSelect("memory")} />
+        ) : tab === "trivia" ? (
+          <FamilyTrivia onHome={() => handleSelect("memory")} />
+        ) : tab === "puzzle" ? (
+          <FamilyPuzzle onHome={() => handleSelect("memory")} />
+        ) : tab === "wordsearch" ? (
+          <WordSearchGame onHome={() => handleSelect("memory")} />
+        ) : tab === "bingo" ? (
+          <FamilyBingo onHome={() => handleSelect("memory")} />
+        ) : tab === "chainstory" ? (
+          <ChainStoryGame onHome={() => handleSelect("memory")} />
+        ) : tab === "drawing" ? (
+          <DrawingBoard onHome={() => handleSelect("memory")} />
         ) : tab === "treasure" ? (
           <TreasureHuntGame onHome={() => handleSelect("memory")} />
         ) : tab === "albums" ? (
