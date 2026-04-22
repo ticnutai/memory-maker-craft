@@ -171,10 +171,11 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
   const [formNotes, setFormNotes] = useState("");
   const [formColor, setFormColor] = useState("#f472b6");
   const [formRecurring, setFormRecurring] = useState(true);
-  const [dateMode, setDateMode] = useState<"greg" | "heb">("greg");
+  const [dateMode, setDateMode] = useState<"greg" | "heb">("heb");
   const [hebYear, setHebYear] = useState<number>(getCurrentHebYear());
   const [hebMonth, setHebMonth] = useState<number>(7);
   const [hebDay, setHebDay] = useState<number>(1);
+  const [hebDateStep, setHebDateStep] = useState<"day" | "month" | "year" | null>(null);
   const isMobile = useIsMobile();
 
   const deviceId = getDeviceId();
@@ -214,7 +215,7 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
     setFormType("birthday"); setFormName(""); setFormDate(""); setFormRelation("משפחה");
     setFormEmoji("🎂"); setFormNotes(""); setFormColor("#f472b6"); setFormRecurring(true);
     setEditId(null); setEditingEvent(false); setShowForm(false);
-    setDateMode("greg");
+    setDateMode("heb"); setHebDateStep(null);
     setHebYear(getCurrentHebYear()); setHebMonth(7); setHebDay(1);
   };
 
