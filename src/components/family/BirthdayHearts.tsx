@@ -691,6 +691,8 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
     return (
       <>
       {monthShowcase}
+      <div className="relative">
+      {editModeUI}
       <div className="flex flex-wrap justify-center gap-4 mb-6">
         {renderedItems.map((item, i) => {
           const key = `${item.eventType}-${item.name}-${i}`;
