@@ -26,7 +26,7 @@ export default function HomeNav({ active, onSelect, onOpenThemePicker }: HomeNav
   };
 
   const isActive = (key: string) => {
-    if (key === "memory") return ["memory", "treasure", "train"].includes(active);
+    if (key === "memory") return ["memory", "treasure", "train", "trivia", "puzzle", "wordsearch", "bingo", "chainstory", "drawing"].includes(active);
     return active === key;
   };
 
