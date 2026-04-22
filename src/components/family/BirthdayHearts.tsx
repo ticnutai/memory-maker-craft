@@ -583,7 +583,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
         {monthShowcase}
         <div className="relative min-h-[300px]">
         {editModeUI}
-        <div className="absolute inset-0 pointer-events-none z-[15] overflow-hidden" aria-hidden="false">
+        <div className="relative min-h-[250px] z-[15]" aria-hidden="false">
           {renderedItems.map((item, i) => {
             const key = `${item.eventType}-${item.name}-${i}`;
             const size = (isHeartShape ? 96 : 80) * floatSizeScale;
