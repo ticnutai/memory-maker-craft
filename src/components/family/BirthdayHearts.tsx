@@ -599,17 +599,16 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
                 className="absolute pointer-events-auto group"
                 {...dragProps(i)}
                 style={{
-                  left: `${baseLeft}%`,
-                  top: `${baseTop}%`,
+                  left: `calc(${baseLeft}% + ${(dOff?.x ?? 0)}px)`,
+                  top: `calc(${baseTop}% + ${(dOff?.y ?? 0)}px)`,
                   width: `${size}px`,
                   height: `${size}px`,
-                  animation: reducedMotion ? undefined : `${animName} ${pos.duration}s ease-in-out infinite`,
+                  animation: (reducedMotion || editMode) ? undefined : `${animName} ${pos.duration}s ease-in-out infinite`,
                   animationDelay: `${pos.delay}s`,
                   filter: `drop-shadow(0 6px 20px ${item.color}50)`,
                   zIndex: dOff ? 50 : 15,
-                  ...(dOff ? { transform: `translate(${dOff.x}px, ${dOff.y}px)` } : {}),
-                  touchAction: draggableEnabled ? "none" : undefined,
-                  cursor: draggableEnabled ? "grab" : "pointer",
+                  touchAction: editMode ? "none" : undefined,
+                  cursor: editMode ? "grab" : "pointer",
                 }}
               >
                 {/* Heart shape */}
