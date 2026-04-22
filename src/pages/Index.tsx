@@ -3,11 +3,19 @@ import CardSetSelect from "@/components/CardSetSelect";
 import GameBoard from "@/components/GameBoard";
 import TreasureHuntGame from "@/components/TreasureHuntGame";
 import TrainGame from "@/components/TrainGame";
+import FamilyTrivia from "@/components/FamilyTrivia";
+import FamilyPuzzle from "@/components/FamilyPuzzle";
+import WordSearchGame from "@/components/WordSearchGame";
+import FamilyBingo from "@/components/FamilyBingo";
+import ChainStoryGame from "@/components/ChainStoryGame";
+import DrawingBoard from "@/components/DrawingBoard";
 import FamilyHome from "@/components/family/FamilyHome";
 import FamilyAlbums from "@/components/family/FamilyAlbums";
+import FamilyIdeasPage from "@/components/family/FamilyIdeasPage";
 import BirthdayManager from "@/components/BirthdayManager";
 import AppSidebar, { SidebarSection } from "@/components/AppSidebar";
 import HomeNav from "@/components/HomeNav";
+import GameFullscreenWrapper from "@/components/GameFullscreenWrapper";
 import { CardSetType, CardData, GameSettings } from "@/lib/gameData";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { useFamily } from "@/hooks/useFamily";
@@ -44,7 +52,7 @@ const Index = () => {
     setCustomCards(undefined);
   };
 
-  const inGame = tab === "memory" && screen === "game";
+  const inGame = (tab === "memory" && screen === "game") || ["treasure", "train", "trivia", "puzzle", "wordsearch", "bingo", "chainstory", "drawing"].includes(tab);
 
   return (
     <div
@@ -71,7 +79,9 @@ const Index = () => {
 
       <div className="flex-1 flex flex-col min-w-0">
         {tab === "memory" && screen === "game" ? (
-          <GameBoard theme="girl" settings={settings} cardSetType={cardSetType} customCards={customCards} onHome={goHome} onSettingsOpen={() => setShowSettings(true)} />
+          <GameFullscreenWrapper>
+            <GameBoard theme="girl" settings={settings} cardSetType={cardSetType} customCards={customCards} onHome={goHome} onSettingsOpen={() => setShowSettings(true)} />
+          </GameFullscreenWrapper>
         ) : tab === "memory" ? (
           <CardSetSelect
             onSelectSet={handleCardSet}
@@ -79,11 +89,41 @@ const Index = () => {
             onSettingsToggle={setShowSettings}
           />
         ) : tab === "train" ? (
-          <TrainGame onHome={() => handleSelect("memory")} />
+          <GameFullscreenWrapper>
+            <TrainGame onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
+        ) : tab === "trivia" ? (
+          <GameFullscreenWrapper>
+            <FamilyTrivia onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
+        ) : tab === "puzzle" ? (
+          <GameFullscreenWrapper>
+            <FamilyPuzzle onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
+        ) : tab === "wordsearch" ? (
+          <GameFullscreenWrapper>
+            <WordSearchGame onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
+        ) : tab === "bingo" ? (
+          <GameFullscreenWrapper>
+            <FamilyBingo onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
+        ) : tab === "chainstory" ? (
+          <GameFullscreenWrapper>
+            <ChainStoryGame onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
+        ) : tab === "drawing" ? (
+          <GameFullscreenWrapper>
+            <DrawingBoard onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
         ) : tab === "treasure" ? (
-          <TreasureHuntGame onHome={() => handleSelect("memory")} />
+          <GameFullscreenWrapper>
+            <TreasureHuntGame onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
         ) : tab === "albums" ? (
           <FamilyAlbums />
+        ) : tab === "ideas" ? (
+          <FamilyIdeasPage />
         ) : tab === "birthdays" ? (
           <div className="w-full px-4 sm:px-6 lg:px-8 pt-14 pb-8">
             <BirthdayManager theme="girl" familyDeviceIds={familyDeviceIds} />

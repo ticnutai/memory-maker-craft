@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send, CalendarPlus, Home, Eye, EyeOff, Settings2, Check } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Calendar, Gift, Heart, Plus, Trash2, Edit2, X, ExternalLink, Clock, LayoutGrid, List, Star, Send, CalendarPlus, Home, Eye, EyeOff, Settings2, Check, Copy } from "lucide-react";
 import { loadHeartsConfig, saveHeartsConfig, HeartsDisplayConfig, HeartsFilterMode, HeartsDisplayStyle, FloatEnvironment, FloatPresetId, FloatAnimationType, getFloatPresetPatch } from "@/lib/heartsDisplayConfig";
 import { format, differenceInDays, addYears, isBefore, parseISO, getMonth, getDate } from "date-fns";
 import { he } from "date-fns/locale";
@@ -171,10 +172,11 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
   const [formNotes, setFormNotes] = useState("");
   const [formColor, setFormColor] = useState("#f472b6");
   const [formRecurring, setFormRecurring] = useState(true);
-  const [dateMode, setDateMode] = useState<"greg" | "heb">("greg");
+  const [dateMode, setDateMode] = useState<"greg" | "heb">("heb");
   const [hebYear, setHebYear] = useState<number>(getCurrentHebYear());
   const [hebMonth, setHebMonth] = useState<number>(7);
   const [hebDay, setHebDay] = useState<number>(1);
+  const [hebDateStep, setHebDateStep] = useState<"day" | "month" | "year" | null>(null);
   const isMobile = useIsMobile();
 
   const deviceId = getDeviceId();
@@ -214,7 +216,7 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
     setFormType("birthday"); setFormName(""); setFormDate(""); setFormRelation("משפחה");
     setFormEmoji("🎂"); setFormNotes(""); setFormColor("#f472b6"); setFormRecurring(true);
     setEditId(null); setEditingEvent(false); setShowForm(false);
-    setDateMode("greg");
+    setDateMode("heb"); setHebDateStep(null);
     setHebYear(getCurrentHebYear()); setHebMonth(7); setHebDay(1);
   };
 
@@ -223,7 +225,7 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
     setFormName(b.name); setFormDate(b.birth_date); setFormRelation(b.relation);
     setFormEmoji(b.emoji); setFormNotes(b.notes || ""); setFormColor(b.color);
     setEditId(b.id); setEditingEvent(false); setShowForm(true);
-    setDateMode("greg");
+    setDateMode("heb"); setHebDateStep(null);
     try {
       const h = gregorianToHebrew(parseISO(b.birth_date));
       setHebYear(h.hyear); setHebMonth(h.hmonth); setHebDay(h.hday);
@@ -236,7 +238,7 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
     setFormEmoji(ev.emoji); setFormNotes(ev.notes || ""); setFormColor(ev.color);
     setFormRecurring(ev.recurring);
     setEditId(ev.id); setEditingEvent(true); setShowForm(true);
-    setDateMode("greg");
+    setDateMode("heb"); setHebDateStep(null);
     try {
       const h = gregorianToHebrew(parseISO(ev.event_date));
       setHebYear(h.hyear); setHebMonth(h.hmonth); setHebDay(h.hday);
@@ -348,7 +350,40 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
     }
   };
 
+  const duplicateBirthday = (b: Birthday) => {
+    resetForm();
+    setFormType("birthday");
+    setFormName(b.name + " (עותק)");
+    setFormDate(b.birth_date);
+    setFormRelation(b.relation);
+    setFormEmoji(b.emoji);
+    setFormNotes(b.notes || "");
+    setFormColor(b.color);
+    setShowForm(true);
+    try {
+      const h = gregorianToHebrew(parseISO(b.birth_date));
+      setHebYear(h.hyear); setHebMonth(h.hmonth); setHebDay(h.hday);
+    } catch { /* ignore */ }
+  };
+
+  const duplicateEvent = (ev: FamilyEvent) => {
+    resetForm();
+    setFormType(ev.event_type);
+    setFormName(ev.name + " (עותק)");
+    setFormDate(ev.event_date);
+    setFormEmoji(ev.emoji);
+    setFormNotes(ev.notes || "");
+    setFormColor(ev.color);
+    setFormRecurring(ev.recurring);
+    setShowForm(true);
+    try {
+      const h = gregorianToHebrew(parseISO(ev.event_date));
+      setHebYear(h.hyear); setHebMonth(h.hmonth); setHebDay(h.hday);
+    } catch { /* ignore */ }
+  };
+
   const sorted = [...birthdays].sort((a, b) => getDaysUntilBirthday(a.birth_date) - getDaysUntilBirthday(b.birth_date));
+
   const upcoming = sorted.filter(b => getDaysUntilBirthday(b.birth_date) <= 30);
 
   const monthGroups = Array.from({ length: 12 }, (_, i) => ({
@@ -809,164 +844,241 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
         </div>
       )}
 
-      {/* Add/Edit Form */}
-      {showForm && (
-        <div id="birthday-form" className="bg-card rounded-2xl p-5 border-2 border-muted shadow-lg space-y-4 bounce-in scroll-mt-20">
-          <div className="flex justify-between items-center">
-            <h3 className="font-bold text-sm">
+      {/* Add/Edit Dialog */}
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) resetForm(); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-base">
               {editId ? "✏️ עריכה" : `${EVENT_TYPES.find(t => t.id === formType)?.emoji ?? "📅"} הוספת ${EVENT_TYPES.find(t => t.id === formType)?.label.split(" ").slice(1).join(" ") ?? "אירוע"}`}
-            </h3>
-            <button onClick={resetForm} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
-          </div>
+            </DialogTitle>
+          </DialogHeader>
 
-          {/* Event type selector */}
-          <div>
-            <label className="text-xs font-bold text-muted-foreground mb-1.5 block">סוג אירוע</label>
-            <div className="flex flex-wrap gap-1.5">
-              {EVENT_TYPES.map(t => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => handleTypeChange(t.id)}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 border ${
-                    formType === t.id
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                      : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
-              <label className="text-xs font-bold text-muted-foreground mb-1 block">שם</label>
-              <input id="birthday-name-input" type="text" value={formName} onChange={e => setFormName(e.target.value)}
-                placeholder="שם בן המשפחה..." dir="rtl"
-                className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink" />
-            </div>
-            <div className="col-span-2">
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-bold text-muted-foreground">תאריך לידה</label>
-                <div className="flex gap-1 bg-muted rounded-lg p-0.5 text-[10px] font-bold">
+          <div className="space-y-4">
+            {/* Event type selector */}
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1.5 block">סוג אירוע</label>
+              <div className="flex flex-wrap gap-1.5">
+                {EVENT_TYPES.map(t => (
                   <button
+                    key={t.id}
                     type="button"
-                    onClick={() => setDateMode("greg")}
-                    className={`px-2 py-0.5 rounded transition-all ${dateMode === "greg" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
-                  >📅 לועזי</button>
-                  <button
-                    type="button"
-                    onClick={() => setDateMode("heb")}
-                    className={`px-2 py-0.5 rounded transition-all ${dateMode === "heb" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
-                  >🕎 עברי</button>
-                </div>
+                    onClick={() => handleTypeChange(t.id)}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95 border ${
+                      formType === t.id
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
+            </div>
 
-              {dateMode === "greg" ? (
-                <input type="date" value={formDate} onChange={e => setFormDate(e.target.value)}
-                  className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink" />
-              ) : (
-                <div className="grid grid-cols-3 gap-2" dir="rtl">
-                  <select value={hebDay} onChange={e => setHebDay(Number(e.target.value))}
-                    className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink">
-                    {Array.from({ length: daysInHebMonth(hebYear, hebMonth) }, (_, i) => i + 1).map(d => (
-                      <option key={d} value={d}>{toHebrewNumeral(d)}</option>
-                    ))}
-                  </select>
-                  <select value={hebMonth} onChange={e => setHebMonth(Number(e.target.value))}
-                    className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink">
-                    {getHebMonthsForYear(hebYear).map(m => (
-                      <option key={m.index} value={m.index}>{m.name}</option>
-                    ))}
-                  </select>
-                  <div className="relative">
-                    <input type="number" min={5700} max={5900} value={hebYear}
-                      onChange={e => setHebYear(Number(e.target.value) || getCurrentHebYear())}
-                      className="h-10 w-full rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink text-center opacity-0 absolute inset-0 z-10" />
-                    <div className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card flex items-center justify-center font-bold text-purple-700">
-                      {toHebrewYear(hebYear)}
-                    </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="text-xs font-bold text-muted-foreground mb-1 block">שם</label>
+                <input id="birthday-name-input" type="text" value={formName} onChange={e => setFormName(e.target.value)}
+                  placeholder="שם בן המשפחה..." dir="rtl"
+                  className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-primary bg-background" />
+              </div>
+              <div className="col-span-2">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-muted-foreground">תאריך</label>
+                  <div className="flex gap-1 bg-muted rounded-lg p-0.5 text-[10px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setDateMode("greg")}
+                      className={`px-2 py-0.5 rounded transition-all ${dateMode === "greg" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
+                    >📅 לועזי</button>
+                    <button
+                      type="button"
+                      onClick={() => setDateMode("heb")}
+                      className={`px-2 py-0.5 rounded transition-all ${dateMode === "heb" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
+                    >🕎 עברי</button>
                   </div>
                 </div>
-              )}
 
-              {formDate && (
-                <p className="text-[10px] text-purple-500 mt-1 flex items-center gap-2 flex-wrap">
-                  <span>📅 {format(parseISO(formDate), "d MMMM yyyy", { locale: he })}</span>
-                  <span>•</span>
-                  <span>🕎 {getHebrewDate(parseISO(formDate))}</span>
-                </p>
+                {dateMode === "greg" ? (
+                  <input type="date" value={formDate} onChange={e => setFormDate(e.target.value)}
+                    className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-primary bg-background" />
+                ) : (
+                  <div dir="rtl" className="space-y-2">
+                    {/* Breadcrumb display */}
+                    <div className="flex items-center gap-1 flex-wrap text-sm">
+                      <button
+                        type="button"
+                        onClick={() => setHebDateStep(hebDateStep === "day" ? null : "day")}
+                        className={`px-3 py-1.5 rounded-lg font-bold transition-all border ${
+                          hebDateStep === "day"
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : "bg-muted/50 text-foreground border-muted hover:bg-muted"
+                        }`}
+                      >
+                        {toHebrewNumeral(hebDay)}
+                      </button>
+                      <span className="text-muted-foreground">/</span>
+                      <button
+                        type="button"
+                        onClick={() => setHebDateStep(hebDateStep === "month" ? null : "month")}
+                        className={`px-3 py-1.5 rounded-lg font-bold transition-all border ${
+                          hebDateStep === "month"
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : "bg-muted/50 text-foreground border-muted hover:bg-muted"
+                        }`}
+                      >
+                        {getHebMonthsForYear(hebYear).find(m => m.index === hebMonth)?.name ?? "חודש"}
+                      </button>
+                      <span className="text-muted-foreground">/</span>
+                      <button
+                        type="button"
+                        onClick={() => setHebDateStep(hebDateStep === "year" ? null : "year")}
+                        className={`px-3 py-1.5 rounded-lg font-bold transition-all border ${
+                          hebDateStep === "year"
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : "bg-muted/50 text-foreground border-muted hover:bg-muted"
+                        }`}
+                      >
+                        {toHebrewYear(hebYear)}
+                      </button>
+                    </div>
+
+                    {/* Step dropdowns */}
+                    {hebDateStep === "day" && (
+                      <div className="bg-muted/30 rounded-xl p-2 border flex flex-wrap gap-1 max-h-48 overflow-y-auto bounce-in">
+                        {Array.from({ length: daysInHebMonth(hebYear, hebMonth) }, (_, i) => i + 1).map(d => (
+                          <button
+                            key={d}
+                            type="button"
+                            onClick={() => { setHebDay(d); setHebDateStep("month"); }}
+                            className={`w-10 h-8 rounded-lg text-xs font-bold transition-all ${
+                              hebDay === d
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "bg-card hover:bg-muted text-foreground"
+                            }`}
+                          >
+                            {toHebrewNumeral(d)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {hebDateStep === "month" && (
+                      <div className="bg-muted/30 rounded-xl p-2 border flex flex-wrap gap-1 bounce-in">
+                        {getHebMonthsForYear(hebYear).map(m => (
+                          <button
+                            key={m.index}
+                            type="button"
+                            onClick={() => { setHebMonth(m.index); setHebDateStep("year"); }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              hebMonth === m.index
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "bg-card hover:bg-muted text-foreground"
+                            }`}
+                          >
+                            {m.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {hebDateStep === "year" && (
+                      <div className="bg-muted/30 rounded-xl p-2 border flex flex-wrap gap-1 max-h-56 overflow-y-auto bounce-in">
+                        {Array.from({ length: 81 }, (_, i) => getCurrentHebYear() - 70 + i).map(y => (
+                          <button
+                            key={y}
+                            type="button"
+                            onClick={() => { setHebYear(y); setHebDateStep(null); }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              hebYear === y
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "bg-card hover:bg-muted text-foreground"
+                            }`}
+                          >
+                            {toHebrewYear(y)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {formDate && (
+                  <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+                    <span>📅 {format(parseISO(formDate), "d MMMM yyyy", { locale: he })}</span>
+                    <span>•</span>
+                    <span>🕎 {getHebrewDate(parseISO(formDate))}</span>
+                  </p>
+                )}
+              </div>
+              {formType === "birthday" && (
+                <div className="col-span-2">
+                  <label className="text-xs font-bold text-muted-foreground mb-1 block">קרבה</label>
+                  <select value={formRelation} onChange={e => setFormRelation(e.target.value)} dir="rtl"
+                    className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-primary bg-background">
+                    {RELATIONS.map(r => <option key={r.label} value={r.label}>{r.emoji} {r.label}</option>)}
+                  </select>
+                </div>
               )}
             </div>
-            {formType === "birthday" && (
-              <div className="col-span-2">
-                <label className="text-xs font-bold text-muted-foreground mb-1 block">קרבה</label>
-                <select value={formRelation} onChange={e => setFormRelation(e.target.value)} dir="rtl"
-                  className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink bg-card">
-                  {RELATIONS.map(r => <option key={r.label} value={r.label}>{r.emoji} {r.label}</option>)}
-                </select>
+
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">אימוג׳י</label>
+              <div className="flex flex-wrap gap-2">
+                {BIRTHDAY_EMOJIS.map(e => (
+                  <button key={e} onClick={() => setFormEmoji(e)}
+                    className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all active:scale-90 ${
+                      formEmoji === e ? "ring-2 ring-primary bg-primary/10 scale-110" : "bg-muted hover:scale-105"
+                    }`}>{e}</button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">צבע</label>
+              <div className="flex gap-2 items-center">
+                {COLORS.map(c => (
+                  <button key={c} onClick={() => setFormColor(c)}
+                    className={`w-7 h-7 rounded-full transition-all active:scale-90 ${
+                      formColor === c ? "ring-2 ring-offset-2 ring-foreground scale-110" : "hover:scale-105"
+                    }`} style={{ backgroundColor: c }} />
+                ))}
+                <label className="relative w-7 h-7 rounded-full overflow-hidden border-2 border-dashed border-muted-foreground/40 cursor-pointer">
+                  <input type="color" value={formColor} onChange={e => setFormColor(e.target.value)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  <div className="w-full h-full flex items-center justify-center text-[10px]">🎨</div>
+                </label>
+              </div>
+            </div>
+
+            {/* Recurring toggle */}
+            {formType !== "birthday" && (
+              <div className="flex items-center justify-between p-3 rounded-xl border bg-muted/30">
+                <label className="text-xs font-bold text-muted-foreground">🔄 חוזר כל שנה</label>
+                <button
+                  type="button"
+                  onClick={() => setFormRecurring(r => !r)}
+                  className={`w-10 h-6 rounded-full transition-all relative ${formRecurring ? "bg-primary" : "bg-muted"}`}
+                >
+                  <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-primary-foreground shadow transition-all ${formRecurring ? "right-0.5" : "right-4"}`} />
+                </button>
               </div>
             )}
-          </div>
 
-          <div>
-            <label className="text-xs font-bold text-muted-foreground mb-1 block">אימוג׳י</label>
-            <div className="flex flex-wrap gap-2">
-              {BIRTHDAY_EMOJIS.map(e => (
-                <button key={e} onClick={() => setFormEmoji(e)}
-                  className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center transition-all active:scale-90 ${
-                    formEmoji === e ? "ring-2 ring-game-pink bg-game-pink/10 scale-110" : "bg-muted hover:scale-105"
-                  }`}>{e}</button>
-              ))}
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-1 block">הערות</label>
+              <input type="text" value={formNotes} onChange={e => setFormNotes(e.target.value)}
+                placeholder="פרטים נוספים..." dir="rtl"
+                className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-primary bg-background" />
             </div>
+
+            <Button variant={theme === "girl" ? "game-pink" : "game-blue"} className="w-full rounded-xl"
+              onClick={saveEntry} disabled={!formName || !formDate}>
+              {editId ? "💾 שמירה" : `${EVENT_TYPES.find(t => t.id === formType)?.emoji ?? "📅"} הוספה`}
+            </Button>
           </div>
-
-          <div>
-            <label className="text-xs font-bold text-muted-foreground mb-1 block">צבע</label>
-            <div className="flex gap-2 items-center">
-              {COLORS.map(c => (
-                <button key={c} onClick={() => setFormColor(c)}
-                  className={`w-7 h-7 rounded-full transition-all active:scale-90 ${
-                    formColor === c ? "ring-2 ring-offset-2 ring-foreground scale-110" : "hover:scale-105"
-                  }`} style={{ backgroundColor: c }} />
-              ))}
-              <label className="relative w-7 h-7 rounded-full overflow-hidden border-2 border-dashed border-muted-foreground/40 cursor-pointer">
-                <input type="color" value={formColor} onChange={e => setFormColor(e.target.value)}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                <div className="w-full h-full flex items-center justify-center text-[10px]">🎨</div>
-              </label>
-            </div>
-          </div>
-
-          {/* Recurring toggle — for non-birthday events */}
-          {formType !== "birthday" && (
-            <div className="flex items-center justify-between p-3 rounded-xl border bg-muted/30">
-              <label className="text-xs font-bold text-muted-foreground">🔄 חוזר כל שנה</label>
-              <button
-                type="button"
-                onClick={() => setFormRecurring(r => !r)}
-                className={`w-10 h-6 rounded-full transition-all relative ${formRecurring ? "bg-primary" : "bg-muted"}`}
-              >
-                <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${formRecurring ? "right-0.5" : "right-4"}`} />
-              </button>
-            </div>
-          )}
-
-          <div>
-            <label className="text-xs font-bold text-muted-foreground mb-1 block">הערות</label>
-            <input type="text" value={formNotes} onChange={e => setFormNotes(e.target.value)}
-              placeholder="פרטים נוספים..." dir="rtl"
-              className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink" />
-          </div>
-
-          <Button variant={theme === "girl" ? "game-pink" : "game-blue"} className="w-full rounded-xl"
-            onClick={saveEntry} disabled={!formName || !formDate}>
-            {editId ? "💾 שמירה" : `${EVENT_TYPES.find(t => t.id === formType)?.emoji ?? "📅"} הוספה`}
-          </Button>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Empty */}
       {birthdays.length === 0 && !showForm && viewMode !== "holidays" && (
@@ -1033,8 +1145,11 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
                     <button onClick={() => setInviteFor(b)} className="p-1.5 rounded-lg transition-all active:scale-90" style={{ background: b.color + "30" }} title="שלח הזמנה">
                       <Send className="w-3.5 h-3.5" style={{ color: b.color }} />
                     </button>
-                    <button onClick={() => editBirthday(b)} className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90">
+                    <button onClick={() => editBirthday(b)} className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="עריכה">
                       <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                    <button onClick={() => duplicateBirthday(b)} className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="שכפול">
+                      <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
                     <a href={generateGoogleCalendarUrl(b)} target="_blank" rel="noopener noreferrer"
                       className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="הוספה ליומן גוגל">
@@ -1089,10 +1204,13 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
                   <span className="text-[10px] font-bold" style={{ color: ev.color }}>
                     {days === 0 ? "🎉 היום!" : `עוד ${days} ימים`}
                   </span>
-                  <button onClick={() => editEvent(ev)} className="p-1 rounded bg-muted hover:bg-muted/80">
+                  <button onClick={() => editEvent(ev)} className="p-1 rounded bg-muted hover:bg-muted/80" title="עריכה">
                     <Edit2 className="w-3 h-3 text-muted-foreground" />
                   </button>
-                  <button onClick={() => deleteEntry(ev.id, true)} className="p-1 rounded bg-muted hover:bg-destructive/10">
+                  <button onClick={() => duplicateEvent(ev)} className="p-1 rounded bg-muted hover:bg-muted/80" title="שכפול">
+                    <Copy className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                  <button onClick={() => deleteEntry(ev.id, true)} className="p-1 rounded bg-muted hover:bg-destructive/10" title="מחיקה">
                     <Trash2 className="w-3 h-3 text-destructive/60" />
                   </button>
                 </div>

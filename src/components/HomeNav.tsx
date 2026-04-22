@@ -1,4 +1,4 @@
-import { Home, Album, Cake, Palette, Gamepad2 } from "lucide-react";
+import { Home, Album, Cake, Palette, Gamepad2, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SidebarSection } from "@/components/AppSidebar";
 
@@ -12,6 +12,7 @@ const navItems: { key: SidebarSection | "themes"; label: string; icon: typeof Ho
   { key: "family", label: "אלבומים", icon: Home },
   { key: "albums", label: "אלבומי משפחה", icon: Album },
   { key: "birthdays", label: "ימי הולדת", icon: Cake },
+  { key: "ideas", label: "רעיונות", icon: Lightbulb },
   { key: "themes", label: "קולאז׳ים וערכות", icon: Palette },
   { key: "memory", label: "משחקים", icon: Gamepad2 },
 ];
@@ -26,7 +27,7 @@ export default function HomeNav({ active, onSelect, onOpenThemePicker }: HomeNav
   };
 
   const isActive = (key: string) => {
-    if (key === "memory") return ["memory", "treasure", "train"].includes(active);
+    if (key === "memory") return ["memory", "treasure", "train", "trivia", "puzzle", "wordsearch", "bingo", "chainstory", "drawing"].includes(active);
     return active === key;
   };
 

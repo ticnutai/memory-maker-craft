@@ -1,10 +1,10 @@
-import { Home, Cake, Gamepad2, Map, Train, ChevronDown, Pin, PinOff, Settings, LogIn, LogOut, User, Shield, Users, Palette, Album } from "lucide-react";
+import { Home, Cake, Gamepad2, Map, Train, ChevronDown, Pin, PinOff, Settings, LogIn, LogOut, User, Shield, Users, Palette, Album, HelpCircle, Puzzle, Search, Target, BookOpen, Paintbrush, Lightbulb } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
-export type SidebarSection = "family" | "albums" | "birthdays" | "memory" | "treasure" | "train";
+export type SidebarSection = "family" | "albums" | "birthdays" | "ideas" | "memory" | "treasure" | "train" | "trivia" | "puzzle" | "wordsearch" | "bingo" | "chainstory" | "drawing";
 
 interface AppSidebarProps {
   active: SidebarSection;
@@ -18,6 +18,12 @@ const games: { key: SidebarSection; title: string; icon: typeof Gamepad2 }[] = [
   { key: "memory", title: "זיכרון", icon: Gamepad2 },
   { key: "treasure", title: "ציד מטמון", icon: Map },
   { key: "train", title: "רכבת", icon: Train },
+  { key: "trivia", title: "טריוויה", icon: HelpCircle },
+  { key: "puzzle", title: "פאזל", icon: Puzzle },
+  { key: "wordsearch", title: "מילים", icon: Search },
+  { key: "bingo", title: "בינגו", icon: Target },
+  { key: "chainstory", title: "סיפור", icon: BookOpen },
+  { key: "drawing", title: "ציור", icon: Paintbrush },
 ];
 
 const PIN_KEY = "app-sidebar-pinned";
@@ -121,6 +127,13 @@ export default function AppSidebar({ active, onSelect, onOpenSettings, onOpenFam
             >
               <Cake className="h-4 w-4 shrink-0" />
               <span>ימי הולדת</span>
+            </button>
+            <button
+              onClick={() => handleSelect("ideas")}
+              className={cn(baseBtn, active === "ideas" && activeBtn)}
+            >
+              <Lightbulb className="h-4 w-4 shrink-0" />
+              <span>רעיונות וכלים</span>
             </button>
             <button
               onClick={() => { onOpenThemePicker?.(); if (!pinned) setHoverOpen(false); }}
