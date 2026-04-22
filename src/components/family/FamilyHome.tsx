@@ -154,6 +154,16 @@ export default function FamilyHome({
     return () => { cancelled = true; };
   }, [user]);
 
+  // ESC to close quick animation panel
+  useEffect(() => {
+    if (!quickAnimOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setQuickAnimOpen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [quickAnimOpen]);
+
   const applyHomeCollage = async (id: string | null, options?: { followHomeInSlideshow?: boolean }) => {
     // Always save locally
     saveHomeCollageId(id);
@@ -619,8 +629,6 @@ export default function FamilyHome({
             <Sparkles className="w-4 h-4" />
           </p>
         </header>
-
-        <BirthdayHearts isDark={isDark} familyDeviceIds={familyCtx.familyDeviceIds} />
 
         {loading && <div className="text-center text-foreground/60">טוען…</div>}
 
