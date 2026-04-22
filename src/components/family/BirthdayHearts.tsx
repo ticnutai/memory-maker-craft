@@ -3,10 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { differenceInDays, addYears, isBefore, parseISO, format } from "date-fns";
 import { he } from "date-fns/locale";
 import { HDate } from "@hebcal/core";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Move, Check, X } from "lucide-react";
 import { toHebrewNumeral } from "@/lib/hebrewCalendar";
 import { getDeviceId } from "@/lib/deviceId";
 import { HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, saveHeartsConfig, HeartsDisplayStyle, FloatAnimationType, FloatingEffect, HeartsFilterMode, FloatDirection } from "@/lib/heartsDisplayConfig";
+
+const POSITIONS_STORAGE_KEY = "family-hearts-saved-positions";
+
+function loadSavedPositions(): Record<number, { x: number; y: number }> {
+  try {
+    const raw = localStorage.getItem(POSITIONS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveSavedPositions(positions: Record<number, { x: number; y: number }>) {
+  localStorage.setItem(POSITIONS_STORAGE_KEY, JSON.stringify(positions));
+}
 
 const HEB_MONTH_NAMES: Record<string, string> = {
   Nisan: "ניסן", Iyyar: "אייר", Sivan: "סיון", Tamuz: "תמוז",
@@ -89,7 +102,7 @@ function useDraggable(enabled: boolean) {
     origX: number;
     origY: number;
   } | null>(null);
-  const [dragOffsets, setDragOffsets] = useState<Record<number, { x: number; y: number }>>({});
+  const [dragOffsets, setDragOffsets] = useState<Record<number, { x: number; y: number }>>(loadSavedPositions);
 
   const onPointerDown = useCallback(
     (idx: number, e: React.PointerEvent) => {
@@ -133,7 +146,7 @@ function useDraggable(enabled: boolean) {
     []
   );
 
-  return { dragOffsets, onPointerDown, onPointerMove, onPointerUp };
+  return { dragOffsets, setDragOffsets, onPointerDown, onPointerMove, onPointerUp };
 }
 
 /* ── Stable random positions for full-page items ── */
@@ -164,10 +177,12 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
   const [floatingIndependent, setFloatingIndependent] = useState(true);
   const [floatFullPage, setFloatFullPage] = useState(false);
   const [draggableEnabled, setDraggableEnabled] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [preEditOffsets, setPreEditOffsets] = useState<Record<number, { x: number; y: number }>>({});
   const [clickBurst, setClickBurst] = useState<{ x: number; y: number; color: string } | null>(null);
   const burstTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const { dragOffsets, onPointerDown, onPointerMove, onPointerUp } = useDraggable(draggableEnabled);
+  const { dragOffsets, setDragOffsets, onPointerDown, onPointerMove, onPointerUp } = useDraggable(editMode);
 
   const triggerClickBurst = useCallback((e: React.MouseEvent, color: string) => {
     if (floatingEffects.length === 0) return;
@@ -296,7 +311,20 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
     setFilterMenuOpen(false);
   };
 
-  const floatEnabled = floatAnim && !reducedMotion;
+  const enterEditMode = () => {
+    setPreEditOffsets({ ...dragOffsets });
+    setEditMode(true);
+  };
+  const confirmEditMode = () => {
+    saveSavedPositions(dragOffsets);
+    setEditMode(false);
+  };
+  const cancelEditMode = () => {
+    setDragOffsets(preEditOffsets);
+    setEditMode(false);
+  };
+
+  const floatEnabled = floatAnim && !reducedMotion && !editMode;
   const densityLimit = Math.max(4, Math.round(10 * floatDensityScale));
   const renderedItems = displayStyle === "hearts" || displayStyle === "bubbles"
     ? items.slice(0, densityLimit)
@@ -452,7 +480,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
   };
 
   const dragProps = (idx: number) =>
-    draggableEnabled
+    editMode
       ? {
           onPointerDown: (e: React.PointerEvent) => onPointerDown(idx, e),
           onPointerMove,
@@ -504,6 +532,42 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
     </div>
   );
 
+  const editModeUI = (
+    <>
+      {!editMode && (displayStyle === "hearts" || displayStyle === "bubbles" || displayStyle === "floating") && (
+        <button
+          type="button"
+          onClick={enterEditMode}
+          className={`absolute top-2 left-2 z-40 h-8 w-8 rounded-full border-2 flex items-center justify-center shadow-lg transition-transform hover:scale-110 ${isDark ? "bg-white/15 border-white/30 text-white" : "bg-background/90 border-muted text-foreground"}`}
+          title="סדר מחדש את האייקונים"
+        >
+          <Move className="w-4 h-4" />
+        </button>
+      )}
+      {editMode && (
+        <div className={`absolute top-2 left-2 z-40 flex items-center gap-2 rounded-xl px-3 py-2 shadow-xl border-2 ${isDark ? "bg-slate-900/95 border-white/30 text-white" : "bg-background/95 border-primary/30 text-foreground"}`}>
+          <span className="text-xs font-bold">גרור את האייקונים למקום הרצוי</span>
+          <button
+            type="button"
+            onClick={confirmEditMode}
+            className="h-7 w-7 rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow hover:scale-110 transition-transform"
+            title="אישור"
+          >
+            <Check className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={cancelEditMode}
+            className="h-7 w-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow hover:scale-110 transition-transform"
+            title="ביטול"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+    </>
+  );
+
   /* ═══════════════════════════════════════════
      Full-page floating overlay (for any style)
      ═══════════════════════════════════════════ */
@@ -518,6 +582,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
       <div className="relative">
         {monthShowcase}
         <div className="relative min-h-[300px]">
+        {editModeUI}
         <div className="absolute inset-0 pointer-events-none z-[15] overflow-hidden" aria-hidden="false">
           {renderedItems.map((item, i) => {
             const key = `${item.eventType}-${item.name}-${i}`;
@@ -534,17 +599,16 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
                 className="absolute pointer-events-auto group"
                 {...dragProps(i)}
                 style={{
-                  left: `${baseLeft}%`,
-                  top: `${baseTop}%`,
+                  left: `calc(${baseLeft}% + ${(dOff?.x ?? 0)}px)`,
+                  top: `calc(${baseTop}% + ${(dOff?.y ?? 0)}px)`,
                   width: `${size}px`,
                   height: `${size}px`,
-                  animation: reducedMotion ? undefined : `${animName} ${pos.duration}s ease-in-out infinite`,
+                  animation: (reducedMotion || editMode) ? undefined : `${animName} ${pos.duration}s ease-in-out infinite`,
                   animationDelay: `${pos.delay}s`,
                   filter: `drop-shadow(0 6px 20px ${item.color}50)`,
                   zIndex: dOff ? 50 : 15,
-                  ...(dOff ? { transform: `translate(${dOff.x}px, ${dOff.y}px)` } : {}),
-                  touchAction: draggableEnabled ? "none" : undefined,
-                  cursor: draggableEnabled ? "grab" : "pointer",
+                  touchAction: editMode ? "none" : undefined,
+                  cursor: editMode ? "grab" : "pointer",
                 }}
               >
                 {/* Heart shape */}
@@ -626,6 +690,8 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
     return (
       <>
       {monthShowcase}
+      <div className="relative">
+      {editModeUI}
       <div className="flex flex-wrap justify-center gap-4 mb-6">
         {renderedItems.map((item, i) => {
           const key = `${item.eventType}-${item.name}-${i}`;
@@ -639,8 +705,9 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
             {...dragProps(i)}
             style={{
               ...(floatEnabled ? { animation: `${getFloatAnimName(i)} ${3 / floatSpeedScale}s ease-in-out infinite`, animationDelay: `${i * 0.35}s`, ["--float-y" as string]: `${floatY}px` } : {}),
-              ...(dOff ? { transform: `translate(${dOff.x}px, ${dOff.y}px)`, zIndex: 50 } : {}),
-              touchAction: draggableEnabled ? "none" : undefined,
+              ...(editMode && dOff ? { transform: `translate(${dOff.x}px, ${dOff.y}px)`, zIndex: 50 } : {}),
+              ...(!editMode && dOff ? { position: "relative" as const, left: `${dOff.x}px`, top: `${dOff.y}px` } : {}),
+              touchAction: editMode ? "none" : undefined,
             }}
           >
             <button
@@ -690,6 +757,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
         {burstOverlay}
         <style>{animKeyframes}</style>
       </div>
+      </div>
       </>
     );
   }
@@ -699,6 +767,8 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
     return (
       <>
       {monthShowcase}
+      <div className="relative">
+      {editModeUI}
       <div className="flex flex-wrap justify-center gap-3 mb-6">
         {renderedItems.map((item, i) => {
           const bubbleSize = 82 * floatSizeScale;
@@ -711,8 +781,9 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
             {...dragProps(i)}
             style={{
               ...(floatEnabled ? { animation: `${getFloatAnimName(i)} ${3 / floatSpeedScale}s ease-in-out infinite`, animationDelay: `${i * 0.3}s`, ["--float-y" as string]: `${floatY}px` } : {}),
-              ...(dOff ? { transform: `translate(${dOff.x}px, ${dOff.y}px)`, zIndex: 50 } : {}),
-              touchAction: draggableEnabled ? "none" : undefined,
+              ...(editMode && dOff ? { transform: `translate(${dOff.x}px, ${dOff.y}px)`, zIndex: 50 } : {}),
+              ...(!editMode && dOff ? { position: "relative" as const, left: `${dOff.x}px`, top: `${dOff.y}px` } : {}),
+              touchAction: editMode ? "none" : undefined,
             }}
           >
             <button
@@ -746,6 +817,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
         })}
         {burstOverlay}
         <style>{animKeyframes}</style>
+      </div>
       </div>
       </>
     );
