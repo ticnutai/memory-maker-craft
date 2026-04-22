@@ -613,10 +613,11 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
             );
           })}
         </div>
+        </div>
 
         {burstOverlay}
         <style>{animKeyframes}</style>
-      </>
+      </div>
     );
   }
 
