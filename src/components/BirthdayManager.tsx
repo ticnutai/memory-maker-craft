@@ -869,27 +869,106 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
                 <input type="date" value={formDate} onChange={e => setFormDate(e.target.value)}
                   className="w-full h-10 rounded-xl border-2 border-muted px-3 text-sm focus:outline-none focus:border-game-pink" />
               ) : (
-                <div className="grid grid-cols-3 gap-2" dir="rtl">
-                  <select value={hebDay} onChange={e => setHebDay(Number(e.target.value))}
-                    className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink">
-                    {Array.from({ length: daysInHebMonth(hebYear, hebMonth) }, (_, i) => i + 1).map(d => (
-                      <option key={d} value={d}>{toHebrewNumeral(d)}</option>
-                    ))}
-                  </select>
-                  <select value={hebMonth} onChange={e => setHebMonth(Number(e.target.value))}
-                    className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink">
-                    {getHebMonthsForYear(hebYear).map(m => (
-                      <option key={m.index} value={m.index}>{m.name}</option>
-                    ))}
-                  </select>
-                  <div className="relative">
-                    <input type="number" min={5700} max={5900} value={hebYear}
-                      onChange={e => setHebYear(Number(e.target.value) || getCurrentHebYear())}
-                      className="h-10 w-full rounded-xl border-2 border-muted px-2 text-sm bg-card focus:outline-none focus:border-game-pink text-center opacity-0 absolute inset-0 z-10" />
-                    <div className="h-10 rounded-xl border-2 border-muted px-2 text-sm bg-card flex items-center justify-center font-bold text-purple-700">
+                <div dir="rtl" className="space-y-2">
+                  {/* Breadcrumb display */}
+                  <div className="flex items-center gap-1 flex-wrap text-sm">
+                    {/* Day */}
+                    <button
+                      type="button"
+                      onClick={() => setHebDateStep(hebDateStep === "day" ? null : "day")}
+                      className={`px-3 py-1.5 rounded-lg font-bold transition-all border ${
+                        hebDateStep === "day"
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          : "bg-muted/50 text-foreground border-muted hover:bg-muted"
+                      }`}
+                    >
+                      {toHebrewNumeral(hebDay)}
+                    </button>
+                    <span className="text-muted-foreground">/</span>
+                    {/* Month */}
+                    <button
+                      type="button"
+                      onClick={() => setHebDateStep(hebDateStep === "month" ? null : "month")}
+                      className={`px-3 py-1.5 rounded-lg font-bold transition-all border ${
+                        hebDateStep === "month"
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          : "bg-muted/50 text-foreground border-muted hover:bg-muted"
+                      }`}
+                    >
+                      {getHebMonthsForYear(hebYear).find(m => m.index === hebMonth)?.name ?? "חודש"}
+                    </button>
+                    <span className="text-muted-foreground">/</span>
+                    {/* Year */}
+                    <button
+                      type="button"
+                      onClick={() => setHebDateStep(hebDateStep === "year" ? null : "year")}
+                      className={`px-3 py-1.5 rounded-lg font-bold transition-all border ${
+                        hebDateStep === "year"
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          : "bg-muted/50 text-foreground border-muted hover:bg-muted"
+                      }`}
+                    >
                       {toHebrewYear(hebYear)}
-                    </div>
+                    </button>
                   </div>
+
+                  {/* Step dropdown */}
+                  {hebDateStep === "day" && (
+                    <div className="bg-muted/30 rounded-xl p-2 border flex flex-wrap gap-1 max-h-40 overflow-y-auto bounce-in">
+                      {Array.from({ length: daysInHebMonth(hebYear, hebMonth) }, (_, i) => i + 1).map(d => (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => { setHebDay(d); setHebDateStep("month"); }}
+                          className={`w-10 h-8 rounded-lg text-xs font-bold transition-all ${
+                            hebDay === d
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "bg-card hover:bg-muted text-foreground"
+                          }`}
+                        >
+                          {toHebrewNumeral(d)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {hebDateStep === "month" && (
+                    <div className="bg-muted/30 rounded-xl p-2 border flex flex-wrap gap-1 bounce-in">
+                      {getHebMonthsForYear(hebYear).map(m => (
+                        <button
+                          key={m.index}
+                          type="button"
+                          onClick={() => { setHebMonth(m.index); setHebDateStep("year"); }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            hebMonth === m.index
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "bg-card hover:bg-muted text-foreground"
+                          }`}
+                        >
+                          {m.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {hebDateStep === "year" && (
+                    <div className="bg-muted/30 rounded-xl p-2 border flex flex-wrap gap-1 max-h-40 overflow-y-auto bounce-in">
+                      {Array.from({ length: 21 }, (_, i) => getCurrentHebYear() - 10 + i).map(y => (
+                        <button
+                          key={y}
+                          type="button"
+                          onClick={() => { setHebYear(y); setHebDateStep(null); }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            hebYear === y
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "bg-card hover:bg-muted text-foreground"
+                          }`}
+                        >
+                          {toHebrewYear(y)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
