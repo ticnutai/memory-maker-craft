@@ -1145,8 +1145,11 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
                     <button onClick={() => setInviteFor(b)} className="p-1.5 rounded-lg transition-all active:scale-90" style={{ background: b.color + "30" }} title="שלח הזמנה">
                       <Send className="w-3.5 h-3.5" style={{ color: b.color }} />
                     </button>
-                    <button onClick={() => editBirthday(b)} className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90">
+                    <button onClick={() => editBirthday(b)} className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="עריכה">
                       <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                    <button onClick={() => duplicateBirthday(b)} className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="שכפול">
+                      <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
                     <a href={generateGoogleCalendarUrl(b)} target="_blank" rel="noopener noreferrer"
                       className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-all active:scale-90" title="הוספה ליומן גוגל">
