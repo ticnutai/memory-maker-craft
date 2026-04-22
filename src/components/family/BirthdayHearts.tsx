@@ -311,7 +311,20 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
     setFilterMenuOpen(false);
   };
 
-  const floatEnabled = floatAnim && !reducedMotion;
+  const enterEditMode = () => {
+    setPreEditOffsets({ ...dragOffsets });
+    setEditMode(true);
+  };
+  const confirmEditMode = () => {
+    saveSavedPositions(dragOffsets);
+    setEditMode(false);
+  };
+  const cancelEditMode = () => {
+    setDragOffsets(preEditOffsets);
+    setEditMode(false);
+  };
+
+  const floatEnabled = floatAnim && !reducedMotion && !editMode;
   const densityLimit = Math.max(4, Math.round(10 * floatDensityScale));
   const renderedItems = displayStyle === "hearts" || displayStyle === "bubbles"
     ? items.slice(0, densityLimit)
