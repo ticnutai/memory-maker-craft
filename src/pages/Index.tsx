@@ -50,7 +50,7 @@ const Index = () => {
     setCustomCards(undefined);
   };
 
-  const inGame = tab === "memory" && screen === "game";
+  const inGame = (tab === "memory" && screen === "game") || ["treasure", "train", "trivia", "puzzle", "wordsearch", "bingo", "chainstory", "drawing"].includes(tab);
 
   return (
     <div
