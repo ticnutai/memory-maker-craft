@@ -480,7 +480,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
   };
 
   const dragProps = (idx: number) =>
-    draggableEnabled
+    editMode
       ? {
           onPointerDown: (e: React.PointerEvent) => onPointerDown(idx, e),
           onPointerMove,
