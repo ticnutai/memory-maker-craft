@@ -532,6 +532,42 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
     </div>
   );
 
+  const editModeUI = (
+    <>
+      {!editMode && (displayStyle === "hearts" || displayStyle === "bubbles" || displayStyle === "floating") && (
+        <button
+          type="button"
+          onClick={enterEditMode}
+          className={`absolute top-2 left-2 z-40 h-8 w-8 rounded-full border-2 flex items-center justify-center shadow-lg transition-transform hover:scale-110 ${isDark ? "bg-white/15 border-white/30 text-white" : "bg-background/90 border-muted text-foreground"}`}
+          title="סדר מחדש את האייקונים"
+        >
+          <Move className="w-4 h-4" />
+        </button>
+      )}
+      {editMode && (
+        <div className={`absolute top-2 left-2 z-40 flex items-center gap-2 rounded-xl px-3 py-2 shadow-xl border-2 ${isDark ? "bg-slate-900/95 border-white/30 text-white" : "bg-background/95 border-primary/30 text-foreground"}`}>
+          <span className="text-xs font-bold">גרור את האייקונים למקום הרצוי</span>
+          <button
+            type="button"
+            onClick={confirmEditMode}
+            className="h-7 w-7 rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow hover:scale-110 transition-transform"
+            title="אישור"
+          >
+            <Check className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={cancelEditMode}
+            className="h-7 w-7 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow hover:scale-110 transition-transform"
+            title="ביטול"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+    </>
+  );
+
   /* ═══════════════════════════════════════════
      Full-page floating overlay (for any style)
      ═══════════════════════════════════════════ */
