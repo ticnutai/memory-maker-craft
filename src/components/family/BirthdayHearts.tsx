@@ -767,6 +767,8 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
     return (
       <>
       {monthShowcase}
+      <div className="relative">
+      {editModeUI}
       <div className="flex flex-wrap justify-center gap-3 mb-6">
         {renderedItems.map((item, i) => {
           const bubbleSize = 82 * floatSizeScale;
