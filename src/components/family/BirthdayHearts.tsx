@@ -515,8 +515,9 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
     const isBubbleShape = displayStyle === "bubbles" || displayStyle === "floating";
 
     return (
-      <>
+      <div className="relative">
         {monthShowcase}
+        <div className="relative min-h-[300px]">
         <div className="absolute inset-0 pointer-events-none z-[15] overflow-hidden" aria-hidden="false">
           {renderedItems.map((item, i) => {
             const key = `${item.eventType}-${item.name}-${i}`;
