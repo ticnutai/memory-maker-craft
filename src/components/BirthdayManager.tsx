@@ -224,7 +224,7 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
     setFormName(b.name); setFormDate(b.birth_date); setFormRelation(b.relation);
     setFormEmoji(b.emoji); setFormNotes(b.notes || ""); setFormColor(b.color);
     setEditId(b.id); setEditingEvent(false); setShowForm(true);
-    setDateMode("greg");
+    setDateMode("heb"); setHebDateStep(null);
     try {
       const h = gregorianToHebrew(parseISO(b.birth_date));
       setHebYear(h.hyear); setHebMonth(h.hmonth); setHebDay(h.hday);
@@ -237,7 +237,7 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
     setFormEmoji(ev.emoji); setFormNotes(ev.notes || ""); setFormColor(ev.color);
     setFormRecurring(ev.recurring);
     setEditId(ev.id); setEditingEvent(true); setShowForm(true);
-    setDateMode("greg");
+    setDateMode("heb"); setHebDateStep(null);
     try {
       const h = gregorianToHebrew(parseISO(ev.event_date));
       setHebYear(h.hyear); setHebMonth(h.hmonth); setHebDay(h.hday);
