@@ -11,6 +11,7 @@ import ChainStoryGame from "@/components/ChainStoryGame";
 import DrawingBoard from "@/components/DrawingBoard";
 import FamilyHome from "@/components/family/FamilyHome";
 import FamilyAlbums from "@/components/family/FamilyAlbums";
+import FamilyIdeasPage from "@/components/family/FamilyIdeasPage";
 import BirthdayManager from "@/components/BirthdayManager";
 import AppSidebar, { SidebarSection } from "@/components/AppSidebar";
 import HomeNav from "@/components/HomeNav";
@@ -121,6 +122,8 @@ const Index = () => {
           </GameFullscreenWrapper>
         ) : tab === "albums" ? (
           <FamilyAlbums />
+        ) : tab === "ideas" ? (
+          <FamilyIdeasPage />
         ) : tab === "birthdays" ? (
           <div className="w-full px-4 sm:px-6 lg:px-8 pt-14 pb-8">
             <BirthdayManager theme="girl" familyDeviceIds={familyDeviceIds} />
