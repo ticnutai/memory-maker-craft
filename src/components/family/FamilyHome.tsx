@@ -373,8 +373,18 @@ export default function FamilyHome({
         </button>
 
         {quickAnimOpen && (
-          <div className="mt-2 w-[290px] rounded-2xl border border-white/40 bg-white/90 backdrop-blur-md shadow-xl p-3 space-y-2 text-right">
-            <div className="text-xs font-black">שליטה מהירה באנימציות</div>
+          <div className="mt-2 w-[290px] max-h-[70vh] overflow-y-auto rounded-2xl border border-white/40 bg-white/90 backdrop-blur-md shadow-xl p-3 space-y-2 text-right">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setQuickAnimOpen(false)}
+                className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                title="סגור"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <div className="text-xs font-black">שליטה מהירה באנימציות</div>
+            </div>
 
             <button
               type="button"
