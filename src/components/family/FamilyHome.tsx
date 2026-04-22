@@ -47,19 +47,7 @@ export default function FamilyHome({
   const [pageClock, setPageClock] = useState(() => new Date());
   const [quickAnimOpen, setQuickAnimOpen] = useState(false);
   const [animCfg, setAnimCfg] = useState(() => loadHeartsConfig());
-  const [smartAnalysis, setSmartAnalysis] = useState<SmartHomeAnalysis | null>(null);
-  const [smartBusyId, setSmartBusyId] = useState<string | null>(null);
-  const [activitySeed, setActivitySeed] = useState(() => new Date().toISOString().slice(0, 10));
-  const [dataOpBusy, setDataOpBusy] = useState(false);
-  const [fileActionMode, setFileActionMode] = useState<"import" | "restore">("import");
-  const [restoreMode, setRestoreMode] = useState<"merge" | "replace">("merge");
-  const [backupHistory, setBackupHistory] = useState<BackupHistoryItem[]>(() => loadBackupHistory());
-  const importFileRef = useRef<HTMLInputElement | null>(null);
   const isMobile = useIsMobile();
-
-  const weeklyPlan = useMemo(() => buildWeeklyFamilyPlan(activitySeed), [activitySeed]);
-  const activityOfTheDay = useMemo(() => pickActivityOfTheDay(activitySeed), [activitySeed]);
-  const gameSuggestions = useMemo(() => getQuickGameSuggestions(), []);
 
   const applyAnimationPreset = (preset: FloatPresetId) => {
     const prefersReduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
