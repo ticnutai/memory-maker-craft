@@ -102,7 +102,7 @@ function useDraggable(enabled: boolean) {
     origX: number;
     origY: number;
   } | null>(null);
-  const [dragOffsets, setDragOffsets] = useState<Record<number, { x: number; y: number }>>({});
+  const [dragOffsets, setDragOffsets] = useState<Record<number, { x: number; y: number }>>(loadSavedPositions);
 
   const onPointerDown = useCallback(
     (idx: number, e: React.PointerEvent) => {
