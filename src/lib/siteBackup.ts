@@ -131,7 +131,7 @@ async function deriveAesKey(password: string, salt: Uint8Array, iterations: numb
     ["deriveKey"],
   );
   return crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
+    { name: "PBKDF2", salt: salt as unknown as ArrayBuffer, iterations, hash: "SHA-256" },
     keyMaterial,
     { name: "AES-GCM", length: 256 },
     false,
@@ -148,7 +148,7 @@ export async function encryptSiteBackupPayload(
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveAesKey(password, salt, iterations);
   const plaintext = new TextEncoder().encode(JSON.stringify(payload));
-  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
+  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv as unknown as ArrayBuffer }, key, plaintext);
 
   return {
     signature: "memory-maker-site-backup-encrypted",
@@ -170,7 +170,7 @@ export async function decryptSiteBackupPayload(
   const iv = fromBase64(envelope.ivBase64);
   const encrypted = fromBase64(envelope.payloadBase64);
   const key = await deriveAesKey(password, salt, envelope.iterations);
-  const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, encrypted);
+  const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv as unknown as ArrayBuffer }, key, encrypted as unknown as ArrayBuffer);
   const text = new TextDecoder().decode(decrypted);
   return JSON.parse(text) as SiteBackupPayload;
 }
@@ -354,19 +354,19 @@ async function replaceCloudScope(payload: SiteBackupPayload): Promise<void> {
 
 async function countByIn(table: string, column: string, values: string[]): Promise<number> {
   if (!values.length) return 0;
-  const { count } = await supabase
+  const result = await (supabase
     .from(table as any)
-    .select("id", { count: "exact", head: true })
-    .in(column as any, values as any);
-  return count ?? 0;
+    .select("id", { count: "exact", head: true }) as any)
+    .in(column, values);
+  return (result as any).count ?? 0;
 }
 
 async function countByEq(table: string, column: string, value: string): Promise<number> {
-  const { count } = await supabase
+  const result = await (supabase
     .from(table as any)
-    .select("id", { count: "exact", head: true })
-    .eq(column as any, value as any);
-  return count ?? 0;
+    .select("id", { count: "exact", head: true }) as any)
+    .eq(column, value);
+  return (result as any).count ?? 0;
 }
 
 export async function previewReplaceScope(payload: SiteBackupPayload): Promise<{ counts: Record<string, number>; total: number }> {
