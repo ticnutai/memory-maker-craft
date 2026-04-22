@@ -1,10 +1,10 @@
-import { Home, Cake, Gamepad2, Map, Train, ChevronDown, Pin, PinOff, Settings, LogIn, LogOut, User, Shield, Users, Palette, Album } from "lucide-react";
+import { Home, Cake, Gamepad2, Map, Train, ChevronDown, Pin, PinOff, Settings, LogIn, LogOut, User, Shield, Users, Palette, Album, HelpCircle, Puzzle, Search, Target, BookOpen, Paintbrush } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
-export type SidebarSection = "family" | "albums" | "birthdays" | "memory" | "treasure" | "train";
+export type SidebarSection = "family" | "albums" | "birthdays" | "memory" | "treasure" | "train" | "trivia" | "puzzle" | "wordsearch" | "bingo" | "chainstory" | "drawing";
 
 interface AppSidebarProps {
   active: SidebarSection;
@@ -18,6 +18,12 @@ const games: { key: SidebarSection; title: string; icon: typeof Gamepad2 }[] = [
   { key: "memory", title: "זיכרון", icon: Gamepad2 },
   { key: "treasure", title: "ציד מטמון", icon: Map },
   { key: "train", title: "רכבת", icon: Train },
+  { key: "trivia", title: "טריוויה", icon: HelpCircle },
+  { key: "puzzle", title: "פאזל", icon: Puzzle },
+  { key: "wordsearch", title: "מילים", icon: Search },
+  { key: "bingo", title: "בינגו", icon: Target },
+  { key: "chainstory", title: "סיפור", icon: BookOpen },
+  { key: "drawing", title: "ציור", icon: Paintbrush },
 ];
 
 const PIN_KEY = "app-sidebar-pinned";
