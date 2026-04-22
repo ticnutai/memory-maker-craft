@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Plus, Sparkles, Heart, Image as ImageIcon, Settings2, X, CalendarDays, Gamepad2, Download, Upload, DatabaseBackup, RotateCcw, Lock } from "lucide-react";
+import { Plus, Sparkles, Heart, Image as ImageIcon, Settings2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFamilyCollages } from "@/hooks/useFamilyCollages";
 import CollageView from "./CollageView";
@@ -17,20 +17,6 @@ import {
   loadSlideshowConfig, saveSlideshowConfig, SlideshowConfig, normalizeSlideshowConfig, resetSlideshowConfig,
 } from "@/lib/familyThemes";
 import { FloatEnvironment, FloatPresetId, FloatingEffect, HeartsDisplayStyle, getFloatPresetPatch, hasSavedHeartsConfig, HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, saveHeartsConfig } from "@/lib/heartsDisplayConfig";
-import { analyzeSmartHome, type SmartHomeAnalysis } from "@/lib/smartInsights";
-import { buildWeeklyFamilyPlan, getQuickGameSuggestions, pickActivityOfTheDay } from "@/lib/familyActivities";
-import {
-  decryptSiteBackupPayload,
-  encryptSiteBackupPayload,
-  exportSiteBackup,
-  isValidEncryptedBackupEnvelope,
-  isValidSiteBackupPayload,
-  loadBackupHistory,
-  previewReplaceScope,
-  pushBackupHistory,
-  restoreSiteBackup,
-  type BackupHistoryItem,
-} from "@/lib/siteBackup";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
