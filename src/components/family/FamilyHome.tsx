@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Sparkles, Heart, Image as ImageIcon, Settings2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFamilyCollages } from "@/hooks/useFamilyCollages";
