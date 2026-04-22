@@ -14,6 +14,7 @@ import FamilyAlbums from "@/components/family/FamilyAlbums";
 import BirthdayManager from "@/components/BirthdayManager";
 import AppSidebar, { SidebarSection } from "@/components/AppSidebar";
 import HomeNav from "@/components/HomeNav";
+import GameFullscreenWrapper from "@/components/GameFullscreenWrapper";
 import { CardSetType, CardData, GameSettings } from "@/lib/gameData";
 import { useCloudSettings } from "@/hooks/useCloudSettings";
 import { useFamily } from "@/hooks/useFamily";
@@ -77,7 +78,9 @@ const Index = () => {
 
       <div className="flex-1 flex flex-col min-w-0">
         {tab === "memory" && screen === "game" ? (
-          <GameBoard theme="girl" settings={settings} cardSetType={cardSetType} customCards={customCards} onHome={goHome} onSettingsOpen={() => setShowSettings(true)} />
+          <GameFullscreenWrapper>
+            <GameBoard theme="girl" settings={settings} cardSetType={cardSetType} customCards={customCards} onHome={goHome} onSettingsOpen={() => setShowSettings(true)} />
+          </GameFullscreenWrapper>
         ) : tab === "memory" ? (
           <CardSetSelect
             onSelectSet={handleCardSet}
@@ -85,21 +88,37 @@ const Index = () => {
             onSettingsToggle={setShowSettings}
           />
         ) : tab === "train" ? (
-          <TrainGame onHome={() => handleSelect("memory")} />
+          <GameFullscreenWrapper>
+            <TrainGame onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
         ) : tab === "trivia" ? (
-          <FamilyTrivia onHome={() => handleSelect("memory")} />
+          <GameFullscreenWrapper>
+            <FamilyTrivia onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
         ) : tab === "puzzle" ? (
-          <FamilyPuzzle onHome={() => handleSelect("memory")} />
+          <GameFullscreenWrapper>
+            <FamilyPuzzle onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
         ) : tab === "wordsearch" ? (
-          <WordSearchGame onHome={() => handleSelect("memory")} />
+          <GameFullscreenWrapper>
+            <WordSearchGame onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
         ) : tab === "bingo" ? (
-          <FamilyBingo onHome={() => handleSelect("memory")} />
+          <GameFullscreenWrapper>
+            <FamilyBingo onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
         ) : tab === "chainstory" ? (
-          <ChainStoryGame onHome={() => handleSelect("memory")} />
+          <GameFullscreenWrapper>
+            <ChainStoryGame onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
         ) : tab === "drawing" ? (
-          <DrawingBoard onHome={() => handleSelect("memory")} />
+          <GameFullscreenWrapper>
+            <DrawingBoard onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
         ) : tab === "treasure" ? (
-          <TreasureHuntGame onHome={() => handleSelect("memory")} />
+          <GameFullscreenWrapper>
+            <TreasureHuntGame onHome={() => handleSelect("memory")} />
+          </GameFullscreenWrapper>
         ) : tab === "albums" ? (
           <FamilyAlbums />
         ) : tab === "birthdays" ? (
