@@ -1204,10 +1204,13 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
                   <span className="text-[10px] font-bold" style={{ color: ev.color }}>
                     {days === 0 ? "🎉 היום!" : `עוד ${days} ימים`}
                   </span>
-                  <button onClick={() => editEvent(ev)} className="p-1 rounded bg-muted hover:bg-muted/80">
+                  <button onClick={() => editEvent(ev)} className="p-1 rounded bg-muted hover:bg-muted/80" title="עריכה">
                     <Edit2 className="w-3 h-3 text-muted-foreground" />
                   </button>
-                  <button onClick={() => deleteEntry(ev.id, true)} className="p-1 rounded bg-muted hover:bg-destructive/10">
+                  <button onClick={() => duplicateEvent(ev)} className="p-1 rounded bg-muted hover:bg-muted/80" title="שכפול">
+                    <Copy className="w-3 h-3 text-muted-foreground" />
+                  </button>
+                  <button onClick={() => deleteEntry(ev.id, true)} className="p-1 rounded bg-muted hover:bg-destructive/10" title="מחיקה">
                     <Trash2 className="w-3 h-3 text-destructive/60" />
                   </button>
                 </div>
