@@ -305,7 +305,7 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
   const currentMonthItems = items.slice(0, 8);
   const nearest = items[0];
 
-  const floatDistancePx = Math.max(6, Math.round(10 * floatSizeScale));
+  const floatDistancePx = Math.max(12, Math.round(20 * floatSizeScale));
   const floatY = floatDirection === "down" ? floatDistancePx : -floatDistancePx;
 
   const monthShowcase = (
