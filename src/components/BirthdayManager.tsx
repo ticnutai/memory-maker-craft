@@ -382,6 +382,7 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
     } catch { /* ignore */ }
   };
 
+  const sorted = [...birthdays].sort((a, b) => getDaysUntilBirthday(a.birth_date) - getDaysUntilBirthday(b.birth_date));
 
   const upcoming = sorted.filter(b => getDaysUntilBirthday(b.birth_date) <= 30);
 
