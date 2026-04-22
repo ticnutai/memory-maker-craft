@@ -705,8 +705,9 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
             {...dragProps(i)}
             style={{
               ...(floatEnabled ? { animation: `${getFloatAnimName(i)} ${3 / floatSpeedScale}s ease-in-out infinite`, animationDelay: `${i * 0.35}s`, ["--float-y" as string]: `${floatY}px` } : {}),
-              ...(dOff ? { transform: `translate(${dOff.x}px, ${dOff.y}px)`, zIndex: 50 } : {}),
-              touchAction: draggableEnabled ? "none" : undefined,
+              ...(editMode && dOff ? { transform: `translate(${dOff.x}px, ${dOff.y}px)`, zIndex: 50 } : {}),
+              ...(!editMode && dOff ? { position: "relative" as const, left: `${dOff.x}px`, top: `${dOff.y}px` } : {}),
+              touchAction: editMode ? "none" : undefined,
             }}
           >
             <button
