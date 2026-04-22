@@ -723,6 +723,9 @@ export default function FamilyHome({
           </div>
         )}
 
+        {/* Event icons — below photos, not overlapping */}
+        <BirthdayHearts isDark={isDark} familyDeviceIds={familyCtx.familyDeviceIds} />
+
         {/* Rotating family quotes — built-in pool + user-added, click to manage */}
         {!loading && <FamilyQuoteRotator isDark={isDark} />}
       </div>
