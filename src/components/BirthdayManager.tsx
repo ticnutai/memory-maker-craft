@@ -350,7 +350,39 @@ export default function BirthdayManager({ theme, familyDeviceIds }: BirthdayMana
     }
   };
 
-  const sorted = [...birthdays].sort((a, b) => getDaysUntilBirthday(a.birth_date) - getDaysUntilBirthday(b.birth_date));
+  const duplicateBirthday = (b: Birthday) => {
+    resetForm();
+    setFormType("birthday");
+    setFormName(b.name + " (עותק)");
+    setFormDate(b.birth_date);
+    setFormRelation(b.relation);
+    setFormEmoji(b.emoji);
+    setFormNotes(b.notes || "");
+    setFormColor(b.color);
+    setShowForm(true);
+    try {
+      const h = gregorianToHebrew(parseISO(b.birth_date));
+      setHebYear(h.hyear); setHebMonth(h.hmonth); setHebDay(h.hday);
+    } catch { /* ignore */ }
+  };
+
+  const duplicateEvent = (ev: FamilyEvent) => {
+    resetForm();
+    setFormType(ev.event_type);
+    setFormName(ev.name + " (עותק)");
+    setFormDate(ev.event_date);
+    setFormEmoji(ev.emoji);
+    setFormNotes(ev.notes || "");
+    setFormColor(ev.color);
+    setFormRecurring(ev.recurring);
+    setShowForm(true);
+    try {
+      const h = gregorianToHebrew(parseISO(ev.event_date));
+      setHebYear(h.hyear); setHebMonth(h.hmonth); setHebDay(h.hday);
+    } catch { /* ignore */ }
+  };
+
+
   const upcoming = sorted.filter(b => getDaysUntilBirthday(b.birth_date) <= 30);
 
   const monthGroups = Array.from({ length: 12 }, (_, i) => ({
