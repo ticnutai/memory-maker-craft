@@ -610,6 +610,7 @@ export default function FamilyHome({
           </p>
         </header>
 
+        <BirthdayHearts isDark={isDark} familyDeviceIds={familyCtx.familyDeviceIds} />
 
         {loading && <div className="text-center text-foreground/60">טוען…</div>}
 
