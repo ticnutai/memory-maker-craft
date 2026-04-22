@@ -3,10 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { differenceInDays, addYears, isBefore, parseISO, format } from "date-fns";
 import { he } from "date-fns/locale";
 import { HDate } from "@hebcal/core";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Move, Check, X } from "lucide-react";
 import { toHebrewNumeral } from "@/lib/hebrewCalendar";
 import { getDeviceId } from "@/lib/deviceId";
 import { HEARTS_CONFIG_UPDATED_EVENT, loadHeartsConfig, saveHeartsConfig, HeartsDisplayStyle, FloatAnimationType, FloatingEffect, HeartsFilterMode, FloatDirection } from "@/lib/heartsDisplayConfig";
+
+const POSITIONS_STORAGE_KEY = "family-hearts-saved-positions";
+
+function loadSavedPositions(): Record<number, { x: number; y: number }> {
+  try {
+    const raw = localStorage.getItem(POSITIONS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveSavedPositions(positions: Record<number, { x: number; y: number }>) {
+  localStorage.setItem(POSITIONS_STORAGE_KEY, JSON.stringify(positions));
+}
 
 const HEB_MONTH_NAMES: Record<string, string> = {
   Nisan: "ניסן", Iyyar: "אייר", Sivan: "סיון", Tamuz: "תמוז",
