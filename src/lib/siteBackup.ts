@@ -362,11 +362,11 @@ async function countByIn(table: string, column: string, values: string[]): Promi
 }
 
 async function countByEq(table: string, column: string, value: string): Promise<number> {
-  const { count } = await supabase
+  const result = await (supabase
     .from(table as any)
-    .select("id", { count: "exact", head: true })
-    .eq(column as any, value as any);
-  return count ?? 0;
+    .select("id", { count: "exact", head: true }) as any)
+    .eq(column, value);
+  return (result as any).count ?? 0;
 }
 
 export async function previewReplaceScope(payload: SiteBackupPayload): Promise<{ counts: Record<string, number>; total: number }> {
