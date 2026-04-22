@@ -146,7 +146,7 @@ function useDraggable(enabled: boolean) {
     []
   );
 
-  return { dragOffsets, onPointerDown, onPointerMove, onPointerUp };
+  return { dragOffsets, setDragOffsets, onPointerDown, onPointerMove, onPointerUp };
 }
 
 /* ── Stable random positions for full-page items ── */
