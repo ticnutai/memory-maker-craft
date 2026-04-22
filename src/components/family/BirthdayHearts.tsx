@@ -389,39 +389,39 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
   );
 
   const animKeyframes = `
-    @keyframes heartFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(var(--float-y, -10px)); } }
-    @keyframes heartDrift { 0% { transform: translate(0, 0); } 25% { transform: translate(12px, -8px); } 50% { transform: translate(-8px, -14px); } 75% { transform: translate(6px, -4px); } 100% { transform: translate(0, 0); } }
-    @keyframes heartPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
-    @keyframes heartSwing { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(6deg); } 75% { transform: rotate(-6deg); } }
-    @keyframes heartWander { 0% { transform: translate(0,0) rotate(0); } 20% { transform: translate(15px,-10px) rotate(3deg); } 40% { transform: translate(-10px,-18px) rotate(-2deg); } 60% { transform: translate(8px,-6px) rotate(4deg); } 80% { transform: translate(-12px,-12px) rotate(-3deg); } 100% { transform: translate(0,0) rotate(0); } }
+    @keyframes heartFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(var(--float-y, -18px)); } }
+    @keyframes heartDrift { 0% { transform: translate(0, 0); } 25% { transform: translate(24px, -16px); } 50% { transform: translate(-18px, -28px); } 75% { transform: translate(14px, -8px); } 100% { transform: translate(0, 0); } }
+    @keyframes heartPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+    @keyframes heartSwing { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(10deg); } 75% { transform: rotate(-10deg); } }
+    @keyframes heartWander { 0% { transform: translate(0,0) rotate(0); } 20% { transform: translate(28px,-20px) rotate(5deg); } 40% { transform: translate(-22px,-35px) rotate(-4deg); } 60% { transform: translate(18px,-12px) rotate(6deg); } 80% { transform: translate(-24px,-25px) rotate(-5deg); } 100% { transform: translate(0,0) rotate(0); } }
     @keyframes itemReveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes floatingBalloon0 {
       0%, 100% { transform: translate(0, 0) rotate(0deg); }
-      25% { transform: translate(20px, -30px) rotate(3deg); }
-      50% { transform: translate(-15px, -50px) rotate(-2deg); }
-      75% { transform: translate(10px, -20px) rotate(4deg); }
+      25% { transform: translate(40px, -55px) rotate(5deg); }
+      50% { transform: translate(-30px, -90px) rotate(-4deg); }
+      75% { transform: translate(20px, -35px) rotate(6deg); }
     }
     @keyframes floatingBalloon1 {
       0%, 100% { transform: translate(0, 0) rotate(0deg); }
-      30% { transform: translate(-25px, -20px) rotate(-4deg); }
-      60% { transform: translate(18px, -45px) rotate(3deg); }
-      80% { transform: translate(-8px, -15px) rotate(-1deg); }
+      30% { transform: translate(-45px, -40px) rotate(-6deg); }
+      60% { transform: translate(35px, -80px) rotate(5deg); }
+      80% { transform: translate(-16px, -28px) rotate(-2deg); }
     }
     @keyframes floatingBalloon2 {
       0%, 100% { transform: translate(0, 0) rotate(0deg); }
-      20% { transform: translate(15px, -40px) rotate(2deg); }
-      50% { transform: translate(-20px, -25px) rotate(-3deg); }
-      70% { transform: translate(12px, -35px) rotate(5deg); }
+      20% { transform: translate(30px, -70px) rotate(4deg); }
+      50% { transform: translate(-40px, -45px) rotate(-5deg); }
+      70% { transform: translate(25px, -60px) rotate(7deg); }
     }
     @keyframes floatingBalloon3 {
       0%, 100% { transform: translate(0, 0) rotate(0deg); }
-      35% { transform: translate(-12px, -35px) rotate(-2deg); }
-      55% { transform: translate(22px, -18px) rotate(4deg); }
-      85% { transform: translate(-5px, -40px) rotate(-3deg); }
+      35% { transform: translate(-25px, -60px) rotate(-4deg); }
+      55% { transform: translate(42px, -32px) rotate(6deg); }
+      85% { transform: translate(-10px, -70px) rotate(-5deg); }
     }
     @keyframes floatingBalloonGroup {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-30px); }
+      50% { transform: translateY(-55px); }
     }
     @keyframes burstParticle {
       0% { opacity: 1; transform: translate(0,0) scale(0.5); }
