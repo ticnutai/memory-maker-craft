@@ -86,6 +86,18 @@ const Index = () => {
           />
         ) : tab === "train" ? (
           <TrainGame onHome={() => handleSelect("memory")} />
+        ) : tab === "trivia" ? (
+          <FamilyTrivia onHome={() => handleSelect("memory")} />
+        ) : tab === "puzzle" ? (
+          <FamilyPuzzle onHome={() => handleSelect("memory")} />
+        ) : tab === "wordsearch" ? (
+          <WordSearchGame onHome={() => handleSelect("memory")} />
+        ) : tab === "bingo" ? (
+          <FamilyBingo onHome={() => handleSelect("memory")} />
+        ) : tab === "chainstory" ? (
+          <ChainStoryGame onHome={() => handleSelect("memory")} />
+        ) : tab === "drawing" ? (
+          <DrawingBoard onHome={() => handleSelect("memory")} />
         ) : tab === "treasure" ? (
           <TreasureHuntGame onHome={() => handleSelect("memory")} />
         ) : tab === "albums" ? (
