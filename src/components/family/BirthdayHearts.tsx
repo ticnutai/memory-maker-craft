@@ -177,10 +177,12 @@ export default function BirthdayHearts({ isDark, familyDeviceIds }: { isDark?: b
   const [floatingIndependent, setFloatingIndependent] = useState(true);
   const [floatFullPage, setFloatFullPage] = useState(false);
   const [draggableEnabled, setDraggableEnabled] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [preEditOffsets, setPreEditOffsets] = useState<Record<number, { x: number; y: number }>>({});
   const [clickBurst, setClickBurst] = useState<{ x: number; y: number; color: string } | null>(null);
   const burstTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  const { dragOffsets, onPointerDown, onPointerMove, onPointerUp } = useDraggable(draggableEnabled);
+  const { dragOffsets, setDragOffsets, onPointerDown, onPointerMove, onPointerUp } = useDraggable(editMode);
 
   const triggerClickBurst = useCallback((e: React.MouseEvent, color: string) => {
     if (floatingEffects.length === 0) return;
